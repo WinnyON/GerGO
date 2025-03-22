@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from fonts import h2_font
+from editorFrame import EditorFrame
 
 
 class MainEditorPage(QWidget):
@@ -11,6 +12,8 @@ class MainEditorPage(QWidget):
         self.editor_layout = QStackedLayout()
         self.editor_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setLayout(self.layout)
+
+        self.editor_frame = EditorFrame()
 
         self.db_tree = QTreeWidget()
         self.db_tree.setHeaderHidden(False)
@@ -37,9 +40,12 @@ class MainEditorPage(QWidget):
         self.create_demo_tree()
 
         self.editor_layout.addWidget(self.nothing_to_see_label)
+        self.editor_layout.addWidget(self.editor_frame)
 
         self.layout.addLayout(self.sidebar_layout, 1)
         self.layout.addLayout(self.editor_layout, 3)
+
+        self.show_selected_state()
 
 
     def create_demo_tree(self):
@@ -56,3 +62,6 @@ class MainEditorPage(QWidget):
 
     def show_unselected_state(self):
     	self.editor_layout.setCurrentIndex(0)
+
+    def show_selected_state(self):
+    	self.editor_layout.setCurrentIndex(1)
