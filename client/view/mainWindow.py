@@ -1,21 +1,24 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QStackedLayout, QPushButton, QVBoxLayout
 from connectPage import ConnectPage
+from mainEditorPage import MainEditorPage
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.stack_layout = QStackedLayout()
-        self.connect_page = ConnectPage()
+        self.connect_page = ConnectPage(self.stack_layout)
+        self.main_editor_page = MainEditorPage()
         self.stack_layout.addWidget(self.connect_page)
+        self.stack_layout.addWidget(self.main_editor_page)
         self.container = QWidget()
         self.setWindowTitle("GerGO")
         self.setGeometry(100, 100, 1280, 720)
         self.container.setLayout(self.stack_layout)
         self.setCentralWidget(self.container)
 
-    # def switch_to_second_page(self):
-    #     self.stack_layout.setCurrentIndex(1)
+    def switch_to_main_editor_page(self):
+        self.stack_layout.setCurrentIndex(1)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

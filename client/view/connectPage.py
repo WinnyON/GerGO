@@ -3,8 +3,9 @@ from PyQt5.QtCore import Qt
 from fonts import h1_font
 
 class ConnectPage(QWidget):
-    def __init__(self):
+    def __init__(self, parent_stack_layout):
         super().__init__()
+        self.parent_stack_layout = parent_stack_layout
         self.layout = QGridLayout()
         self.form_layout = QFormLayout()
         self.welcome_layout = QHBoxLayout()
@@ -24,6 +25,7 @@ class ConnectPage(QWidget):
         self.input_ip = QLineEdit()
         self.input_port = QLineEdit()
         self.submit_button = QPushButton("Connect to server")
+        self.submit_button.clicked.connect(self.go_to_main_editor_page)
         self.connection_failed_label = QLabel("Could not connect to the server. Try again!")
         self.connection_failed_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -34,10 +36,7 @@ class ConnectPage(QWidget):
         self.form_layout.addRow(self.port_label, self.input_port)
         self.form_layout.setContentsMargins(20, 20, 20, 20)
         self.layout.addLayout(self.form_layout, 1, 0, 2, 2)
-        # self.layout.addWidget(self.ip_label)
-        # self.layout.addWidget(self.input_ip)
-        # self.layout.addWidget(self.port_label)
-        # self.layout.addWidget(self.input_port)
+
         self.submit_layout.addWidget(self.submit_button)
         self.submit_layout.setContentsMargins(100, 0, 100, 0)
         self.layout.addLayout(self.submit_layout, 3, 0, 1, 2)
@@ -47,5 +46,8 @@ class ConnectPage(QWidget):
         self.layout.addLayout(self.connection_failed_layout, 4, 0, 1, 2)
         self.connection_failed_label.hide()
 
-    def failed_connection():
+    def failed_connection(self):
         self.connection_failed_label.show()
+
+    def go_to_main_editor_page(self):
+        self.parent_stack_layout.setCurrentIndex(1)
