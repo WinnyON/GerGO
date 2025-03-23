@@ -1,43 +1,50 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 
-using GerGO.utils;
+using GerGO.Utils;
 
 namespace GerGO
 {
-    class Server
+    static class Server
     {
-        private bool _running = false;
-        private TcpListener _listener;
+        private static bool s_running = false;
+        private static TcpListener s_listener;
 
-        private Logger _logger = LoggerFactory.GetLogger();
+        private static Logger s_logger = LoggerFactory.GetLogger();
 
-        public Server(string IpAddress, int port)
+        public static void InitializeServer(string IpAddress, int port)
         {
-            _running = false;
-            _listener = new TcpListener(IPAddress.Parse(IpAddress), port);
+            s_running = false;
+            s_listener = new TcpListener(IPAddress.Parse(IpAddress), port);
         }
 
-        public void Start()
+        public static void Start()
         {
-            _running = true;
-            _listener.Start();
-
-            _logger.Info("Server started!");
+            s_running = true;
+            s_listener.Start();
+            s_logger.Info("Server started!");
         }
 
-        public void Stop()
+        public static void Stop()
         {
-            _listener.Stop();
-            _logger.Info("Server stopped!");
+            s_running = false;
+            s_listener.Stop();
+            s_logger.Info("Server stopped!");
         }
 
-        public void Run()
+        public static void Run()
         {
-            while (_running)
+            while (s_running)
             {
-                TcpClient client = _listener.AcceptTcpClient();
-                _ = Task.Run(() => new RequestHandler(client));
+                try
+                {
+                    TcpClient client = s_listener.AcceptTcpClient();
+                    _ = Task.Run(() => new RequestHandler(client));
+                }
+                catch (SocketException)
+                {
+                    s_logger.Warning("An operation was interrupted during stopping server.");
+                }
             }
         }
     }

@@ -1,5 +1,6 @@
-﻿using GerGO.functionalities;
-using GerGO.utils;
+﻿using GerGO.Functionalities;
+using GerGO.Utils;
+using GerGO.Communication;
 using System.Net.Sockets;
 using System.Text;
 
@@ -39,11 +40,16 @@ namespace GerGO
             string request = Encoding.UTF8.GetString(buffer);
 
             string[] commandArgs = request.Split("^");
+            for (int i = 0; i < commandArgs.Length; i++)
+            {
+                commandArgs[i] = commandArgs[i].Replace("\0", "");
+            }
 
             if (commandArgs.Length == 0)
             {
                 _logger.Error("No request!");
-                SendErrorMessage(stream, "No request!");
+                TcpResponder.SendErrorMessage(stream, "No request!");
+                tcpClient.Close();
                 return;
             }
 
@@ -51,36 +57,26 @@ namespace GerGO
             {
                 RequestType type = (RequestType)int.Parse(commandArgs[0]);
 
-                int res = s_commands[(int)type].Execute(stream, commandArgs);
+                s_commands[(int)type].Execute(stream, commandArgs);
 
                 _logger.Info("Thread " + Thread.CurrentThread.ManagedThreadId + " - Finished command succesfully: " + type.ToString());
             }
             catch (FormatException)
             {
                 _logger.Error("Error in request!");
-                SendErrorMessage(stream, "Error in request!");
-                return;
+                TcpResponder.SendErrorMessage(stream, "Error in request!");
             }
             catch (IndexOutOfRangeException)
             {
                 _logger.Error("Not valid request!");
-                SendErrorMessage(stream, "Not valid request!");
-                return;
+                TcpResponder.SendErrorMessage(stream, "Not valid request!");
             }
             catch (CommandException ex)
             {
                 _logger.Error("Got command exception: " + ex.Message);
-                SendErrorMessage(stream, ex.Message);
-                return;
+                TcpResponder.SendErrorMessage(stream, "Failed to complete command: " + ex.Message);
             }
-        }
-
-        private void SendErrorMessage(NetworkStream stream, string message)
-        {
-            string text = "1_" + message;
-            byte[] buffer = Encoding.UTF8.GetBytes(text);
-
-            stream.Write(buffer, 0, buffer.Length);
+            tcpClient.Close();
         }
     }
 }

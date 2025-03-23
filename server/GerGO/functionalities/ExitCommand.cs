@@ -1,13 +1,12 @@
 ﻿using System.Net.Sockets;
 
-namespace GerGO.functionalities
+namespace GerGO.Functionalities
 {
     class ExitCommand : Command
     {
-        // TODO: resolve stopping of the server
-        public int Execute(NetworkStream stream, string[] arguments)
+        public void Execute(NetworkStream stream, string[] arguments)
         {
-            throw new NotImplementedException();
+            Server.Stop();
         }
     }
 }

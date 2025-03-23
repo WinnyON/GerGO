@@ -1,10 +1,16 @@
-﻿namespace GerGO.models
+﻿using System.Xml.Serialization;
+
+namespace GerGO.Models
 {
-    class ForeignKey
+    public class ForeignKey
     {
+        [XmlElement("Name")]
         public string Name { get; set; }
+        [XmlElement("RefTableName")]
         public string RefTableName { get; set; }
+        [XmlElement("RefAttributeName")]
         public string RefAttributeName { get; set; }
+        [XmlElement("AttributeName")]
         public string AttributeName { get; set; }
 
         public ForeignKey()

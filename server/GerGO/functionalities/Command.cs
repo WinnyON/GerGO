@@ -1,9 +1,9 @@
 ﻿using System.Net.Sockets;
 
-namespace GerGO.functionalities
+namespace GerGO.Functionalities
 {
     interface Command
     {
-        int Execute(NetworkStream stream, string[] arguments);
+        void Execute(NetworkStream stream, string[] arguments);
     }
 }

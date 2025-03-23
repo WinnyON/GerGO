@@ -1,10 +1,10 @@
 ﻿using System.Net.Sockets;
 
-namespace GerGO.functionalities
+namespace GerGO.Functionalities
 {
     class GetDBDetailsCommand : Command
     {
-        public int Execute(NetworkStream stream, string[] arguments)
+        public void Execute(NetworkStream stream, string[] arguments)
         {
             throw new NotImplementedException();
         }

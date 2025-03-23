@@ -1,4 +1,4 @@
-﻿namespace GerGO.functionalities
+﻿namespace GerGO.Functionalities
 {
     class CommandException : Exception
     {

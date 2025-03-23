@@ -1,21 +1,27 @@
-﻿namespace GerGO.models
+﻿using System.Xml.Serialization;
+
+namespace GerGO.Models
 {
-    class DataBase
+    [XmlRoot("DataBase")]
+    public class DataBase
     {
+        [XmlAttribute("Name")]
         public string Name { get; set; }
 
-        private Dictionary<string, Table> _tables;
+        [XmlArray("Tables")]
+        [XmlArrayItem("Table")]
+        public List<Table> Tables {  get; set; }
 
         public DataBase()
         {
             Name = string.Empty;
-            _tables = new Dictionary<string, Table>();
+            Tables = new List<Table>();
         }
 
         public DataBase(string name)
         {
             Name = name;
-            _tables = new Dictionary<string, Table>();
+            Tables = new List<Table>();
         }
     }
 }

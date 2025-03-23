@@ -1,29 +1,57 @@
-﻿namespace GerGO.models
+﻿using System.Xml.Serialization;
+
+namespace GerGO.Models
 {
-    class Table
+    public class Table
     {
+        [XmlAttribute("TableName")]
         public string Name { get; set; }
-        private int _rowCount = 0;
-        private List<string> _prinamryKeys;
-        private Dictionary<string, ForeignKey> _foreignKeys;
-        private Dictionary<string, Column> _columns;
+        
+        [XmlAttribute("FileName")]
+        public string FileName { get; set; }
+        
+        [XmlAttribute("RowCount")]
+        public int RowCount {  get; set; }
+        
+        [XmlArray("PrimaryKeys")]
+        [XmlArrayItem("PrimaryKeyItem")]
+        public List<string> PrinamryKeys { get; set; }
+        
+        [XmlArray("ForeignKeys")]
+        [XmlArrayItem("ForeignKey")]
+        public List<ForeignKey> ForeignKeys { get; set; }
+
+        [XmlArray("Structure")]
+        [XmlArrayItem("Column")]
+        public List<Column> Columns { get; set; }
 
         public Table()
         {
             Name = string.Empty;
-            _rowCount = 0;
-            _prinamryKeys = new List<string>();
-            _foreignKeys = new Dictionary<string, ForeignKey>();
-            _columns = new Dictionary<string, Column>();
+            FileName = string.Empty;
+            RowCount = 0;
+            PrinamryKeys = new List<string>();
+            ForeignKeys = new List<ForeignKey>();
+            Columns = new List<Column>();
         }
 
         public Table(string name)
         {
             Name = name;
-            _rowCount = 0;
-            _prinamryKeys = new List<string>();
-            _foreignKeys = new Dictionary<string, ForeignKey>();
-            _columns = new Dictionary<string, Column>();
+            FileName = string.Empty;
+            RowCount = 0;
+            PrinamryKeys = new List<string>();
+            ForeignKeys = new List<ForeignKey>();
+            Columns = new List<Column>();
+        }
+        public Table(string name, string fileName)
+        {
+            Name = name;
+            FileName = fileName;
+            RowCount = 0;
+            PrinamryKeys = new List<string>();
+            ForeignKeys = new List<ForeignKey>();
+            Columns = new List<Column>();
         }
     }
 }

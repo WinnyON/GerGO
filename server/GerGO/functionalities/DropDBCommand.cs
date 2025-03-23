@@ -1,9 +1,10 @@
 ﻿using System.Net.Sockets;
 
-namespace GerGO.functionalities
+namespace GerGO.Functionalities
 {
     class DropDBCommand : Command
-    {public int Execute(NetworkStream stream, string[] arguments)
+    {
+        public void Execute(NetworkStream stream, string[] arguments)
         {
             throw new NotImplementedException();
         }
