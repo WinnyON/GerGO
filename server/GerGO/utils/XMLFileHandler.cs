@@ -22,7 +22,6 @@ namespace GerGO.Utils
             try
             {
                 string resultXml = SerializeToXml(new DataBaseXmlWrapper() { DataBases = dataBases });
-                _logger.Info(resultXml);
 
                 File.WriteAllText(path, resultXml);
             }

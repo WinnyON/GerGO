@@ -37,5 +37,26 @@ namespace GerGO.DataResource
                 throw new DataResourceException("Failed to create db!");
             }
         }
+
+        public void DropDataBase(DataBase dataBase)
+        {
+            DataBase result = _dataBases.FirstOrDefault((db) => db.Name.Equals(dataBase.Name), null);
+            if (result == null)
+            {
+                _logger.Error("The database doesn't exists!");
+                throw new DataResourceException("The database doesn't exists!");
+            }
+
+            try
+            {
+                _dataBases.Remove(result);
+                _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
+            }
+            catch (FileHandlerException ex)
+            {
+                _logger.Error("Failed to write db data: " + ex.Message);
+                throw new DataResourceException("Failed to delete db!");
+            }
+        }
     }
 }
