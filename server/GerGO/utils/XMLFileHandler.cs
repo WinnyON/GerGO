@@ -3,6 +3,17 @@ using System.Xml.Serialization;
 
 namespace GerGO.Utils
 {
+    [XmlRoot("DataBaseXmlWrapper")]
+    public class DataBaseXmlWrapper
+    {
+        [XmlArray("Databases")]
+        [XmlArrayItem("DataBase")]
+        public List<DataBase> DataBases {  get; set; }
+        public DataBaseXmlWrapper()
+        {
+
+        }
+    }
     class XMLFileHandler : FileHandler
     {
         private Logger _logger = LoggerFactory.GetLogger();
@@ -10,7 +21,7 @@ namespace GerGO.Utils
         {
             try
             {
-                string resultXml = SerializeToXml(dataBases);
+                string resultXml = SerializeToXml(new DataBaseXmlWrapper() { DataBases = dataBases });
                 _logger.Info(resultXml);
 
                 File.WriteAllText(path, resultXml);
@@ -27,13 +38,37 @@ namespace GerGO.Utils
             }
         }
 
-        private string SerializeToXml<T>(List<T> obj)
+        public List<DataBase> ReadDataBaseData(string path)
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(List<T>));
+            DataBaseXmlWrapper wrapper = DeserializeFromXml(path);
+
+            return wrapper.DataBases;
+        }
+
+        private string SerializeToXml(DataBaseXmlWrapper wrapper)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(DataBaseXmlWrapper));
             using (StringWriter sw = new StringWriter())
             {
-                serializer.Serialize(sw, obj);
+                serializer.Serialize(sw, wrapper);
                 return sw.ToString();
+            }
+        }
+
+        private DataBaseXmlWrapper DeserializeFromXml(string path)
+        {
+            try
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(DataBaseXmlWrapper));
+                using (StreamReader sr = new StreamReader(path))
+                {
+                    return (DataBaseXmlWrapper)serializer.Deserialize(sr);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Failed to deserialize! " + ex.Message);
+                throw new FileHandlerException("Failed to deserialize!");
             }
         }
     }

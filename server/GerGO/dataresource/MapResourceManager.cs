@@ -13,8 +13,9 @@ namespace GerGO.DataResource
 
         public MapResourceManager()
         {
-            _dataBases = new List<DataBase>();
             _dbDataSourceFile = "Catalog.xml";
+            //_dataBases = new List<DataBase>();
+            _dataBases = _fileHandler.ReadDataBaseData(_dbDataSourceFile);
         }
 
         public void AddDataBase(DataBase dataBase)
