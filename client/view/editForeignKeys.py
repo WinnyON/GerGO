@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from fonts import h2_font
 
-class EditRows(QTableWidget):
+class EditForeignKeys(QTableWidget):
 	def __init__(self):
 		super().__init__() 
 		self.setEditTriggers(QAbstractItemView.AllEditTriggers)
@@ -23,7 +23,6 @@ class EditRows(QTableWidget):
 		self.verticalHeader().sectionClicked.connect(self.select_row)
 		self.set_demo_data()
 
-
 	def select_row(self, row):
 		print(row)
 		self.clearSelection()
@@ -39,20 +38,11 @@ class EditRows(QTableWidget):
 
 	def set_demo_data(self):
 		self.setRowCount(10)
-		self.setColumnCount(5)
-		self.setHorizontalHeaderLabels(["Column 1", "Column 2", "C3", "Col4", "COL5"])
+		self.setColumnCount(4)
+		self.setHorizontalHeaderLabels(["Constraint Name", "Column", "Foreign Table", "Foreign Column"])
 
 		for row in range(self.rowCount()):
 			for column in range(self.columnCount()):
 				item = QTableWidgetItem(f"Row {row}, Column {column}")
 				item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
 				self.setItem(row, column, item)
-
-	def get_data(self):
-		data = []
-		for row in range(self.rowCount()):
-			row_data = {}
-			for column in range(self.columnCount()):
-				row_data[self.horizontalHeaderItem(column).text()] = self.item(row, column).text()
-			data.append(row_data)
-		return data

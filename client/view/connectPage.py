@@ -1,10 +1,19 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIntValidator
 from fonts import h1_font
+import os
+import sys
+
+parent_folder = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, parent_folder)
+
+from client import Client
 
 class ConnectPage(QWidget):
-    def __init__(self, parent_stack_layout):
+    def __init__(self, parent_stack_layout, conn_client):
         super().__init__()
+        self.client = conn_client
         self.parent_stack_layout = parent_stack_layout
         self.layout = QGridLayout()
         self.form_layout = QFormLayout()
@@ -24,6 +33,7 @@ class ConnectPage(QWidget):
         self.port_label = QLabel("Port")
         self.input_ip = QLineEdit()
         self.input_port = QLineEdit()
+        self.input_port.setValidator(QIntValidator())
         self.submit_button = QPushButton("Connect to server")
         self.submit_button.clicked.connect(self.go_to_main_editor_page)
         self.connection_failed_label = QLabel("Could not connect to the server. Try again!")
@@ -50,4 +60,9 @@ class ConnectPage(QWidget):
         self.connection_failed_label.show()
 
     def go_to_main_editor_page(self):
-        self.parent_stack_layout.setCurrentIndex(1)
+        self.client.setDestination(self.input_ip.text(), self.input_port.text())
+        return_code = self.client.connect()
+        if return_code == 0:
+            self.parent_stack_layout.setCurrentIndex(1)
+        else:
+            self.failed_connection()
