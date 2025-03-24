@@ -24,6 +24,7 @@ namespace GerGO
             s_commands.Add(new DropDBCommand());
             s_commands.Add(new CreateTableCommand());
             s_commands.Add(new DropTableCommand());
+            s_commands.Add(new AlterTableCommand());
             s_commands.Add(new GetDBDetailsCommand());
             s_commands.Add(new GetTableDetailsCommand());
         }

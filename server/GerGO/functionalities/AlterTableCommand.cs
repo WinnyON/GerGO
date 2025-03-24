@@ -6,7 +6,7 @@ namespace GerGO.Functionalities
     {
         public void Execute(NetworkStream stream, string[] arguments)
         {
-            throw new NotImplementedException();
+
         }
     }
 }

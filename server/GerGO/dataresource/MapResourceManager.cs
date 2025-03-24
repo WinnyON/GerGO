@@ -33,6 +33,7 @@ namespace GerGO.DataResource
             }
             catch (FileHandlerException ex)
             {
+                _dataBases.Remove(dataBase);
                 _logger.Error("Failed to write db data: " + ex.Message);
                 throw new DataResourceException("Failed to create db!");
             }
@@ -54,9 +55,85 @@ namespace GerGO.DataResource
             }
             catch (FileHandlerException ex)
             {
+                _dataBases.Add(result);
                 _logger.Error("Failed to write db data: " + ex.Message);
                 throw new DataResourceException("Failed to delete db!");
             }
+        }
+        public void AddTable(string dbName, Table table)
+        {
+            DataBase result = _dataBases.FirstOrDefault((db) => db.Name.Equals(dbName), null);
+            if (result == null)
+            {
+                _logger.Error("The database doesn't exists!");
+                throw new DataResourceException("The database doesn't exists!");
+            }
+
+            Table resTable = result.Tables.FirstOrDefault((t) => t.Name.Equals(table.Name), null);
+            if (resTable != null)
+            {
+                _logger.Error("The table already exists!");
+                throw new DataResourceException("The table already exists!");
+            }
+
+            try
+            {
+                _dataBases.First((db) => db.Name.Equals(dbName)).Tables.Add(table);
+                _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
+            }
+            catch (FileHandlerException ex)
+            {
+                _dataBases.First((db) => db.Name.Equals(dbName)).Tables.Remove(table);
+                _logger.Error("Failed to write db data: " + ex.Message);
+                throw new DataResourceException("Failed to create table!");
+            }
+        }
+
+        public void DropTable(string dbName, Table table)
+        {
+            DataBase result = _dataBases.FirstOrDefault((db) => db.Name.Equals(dbName), null);
+            if (result == null)
+            {
+                _logger.Error("The database doesn't exists!");
+                throw new DataResourceException("The database doesn't exists!");
+            }
+
+            Table resTable = result.Tables.FirstOrDefault((t) => t.Name.Equals(table.Name), null);
+            if (resTable == null)
+            {
+                _logger.Error("The table doesn't exists!");
+                throw new DataResourceException("The table doesn't exists!");
+            }
+
+            try
+            {
+                _dataBases.First((db) => db.Name.Equals(dbName)).Tables.Remove(resTable);
+                _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
+            }
+            catch (FileHandlerException ex)
+            {
+                _dataBases.First((db) => db.Name.Equals(dbName)).Tables.Add(resTable);
+                _logger.Error("Failed to write db data: " + ex.Message);
+                throw new DataResourceException("Failed to drop table!");
+            }
+        }
+
+        public List<string[]> GetDBData()
+        {
+            List<string[]> data = new List<string[]>();
+
+            foreach (var db in _dataBases)
+            {
+                string[] dbData = new string[db.Tables.Count+1];
+                dbData[0] = db.Name;
+                for (int i = 0; i < db.Tables.Count; i++)
+                {
+                    dbData[i+1] = db.Tables[i].Name;
+                }
+                data.Add(dbData);
+            }
+
+            return data;
         }
     }
 }

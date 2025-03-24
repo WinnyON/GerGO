@@ -14,7 +14,8 @@ namespace GerGO.Functionalities
             DataBase db;
             try
             {
-                db = new DataBase(arguments[1]);
+                string name = arguments[1].ToLower();
+                db = new DataBase(name);
                 ResourceManager manager = ResourceManagerFactory.GetInstance();
 
                 manager.AddDataBase(db);
