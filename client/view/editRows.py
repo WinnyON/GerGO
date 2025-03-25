@@ -1,0 +1,67 @@
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt
+from fonts import h2_font
+
+class EditRows(QTableWidget):
+	def __init__(self):
+		super().__init__() 
+		self.setEditTriggers(QAbstractItemView.AllEditTriggers)
+		self.setAlternatingRowColors(True)
+		self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+		self.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+		self.setShowGrid(True)
+		self.setGridStyle(Qt.SolidLine)
+		self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+		self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+
+
+		self.horizontalHeader().setStyleSheet("::section { background-color: #87CEEB; color: #FFFFFF }")
+		self.horizontalHeader().setDefaultAlignment(Qt.AlignHCenter | Qt.AlignVCenter) 
+		self.verticalHeader().setStyleSheet("::section { background-color: #E5E4E2; border: 1px solid #D3D3D3; border-left: none;}")
+		self.verticalHeader().setDefaultAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+
+		self.verticalHeader().sectionClicked.connect(self.select_row)
+		self.set_demo_data()
+
+
+	def select_row(self, row):
+		print(row)
+		self.clearSelection()
+		self.selectRow(row)
+
+	def keyPressEvent(self, event):
+		if event.key() == Qt.Key_Delete:
+			row = self.currentRow()
+			if row != -1:
+				self.removeRow(row)
+		else:
+			super().keyPressEvent(event)
+
+	def set_demo_data(self):
+		self.setRowCount(10)
+		self.setColumnCount(5)
+		self.setHorizontalHeaderLabels(["Column 1", "Column 2", "C3", "Col4", "COL5"])
+
+		for row in range(self.rowCount()):
+			for column in range(self.columnCount()):
+				item = QTableWidgetItem(f"Row {row}, Column {column}")
+				item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
+				self.setItem(row, column, item)
+
+	def get_data(self):
+		data = []
+		for row in range(self.rowCount()):
+			row_data = {}
+			for column in range(self.columnCount()):
+				row_data[self.horizontalHeaderItem(column).text()] = self.item(row, column).text()
+			data.append(row_data)
+		return data
+
+	def add_row(self):
+		self.setRowCount(self.rowCount() + 1)
+		row = self.rowCount() - 1
+		for column in range(self.columnCount()):
+			item = QTableWidgetItem("")
+			item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
+			self.setItem(row, column, item)
+
