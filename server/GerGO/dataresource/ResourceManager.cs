@@ -15,5 +15,6 @@ namespace GerGO.DataResource
 
         public bool ExistsTable(string dbName, string tableName);
         public string[] GetTables(string dbName);
+        public List<string[]> GetForeignKeys(string dbName, string tableName);
     }
 }

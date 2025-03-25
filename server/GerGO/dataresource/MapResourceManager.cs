@@ -287,5 +287,24 @@ namespace GerGO.DataResource
 
             return resTables;
         }
+
+        public List<string[]> GetForeignKeys(string dbName, string tableName)
+        {
+            List<string[]> fkList = new List<string[]>();
+
+            Table table = _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName));
+            foreach (var fk in  table.ForeignKeys)
+            {
+                string[] data = new string[4];
+                data[0] = fk.Name;
+                data[1] = fk.AttributeName;
+                data[2] = fk.RefTableName;
+                data[3] = fk.RefAttributeName;
+
+                fkList.Add(data);
+            }
+
+            return fkList;
+        }
     }
 }

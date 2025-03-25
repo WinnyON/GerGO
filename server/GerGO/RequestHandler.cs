@@ -7,7 +7,7 @@ using System.Text;
 namespace GerGO
 {
     enum RequestType { EXIT, CREATE_DB, DROP_DB, CREATE_TABLE, DROP_TABLE, GET_DB_DETAILS, GET_TABLE_DETAILS,
-        ADD_COLUMN, ADD_FOREIGN_KEY, GET_TABLES }
+        ADD_COLUMN, ADD_FOREIGN_KEY, GET_TABLES, GET_FOREIGN_KEYS }
     class RequestHandler
     {
         private TcpClient _tcpClient;
@@ -29,6 +29,7 @@ namespace GerGO
             s_commands.Add(new AddColumnCommand());
             s_commands.Add(new AddForeignKeyCommand());
             s_commands.Add(new GetTablesCommand());
+            s_commands.Add(new GetForeignKeysCommand());
         }
         public RequestHandler(TcpClient tcpClient)
         {
