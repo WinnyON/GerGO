@@ -46,7 +46,7 @@ namespace GerGO.Communication
 
         public static void SendErrorMessage(NetworkStream stream, string message)
         {
-            string text = "1_" + message;
+            string text = "1^" + message;
             byte[] buffer = Encoding.UTF8.GetBytes(text);
 
             try
@@ -62,7 +62,7 @@ namespace GerGO.Communication
 
         public static void SendMessage(NetworkStream stream, string message)
         {
-            string response = "0 " + message;
+            string response = "0^" + message;
             byte[] buffer = Encoding.UTF8.GetBytes(response);
 
             try

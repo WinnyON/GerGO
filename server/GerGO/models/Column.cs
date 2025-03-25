@@ -10,38 +10,48 @@ namespace GerGO.Models
         public string Name { get; set; }
 
         [XmlAttribute("Type")]
-        public DataType Type { get; set; }
+        public string Type { get; set; }
         
         [XmlAttribute("NotNull")]
         public bool NotNull { get; set; }
         
-        [XmlAttribute("DefaultVal")]
+        [XmlElement("DefaultVal")]
         public string DefaultVal { get; set; }
         
-        [XmlElement("Identity")]
-        public Identity PKIdentity{ get; set; }
+        [XmlElement("PrimaryKey")]
+        public bool PrimaryKey{ get; set; }
+
+        [XmlAttribute("Identity")]
+        public bool Identity { get; set; }
         
         [XmlAttribute("Unique")]
         public bool Unique { get; set; }
 
+        [XmlElement("Check")]
+        public string Check {  get; set; }
+
         public Column()
         {
             Name = string.Empty;
-            Type = DataType.VOID;
+            Type = string.Empty;
             NotNull = false;
             DefaultVal = string.Empty;
-            PKIdentity = new Identity(0, 0);
+            PrimaryKey = false;
+            Identity = false;
             Unique = false;
+            Check = string.Empty;
         }
 
-        public Column(string name, DataType type, bool notNull, string defaultVal, Identity identity, bool unique)
+        public Column(string name, string type, bool notNull, string defaultVal, bool primaryKey, bool identity, bool unique, string check)
         {
             Name = name;
             Type = type;
             NotNull = notNull;
             DefaultVal = defaultVal;
-            PKIdentity = identity;
+            PrimaryKey = primaryKey;
+            Identity = identity;
             Unique = unique;
+            Check = check;
         }
     }
 }

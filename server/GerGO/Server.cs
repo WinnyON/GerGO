@@ -39,6 +39,7 @@ namespace GerGO
                 try
                 {
                     TcpClient client = s_listener.AcceptTcpClient();
+                    s_logger.Info("Connected: " + client.Client.RemoteEndPoint);
                     _ = Task.Run(() => new RequestHandler(client));
                 }
                 catch (SocketException)

@@ -1,5 +1,6 @@
 ﻿using GerGO.Models;
 using GerGO.Utils;
+using System.Data.Common;
 
 namespace GerGO.DataResource
 {
@@ -134,6 +135,97 @@ namespace GerGO.DataResource
             }
 
             return data;
+        }
+
+        public void AddColumn(string dbName, string tableName, Column column)
+        {
+            DataBase result = _dataBases.FirstOrDefault((db) => db.Name.Equals(dbName), null);
+            if (result == null)
+            {
+                _logger.Error("The database doesn't exists!");
+                throw new DataResourceException("The database doesn't exists!");
+            }
+
+            Table resTable = result.Tables.FirstOrDefault((t) => t.Name.Equals(tableName), null);
+            if (resTable == null)
+            {
+                _logger.Error("The table doesn't exists!");
+                throw new DataResourceException("The table doesn't exists!");
+            }
+
+            Column resColumn = resTable.Columns.FirstOrDefault(c =>  c.Name.Equals(column.Name), null);
+            if (resColumn != null)
+            {
+                _dataBases.First((db) => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.Remove(resColumn);
+            }
+
+            try
+            {
+                _dataBases.First((db) => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.Add(column);
+                _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
+            }
+            catch (FileHandlerException ex)
+            {
+                _dataBases.First((db) => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.Remove(column);
+                _logger.Error("Failed to write db data: " + ex.Message);
+                throw new DataResourceException("Failed to drop table!");
+            }
+        }
+
+        public void AddForeignKey(string dbName, string tableName, ForeignKey foreignKey)
+        {
+            DataBase result = _dataBases.FirstOrDefault((db) => db.Name.Equals(dbName), null);
+            if (result == null)
+            {
+                _logger.Error("The database doesn't exists!");
+                throw new DataResourceException("The database doesn't exists!");
+            }
+
+            Table resTable = result.Tables.FirstOrDefault((t) => t.Name.Equals(tableName), null);
+            if (resTable == null)
+            {
+                _logger.Error("The table doesn't exists!");
+                throw new DataResourceException("The table doesn't exists!");
+            }
+
+            Column resColumn = resTable.Columns.FirstOrDefault(c => c.Name.Equals(foreignKey.AttributeName), null);
+            if (resColumn == null)
+            {
+                _logger.Error("The attribute doesn't exists!");
+                throw new DataResourceException("The attribute doesn't exists!");
+            }
+
+            Table refTable = result.Tables.FirstOrDefault((t) => t.Name.Equals(foreignKey.RefTableName), null);
+            if (refTable == null)
+            {
+                _logger.Error("The referrenced table doesn't exists!");
+                throw new DataResourceException("The referrenced table doesn't exists!");
+            }
+
+            Column refColumn = refTable.Columns.FirstOrDefault(c => c.Name.Equals(foreignKey.RefAttributeName), null);
+            if (refColumn == null)
+            {
+                _logger.Error("The referrenced attribute doesn't exists!");
+                throw new DataResourceException("The referrenced attribute doesn't exists!");
+            }
+
+            ForeignKey resFk = resTable.ForeignKeys.FirstOrDefault(fk => fk.Name.Equals(foreignKey.Name), null);
+            if (resFk != null)
+            {
+                _dataBases.First((db) => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).ForeignKeys.Remove(resFk);
+            }
+
+            try
+            {
+                _dataBases.First((db) => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).ForeignKeys.Add(foreignKey);
+                _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
+            }
+            catch (FileHandlerException ex)
+            {
+                _dataBases.First((db) => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).ForeignKeys.Remove(foreignKey);
+                _logger.Error("Failed to write db data: " + ex.Message);
+                throw new DataResourceException("Failed to drop table!");
+            }
         }
     }
 }

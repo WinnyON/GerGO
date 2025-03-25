@@ -13,10 +13,6 @@ namespace GerGO.Models
         [XmlAttribute("RowCount")]
         public int RowCount {  get; set; }
         
-        [XmlArray("PrimaryKeys")]
-        [XmlArrayItem("PrimaryKeyItem")]
-        public List<string> PrinamryKeys { get; set; }
-        
         [XmlArray("ForeignKeys")]
         [XmlArrayItem("ForeignKey")]
         public List<ForeignKey> ForeignKeys { get; set; }
@@ -30,7 +26,6 @@ namespace GerGO.Models
             Name = string.Empty;
             FileName = string.Empty;
             RowCount = 0;
-            PrinamryKeys = new List<string>();
             ForeignKeys = new List<ForeignKey>();
             Columns = new List<Column>();
         }
@@ -40,7 +35,6 @@ namespace GerGO.Models
             Name = name;
             FileName = string.Empty;
             RowCount = 0;
-            PrinamryKeys = new List<string>();
             ForeignKeys = new List<ForeignKey>();
             Columns = new List<Column>();
         }
@@ -49,7 +43,6 @@ namespace GerGO.Models
             Name = name;
             FileName = fileName;
             RowCount = 0;
-            PrinamryKeys = new List<string>();
             ForeignKeys = new List<ForeignKey>();
             Columns = new List<Column>();
         }

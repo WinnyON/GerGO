@@ -9,5 +9,7 @@ namespace GerGO.DataResource
         public void AddTable(string dbName, Table table);
         public void DropTable(string dbName, Table table);
         public List<string[]> GetDBData();
+        public void AddColumn(string dbName, string tableName, Column column);
+        public void AddForeignKey(string dbName, string tableName, ForeignKey foreignKey);
     }
 }
