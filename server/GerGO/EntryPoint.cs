@@ -4,7 +4,7 @@
     {
         public static void Main(string[] args)
         {
-            Server.InitializeServer("192.168.8.170", 12000);
+            Server.InitializeServer("172.30.244.238", 12000);
 
             Server.Start();
             Server.Run();

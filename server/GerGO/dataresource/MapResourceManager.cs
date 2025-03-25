@@ -227,5 +227,65 @@ namespace GerGO.DataResource
                 throw new DataResourceException("Failed to drop table!");
             }
         }
+
+        public List<string[]> GetTableData(string dbName, string tableName)
+        {
+            Table resTable = _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName));
+
+            List<string[]> columnList = new List<string[]>();
+            foreach (var col in resTable.Columns)
+            {
+                string[] columnData = new string[8];
+                columnData[0] = col.Name;
+                columnData[1] = col.Type;
+                columnData[2] = col.NotNull.ToString();
+                columnData[3] = col.DefaultVal;
+                columnData[4] = col.PrimaryKey.ToString();
+                columnData[5] = col.Identity.ToString();
+                columnData[6] = col.Unique.ToString();
+                columnData[7] = col.Check;
+                
+                columnList.Add(columnData);
+            }
+
+            return columnList;
+        }
+
+        public bool ExistsTable(string dbName, string tableName)
+        {
+            DataBase result = _dataBases.FirstOrDefault((db) => db.Name.Equals(dbName), null);
+            if (result == null)
+            {
+                _logger.Warning("The database doesn't exists!");
+                return false;
+            }
+
+            Table resTable = result.Tables.FirstOrDefault((t) => t.Name.Equals(tableName), null);
+            if (resTable == null)
+            {
+                _logger.Warning("The table doesn't exists!");
+                return false;
+            }
+
+            return true;
+        }
+
+        public string[] GetTables(string dbName)
+        {
+            DataBase result = _dataBases.FirstOrDefault((db) => db.Name.Equals(dbName), null);
+            if (result == null)
+            {
+                _logger.Error("The database doesn't exists!");
+                throw new DataResourceException("The database doesn't exists!");
+            }
+
+            string[] resTables = new string[result.Tables.Count];
+            for (int i = 0; i < result.Tables.Count; i++)
+            {
+                resTables[i] = result.Tables[i].Name;
+            }
+
+            return resTables;
+        }
     }
 }
