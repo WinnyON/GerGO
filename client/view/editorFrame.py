@@ -79,6 +79,7 @@ class EditorFrame(QWidget):
 			fk = {"name": data[0], "tableName": data[2], "foreignColumn": data[3], "column": data[1]}
 			code = self.repository.add_foreign_key(self.selected_db, self.selected_table, fk)
 			print(code)
+
 		elif self.selected_editor_type == "columns":
 			data = self.edit_columns_widget.get_data()
 			print(data)

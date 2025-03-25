@@ -21,14 +21,16 @@ class MainEditorPage(QWidget):
         # self.setLayout(self.layout)
         self.setLayout(self.extended_layout)
 
+
         self.editor_frame = EditorFrame(repository)
-        self.create_page = CreatePage(self.editor_layout)
+        self.db_tree = DbTree(self, self.editor_frame)
+        self.create_page = CreatePage(self.editor_layout, self.repository, self.db_tree)
         # self.menu_bar = MenuBar(self)
 
         # self.extended_layout.addWidget(self.menu_bar)
         self.extended_layout.addLayout(self.layout)
 
-        self.db_tree = DbTree(self, self.editor_frame)
+        
         # self.db_tree = QTreeWidget()
         # self.db_tree.setHeaderHidden(False)
         # self.db_tree.setHeaderLabels(['Databases'])
@@ -85,8 +87,24 @@ class MainEditorPage(QWidget):
         self.editor_frame.set_selected_table(table_name)
         self.editor_layout.setCurrentIndex(1)
 
-    def show_create_state(self, type, db_name):
+    def show_create_state(self, create_type, db_name):
         self.editor_layout.setCurrentIndex(2)
+        self.create_page.set_submit_action(create_type, db_name)
+
+    def show_delete_state(self, delete_type, db_name, table_name):
+        print(delete_type, db_name, table_name)
+        if delete_type == "db":
+            code, msg = self.repository.drop_database(db_name)
+            print(code, msg)
+            self.show_unselected_state()
+            return code
+        else:
+            code, msg = self.repository.drop_table(db_name, table_name)
+            print(code, msg)
+            self.show_unselected_state()
+            return code
+        return 1
+        #create delete successful or failed popup
 
     # de a dbTree latja az editor frame-t is s be tudja alllitani azt is
     # def set_selected_db(self, db):

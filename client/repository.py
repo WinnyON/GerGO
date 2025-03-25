@@ -6,13 +6,14 @@ class Repository():
 
 	def create_db(self, db_name):
 		command = "1^" + db_name
-		code = self.client.send_message(command)
-		if "-1" in code:
-			return -1, "There was an error with the connection"
-		elif code[0] == '1':
-			return 1, code.split()[1]
-		elif code[0] == '0':
+		try:
+			code = self.client.send_message(command)
+			print(code)
+			if code[0] == '1':
+				return 1, code.split('^')[1]
 			return 0, "OK"
+		except ConnectionError as ce:
+			return 1, ce
 
 	def build_column_command(self, column):
 		command = column["Name"] + "^" + column["Type"] + "^"
@@ -63,29 +64,30 @@ class Repository():
 		command = "8^" + db_name + "^" + table_name + "^" + self.build_fk_command(fk)
 		return self.client.send_message(command)
 
-	def create_table(self, db_name, table):
-		command = "3^" + db_name + "^" + table["name"]
+	def create_table(self, db_name, table_name):
+		command = "3^" + db_name + "^" + table_name
 		try:
+			# print(command)
 			code = self.client.send_message(command)
 			if code[0] == '1':
-				return 1, code.split()[1]
+				return 1, code.split('^')[1]
 			# else:
 			# 	# if code[0] == '1':
-			# 	# 	return 1, code.split()[1]
+			# 	# 	return 1, code.split('^')[1]
 			# 	for column in table["columns"]:
 			# 		code = self.add_column(column)
 			# 		if code[0] == '1':
-			# 			return 1, code.split()[1]
+			# 			return 1, code.split('^')[1]
 			# 	# code = self.client.send_message("-5")
 			# 	# if code[0] == '1':
-			# 	# 	return 1, code.split()[1]
+			# 	# 	return 1, code.split('^')[1]
 			# 	for fk in table["FK"]:
 			# 		code = self.add_foreign_key(fk)
 			# 		if code[0] == '1':
-			# 			return 1, code.split()[1]
+			# 			return 1, code.split('^')[1]
 			# code = self.client.send_message("-3 END")
 			# if code[0] == '1':
-			# 	return 1, code.split()[1]
+			# 	return 1, code.split('^')[1]
 			return 0, 'OK'
 		except ConnectionError as ce:
 			return 1, ce
@@ -95,7 +97,7 @@ class Repository():
 		try:
 			code = self.client.send_message(command)
 			if code[0] == '1':
-				return 1, code.split()[1]
+				return 1, code.split('^')[1]
 			return 0, 'OK'
 		except ConnectionError as ce:
 			return 1, ce
@@ -105,7 +107,7 @@ class Repository():
 		try:
 			code = self.client.send_message(command)
 			if code[0] == '1':
-				return 1, code.split()[1]
+				return 1, code.split('^')[1]
 			return 0, 'OK'
 		except ConnectionError as ce:
 			return 1, ce

@@ -3,8 +3,11 @@ from PyQt5.QtCore import Qt
 from fonts import h2_font
 
 class CreatePage(QWidget):
-	def __init__(self, parent_stack_layout):
+	def __init__(self, parent_stack_layout, repository, db_tree):
 		super().__init__()
+		self.repository = repository
+		self.db_tree = db_tree
+		self.db_name = None
 		self.parent_stack_layout = parent_stack_layout
 		self.layout = QGridLayout()
 		self.submit_layout = QHBoxLayout()
@@ -36,16 +39,51 @@ class CreatePage(QWidget):
 
 		self.setLayout(self.layout)
 
-	def set_submit_action(self, type):
-		if type == "db":
-			self.submit_button.clicked.connect(switch_to_empty)
+	def set_submit_action(self, create_type, db_name):
+		self.db_name = db_name
+		if create_type == "db":
+			try:
+				self.submit_button.clicked.disconnect(self.switch_to_empty)
+			except Exception:
+				pass
+			try:
+				self.submit_button.clicked.disconnect(self.switch_to_create)
+			except Exception:
+				pass
+			self.submit_button.clicked.connect(self.switch_to_empty)
 		else:
-			self.submit_button.clicked.connect(switch_to_create)
+			try:
+				self.submit_button.clicked.disconnect(self.switch_to_empty)
+			except Exception:
+				pass
+			try:
+				self.submit_button.clicked.disconnect(self.switch_to_create)
+			except Exception:
+				pass
+			self.submit_button.clicked.connect(self.switch_to_create)
 
 	def switch_to_empty(self):
+		print(self.name_text.text())
+		code, msg = self.repository.create_db(self.name_text.text())
+		print(code)
 		self.parent_stack_layout.setCurrentIndex(0)
+		#create popup for success or error
+
+		if code == 0:
+			self.db_tree.add_db(self.name_text.text())
+
+		# self.name_text.setText("")
+
 		#TODO: send data to server to create db
 
 	def switch_to_create(self):
+		print(self.name_text.text())
+		print(self.db_name)
+		code, msg = self.repository.create_table(self.db_name, self.name_text.text())
+		print(code)
 		self.parent_stack_layout.setCurrentIndex(1)
+		if code == 0:
+			self.db_tree.add_table(self.db_name, self.name_text.text())
+		# self.name_text.clear()
+
 		#TODO: load empty column edit page

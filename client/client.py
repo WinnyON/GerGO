@@ -15,6 +15,7 @@ class Client():
 		try:
 			self.client_socket.connect((self.server_ip, self.server_port))
 			self.client_socket.settimeout(600)
+			# self.client_socket.setsockopt(SOL_SOCKET, SO_RCVTIMEO, struct.pack('LL', 15, 0))
 			print("Connection successful")
 			return 0
 		except error:
@@ -22,13 +23,19 @@ class Client():
 			return 1
 
 	def send_message(self, message):
+		# self.connect()
 		try:
 			self.client_socket.send(message.encode())
+			# print("SENT MESSAGE: ", message)
 			self.response = self.client_socket.recv(2048).decode()
 			return self.response
 		except error:
 			print("Connection error when sending message to server")
-			raise ConnectionError("Connection error when sending message to server " + error)
+			raise ConnectionError("Connection error when sending message to server " + str(error))
+
+		# self.close_connection()
+		# except timeout:
+			# raise ConnectionError("Connection timed out when waiting for response")
 
 
 	def close_connection(self):
