@@ -148,7 +148,8 @@ class Repository():
 		except ConnectionError as ce:
 			return 1, ce
 
-	def get_table_data(self, db_name, table_name):
+	# TODO: rename to get_table_columns
+	def get_table_data(self, db_name, table_name): 
 		command = "6^" + db_name + "^" + table_name
 		table_data = []
 		try:
@@ -159,7 +160,7 @@ class Repository():
 				return 1, code.split('^')[0]
 			code = self.client.send_message_pers("0")
 			while code[0] != '0':
-				print(code)
+				# print(code)
 				column = {}
 				data = code.split('^')
 				column["Name"] = data[0]
@@ -180,5 +181,33 @@ class Repository():
 				if code[0] == '1':
 					return 1, code.split('^')[0]
 			return 0, table_data
+		except ConnectionError as ce:
+			return 1, ce
+
+
+	def get_table_foreign_keys(self, db_name, table_name): 
+		command = "10^" + db_name + "^" + table_name
+		key_data = []
+		try:
+			self.client.connect()
+			code = self.client.send_message_pers(command)
+
+			if code[0] == '1':
+				return 1, code.split('^')[0]
+			code = self.client.send_message_pers("0")
+			while code[0] != '0':
+				# print(code)
+				foreign_key = {}
+				data = code.split('^')
+				foreign_key["Constraint Name"] = data[0]
+				foreign_key["Column"] = data[1]
+				foreign_key["Foreign Table"] = data[2]
+				foreign_key["Foreign Column"] = data[3]
+
+				key_data.append(foreign_key)
+				code = self.client.send_message_pers("0^OK")
+				if code[0] == '1':
+					return 1, code.split('^')[0]
+			return 0, key_data
 		except ConnectionError as ce:
 			return 1, ce

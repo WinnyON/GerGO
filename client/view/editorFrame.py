@@ -70,7 +70,7 @@ class EditorFrame(QWidget):
 
 	def change_editor_to_create_fk(self, db_name, table_name):
 		code, data = self.repository.get_tables(db_name)
-		if code != '1':
+		if code != 1:
 			table_details = []
 			current_columns = []
 			for table in data:
@@ -91,8 +91,11 @@ class EditorFrame(QWidget):
 		self.selected_editor_type = "create_fk"
 
 	def change_editor_to_edit_fk(self):
-		self.editor_type_layout.setCurrentIndex(3)
-		self.selected_editor_type = "edit_fk"
+		code, data = self.repository.get_table_foreign_keys(self.selected_db, self.selected_table)
+		if code != 1:
+			self.edit_foreign_keys_widget.set_table_data(data)
+			self.editor_type_layout.setCurrentIndex(3)
+			self.selected_editor_type = "edit_fk"
 
 
 	def set_selected_db(self, db):
@@ -116,6 +119,9 @@ class EditorFrame(QWidget):
 			print(data)
 			code = self.repository.add_columns(self.selected_db, self.selected_table, data)
 			print(code)
+
+		# elif self.selected_editor_type == "edit_fk":
+			# data = self.repository.get_table_foreign_keys(self.selected_db, self.selected_table)
 
 
 

@@ -36,6 +36,20 @@ class EditForeignKeys(QTableWidget):
 		else:
 			super().keyPressEvent(event)
 
+	def set_table_data(self, table_data):
+		header_labels = ["Constraint Name", "Column", "Foreign Table", "Foreign Column"]
+		self.setRowCount(len(table_data))
+		self.setColumnCount(4)
+		self.setHorizontalHeaderLabels(header_labels)
+
+		for row in range(self.rowCount()):
+			foreign_key = table_data[row]
+			for column in range(self.columnCount()):
+				item = QTableWidgetItem(foreign_key[header_labels[column]])
+				item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
+				self.setItem(row, column, item)
+
+
 	def set_demo_data(self):
 		self.setRowCount(10)
 		self.setColumnCount(4)
