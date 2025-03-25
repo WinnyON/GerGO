@@ -45,10 +45,24 @@ class ConstraintEditor(QWidget):
 		self.form_layout.addRow(self.constraint_name_label, self.constraint_name_input)
 		self.form_layout.addRow(self.current_table_label, self.combo_box)
 
-		self.create_demo_tree()
+		# self.create_demo_tree()
 
 		self.layout.addLayout(self.form_layout, 0, 0, 2, 2)
 		self.layout.addWidget(self.table_tree, 2, 0, 2, 1)
+
+	def load_table_columns(self, columns):
+		self.combo_box.clear()
+		self.combo_box.addItems(columns)
+
+
+	def load_tree_data(self, tables):
+		for table in tables:
+			root_item = QTreeWidgetItem([table["name"]])
+			root_item.setFlags(root_item.flags() & ~Qt.ItemIsSelectable)
+			self.table_tree.addTopLevelItem(root_item)
+			for column in table["columns"]:
+				column_item = QTreeWidgetItem([column["Name"]])
+				root_item.addChild(column_item)
 
 	def create_demo_tree(self):
 		rootItem1 = QTreeWidgetItem(['Table 1'])
@@ -79,7 +93,7 @@ class ConstraintEditor(QWidget):
 		item = self.table_tree.currentItem()
 		if item and self.get_item_level(item) == 1:
 			self.selected_column = item.text(0)
-			self.selected_table = item.parent.text(0)
+			self.selected_table = item.parent().text(0)
 
 
 	def get_data(self):

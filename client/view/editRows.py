@@ -56,3 +56,12 @@ class EditRows(QTableWidget):
 				row_data[self.horizontalHeaderItem(column).text()] = self.item(row, column).text()
 			data.append(row_data)
 		return data
+
+	def add_row(self):
+		self.setRowCount(self.rowCount() + 1)
+		row = self.rowCount() - 1
+		for column in range(self.columnCount()):
+			item = QTableWidgetItem("")
+			item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
+			self.setItem(row, column, item)
+

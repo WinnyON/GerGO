@@ -21,7 +21,6 @@ class MainEditorPage(QWidget):
         # self.setLayout(self.layout)
         self.setLayout(self.extended_layout)
 
-
         self.editor_frame = EditorFrame(repository)
         self.db_tree = DbTree(self, self.editor_frame)
         self.create_page = CreatePage(self.editor_layout, self.repository, self.db_tree)
@@ -54,7 +53,7 @@ class MainEditorPage(QWidget):
         self.sidebar_layout.addWidget(self.db_tree)
 
         # self.create_demo_tree()
-        self.db_tree.create_demo_tree()
+        # self.db_tree.create_demo_tree()
 
 
         self.editor_layout.addWidget(self.nothing_to_see_label)
@@ -65,6 +64,8 @@ class MainEditorPage(QWidget):
         self.layout.addLayout(self.editor_layout, 3)
 
         self.show_unselected_state()
+
+
 
 
     # def create_demo_tree(self):
@@ -78,6 +79,10 @@ class MainEditorPage(QWidget):
     # 	rootItem1.addChild(childItem1)
 
     # 	self.db_tree.setCurrentItem(childItem1)
+
+    def load_tree_data(self):
+        code, self.db_data = self.repository.get_db_data()
+        self.db_tree.create_tree(self.db_data)
 
     def show_unselected_state(self):
     	self.editor_layout.setCurrentIndex(0)

@@ -11,9 +11,10 @@ sys.path.insert(0, parent_folder)
 from client import Client
 
 class ConnectPage(QWidget):
-    def __init__(self, parent_stack_layout, conn_client):
+    def __init__(self, parent_stack_layout, conn_client, main_editor):
         super().__init__()
         self.client = conn_client
+        self.main_editor = main_editor
         self.parent_stack_layout = parent_stack_layout
         self.layout = QGridLayout()
         self.form_layout = QFormLayout()
@@ -64,5 +65,6 @@ class ConnectPage(QWidget):
         return_code = self.client.connect()
         if return_code == 0:
             self.parent_stack_layout.setCurrentIndex(1)
+            self.main_editor.load_tree_data()
         else:
             self.failed_connection()

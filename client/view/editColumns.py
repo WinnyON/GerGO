@@ -22,7 +22,7 @@ class EditColumns(QTableWidget):
 		self.verticalHeader().setDefaultAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
 
 		self.verticalHeader().sectionClicked.connect(self.select_row)
-		self.set_demo_data()
+		# self.set_demo_data()
 
 	def select_row(self, row):
 		print(row)
@@ -36,6 +36,56 @@ class EditColumns(QTableWidget):
 				self.removeRow(row)
 		else:
 			super().keyPressEvent(event)
+
+	def set_table_data(self, table_data):
+		header_labels = ["Name", "Type", "Check", "Default", "Primary Key", "Identity", "Not NULL", "Unique"]
+		self.setRowCount(len(table_data))
+		self.setColumnCount(8)
+		self.setHorizontalHeaderLabels(header_labels)
+
+		for row in range(self.rowCount()):
+			col = table_data[row]
+			for column in range(self.columnCount()):
+				if column > 3:
+					container = QWidget()
+					container_layout = QHBoxLayout()
+					container_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+					container.setLayout(container_layout)
+
+					checkbox = QCheckBox()
+					checkbox.setChecked(col[header_labels[column]])
+					checkbox.setMinimumSize(10,20)
+					container_layout.addWidget(checkbox)
+					
+					self.setCellWidget(row, column, container)
+
+				else:
+					item = QTableWidgetItem(col[header_labels[column]])
+					item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
+					item.setTextAlignment(Qt.AlignCenter)
+					self.setItem(row, column, item)
+
+
+		self.setStyleSheet("""
+			    QTableWidget::item {
+			        padding: 5px;
+			    }
+			""")
+
+
+		header = self.horizontalHeader()
+		header.setMinimumSectionSize(50)
+		header.setMaximumSectionSize(500)
+		for column in range(self.columnCount()):
+			if column > 3:
+				header.setSectionResizeMode(column, QHeaderView.ResizeToContents)
+			else:
+				header.setSectionResizeMode(column, QHeaderView.Interactive)
+				header.resizeSection(column, 150)
+
+		header = self.verticalHeader()
+		for row in range(self.rowCount()):
+			header.setSectionResizeMode(row, QHeaderView.ResizeToContents)
 
 	def set_demo_data(self):
 		self.setRowCount(10)
@@ -96,3 +146,25 @@ class EditColumns(QTableWidget):
 					column_data[self.horizontalHeaderItem(column).text()] = self.cellWidget(row, column).findChild(QCheckBox).isChecked()
 			data.append(column_data)
 		return data
+
+	def add_row(self):
+		self.setRowCount(self.rowCount() + 1)
+		row = self.rowCount() - 1
+		for column in range(self.columnCount()):
+			if column > 3:
+				container = QWidget()
+				container_layout = QHBoxLayout()
+				container_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+				container.setLayout(container_layout)
+
+				checkbox = QCheckBox()
+				checkbox.setMinimumSize(10,20)
+				container_layout.addWidget(checkbox)
+				
+				self.setCellWidget(row, column, container)
+
+			else:
+				item = QTableWidgetItem("")
+				item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
+				item.setTextAlignment(Qt.AlignCenter)
+				self.setItem(row, column, item)

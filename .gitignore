@@ -1,1 +1,2 @@
-client/*/__pycache__/*
+client/__pycache__/
+client/view/__pycache__/

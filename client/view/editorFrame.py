@@ -26,6 +26,8 @@ class EditorFrame(QWidget):
 		self.foreign_key_button.clicked.connect(self.change_editor_to_edit_fk)
 		self.apply_button = QPushButton('Apply changes')
 		self.apply_button.clicked.connect(self.apply_changes_handler)
+		self.add_entry_button = QPushButton('Add Entry')
+		self.add_entry_button.clicked.connect(self.add_column_handler)
 
 		self.edit_rows_widget = EditRows()
 		self.edit_columns_widget = EditColumns()
@@ -35,6 +37,7 @@ class EditorFrame(QWidget):
 		self.header_layout.addWidget(self.columns_button)
 		self.header_layout.addWidget(self.rows_button)
 		self.header_layout.addWidget(self.foreign_key_button)
+		self.header_layout.addWidget(self.add_entry_button)
 		self.header_layout.addWidget(self.apply_button)
 
 		self.editor_type_layout.addWidget(self.edit_rows_widget)
@@ -47,15 +50,43 @@ class EditorFrame(QWidget):
 		self.layout.addLayout(self.header_layout, 0, 0, 1, 3)
 		self.layout.addLayout(self.editor_type_layout, 1, 0, 1, 6)
 
+
+	def add_column_handler(self):
+		if self.selected_editor_type == "columns":
+			self.edit_columns_widget.add_row()
+		elif self.selected_editor_type == "rows":
+			self.edit_rows_widget.add_row()
+
 	def change_editor_to_rows(self):
 		self.editor_type_layout.setCurrentIndex(0)
 		self.selected_editor_type = "rows"
 
-	def change_editor_to_columns(self):
-		self.editor_type_layout.setCurrentIndex(1)
-		self.selected_editor_type = "columns"
+	def change_editor_to_columns(self):	
+		code, data = self.repository.get_table_data(self.selected_db, self.selected_table)
+		if code != '1':
+			self.edit_columns_widget.set_table_data(data)
+			self.editor_type_layout.setCurrentIndex(1)
+			self.selected_editor_type = "columns"
 
 	def change_editor_to_create_fk(self, db_name, table_name):
+		code, data = self.repository.get_tables(db_name)
+		if code != '1':
+			table_details = []
+			current_columns = []
+			for table in data:
+				code, columns = self.repository.get_table_data(db_name, table)
+				if code != '1':
+					if table == table_name:
+						current_columns = [column["Name"] for column in columns] 
+					else:
+						table_details.append({"name": table, "columns": columns})
+
+			print(current_columns)
+			self.edit_constraints_widget.load_tree_data(table_details)
+			self.edit_constraints_widget.load_table_columns(current_columns)
+
+
+
 		self.editor_type_layout.setCurrentIndex(2)
 		self.selected_editor_type = "create_fk"
 

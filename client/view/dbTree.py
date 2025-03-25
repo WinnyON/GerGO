@@ -127,17 +127,29 @@ class DbTree(QTreeWidget):
 			table_item = QTreeWidgetItem([table_name])
 			items[0].addChild(table_item)
 
-	def create_demo_tree(self):
-		rootItem1 = QTreeWidgetItem(['Root Item 1'])
-		rootItem2 = QTreeWidgetItem(['Root Item 2'])
-		rootItem3 = QTreeWidgetItem(['valami'])
-		self.addTopLevelItem(rootItem1)
-		self.addTopLevelItem(rootItem2)
-		self.addTopLevelItem(rootItem3)
-		childItem1 = QTreeWidgetItem(['Child Item 1'])
-		childItem2 = QTreeWidgetItem(['Child Item 2'])
-		childItem3 = QTreeWidgetItem(['abc'])
-		rootItem1.addChild(childItem1)
-		rootItem1.addChild(childItem2)
-		rootItem3.addChild(childItem3)
-		# self.setCurrentItem(childItem1)
+
+	def create_tree(self, databases):
+		print(databases)
+		for db in databases:
+			print(db)
+			root_item = QTreeWidgetItem([db["name"]])
+			self.addTopLevelItem(root_item)
+			for table in db["tables"]:
+				table_item = QTreeWidgetItem([table])
+				root_item.addChild(table_item)
+
+
+	# def create_demo_tree(self):
+	# 	rootItem1 = QTreeWidgetItem(['Root Item 1'])
+	# 	rootItem2 = QTreeWidgetItem(['Root Item 2'])
+	# 	rootItem3 = QTreeWidgetItem(['valami'])
+	# 	self.addTopLevelItem(rootItem1)
+	# 	self.addTopLevelItem(rootItem2)
+	# 	self.addTopLevelItem(rootItem3)
+	# 	childItem1 = QTreeWidgetItem(['Child Item 1'])
+	# 	childItem2 = QTreeWidgetItem(['Child Item 2'])
+	# 	childItem3 = QTreeWidgetItem(['abc'])
+	# 	rootItem1.addChild(childItem1)
+	# 	rootItem1.addChild(childItem2)
+	# 	rootItem3.addChild(childItem3)
+	# 	# self.setCurrentItem(childItem1)
