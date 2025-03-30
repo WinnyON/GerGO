@@ -4,7 +4,7 @@ using GerGO.Models;
 using GerGO.Utils;
 using System.Net.Sockets;
 
-namespace GerGO.Functionalities
+namespace GerGO.Functionalities.MetaData
 {
     class AddColumnCommand : Command
     {
@@ -34,20 +34,20 @@ namespace GerGO.Functionalities
                 else
                     column.DefaultVal = arguments[7];
 
-                if (arguments[8].Equals("--"))
-                    column.Identity = false;
-                else
-                    column.Identity = true;
-
-                if (arguments[9].Equals("--"))
-                    column.Unique = false;
-                else
-                    column.Unique= true;
+                if (!arguments[8].Equals("--"))
+                    column.PKIdentity.Seed = int.Parse(arguments[8]);
+                if (!arguments[9].Equals("--"))
+                    column.PKIdentity.Step = int.Parse(arguments[9]);
 
                 if (arguments[10].Equals("--"))
+                    column.Unique = false;
+                else
+                    column.Unique = true;
+
+                if (arguments[11].Equals("--"))
                     column.Check = string.Empty;
                 else
-                    column.Check= arguments[10];
+                    column.Check = arguments[11];
 
                 ResourceManager manager = ResourceManagerFactory.GetInstance();
                 manager.AddColumn(dbName, tableName, column);

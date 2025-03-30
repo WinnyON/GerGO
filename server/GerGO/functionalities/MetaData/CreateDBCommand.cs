@@ -4,7 +4,7 @@ using GerGO.DataResource;
 using GerGO.Utils;
 using GerGO.Communication;
 
-namespace GerGO.Functionalities
+namespace GerGO.Functionalities.MetaData
 {
     class CreateDBCommand : Command
     {

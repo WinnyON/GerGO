@@ -3,7 +3,7 @@ using GerGO.DataResource;
 using GerGO.Utils;
 using System.Net.Sockets;
 
-namespace GerGO.Functionalities
+namespace GerGO.Functionalities.MetaData
 {
     class GetForeignKeysCommand : Command
     {

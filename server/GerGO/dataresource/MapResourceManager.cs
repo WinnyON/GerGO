@@ -234,16 +234,18 @@ namespace GerGO.DataResource
             List<string[]> columnList = new List<string[]>();
             foreach (var col in resTable.Columns)
             {
-                string[] columnData = new string[8];
-                columnData[0] = col.Name;
-                columnData[1] = col.Type;
-                columnData[2] = col.NotNull.ToString();
-                columnData[3] = col.DefaultVal;
-                columnData[4] = col.PrimaryKey.ToString();
-                columnData[5] = col.Identity.ToString();
-                columnData[6] = col.Unique.ToString();
-                columnData[7] = col.Check;
-                
+                string[] columnData =
+                [
+                    col.Name,
+                    col.Type,
+                    col.NotNull.ToString(),
+                    col.DefaultVal,
+                    col.PrimaryKey.ToString(),
+                    col.PKIdentity.Seed.ToString(),
+                    col.PKIdentity.Step.ToString(),
+                    col.Unique.ToString(),
+                    col.Check,
+                ];
                 columnList.Add(columnData);
             }
 
@@ -294,12 +296,7 @@ namespace GerGO.DataResource
             Table table = _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName));
             foreach (var fk in  table.ForeignKeys)
             {
-                string[] data = new string[4];
-                data[0] = fk.Name;
-                data[1] = fk.AttributeName;
-                data[2] = fk.RefTableName;
-                data[3] = fk.RefAttributeName;
-
+                string[] data = [fk.Name, fk.AttributeName, fk.RefTableName, fk.RefAttributeName];
                 fkList.Add(data);
             }
 

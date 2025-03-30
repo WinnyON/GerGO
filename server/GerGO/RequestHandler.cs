@@ -1,4 +1,5 @@
 ﻿using GerGO.Functionalities;
+using GerGO.Functionalities.MetaData;
 using GerGO.Utils;
 using GerGO.Communication;
 using System.Net.Sockets;
@@ -6,8 +7,15 @@ using System.Text;
 
 namespace GerGO
 {
-    enum RequestType { EXIT, CREATE_DB, DROP_DB, CREATE_TABLE, DROP_TABLE, GET_DB_DETAILS, GET_TABLE_DETAILS,
-        ADD_COLUMN, ADD_FOREIGN_KEY, GET_TABLES, GET_FOREIGN_KEYS }
+    enum RequestType {
+        EXIT, 
+        CREATE_DB, DROP_DB, 
+        CREATE_TABLE, DROP_TABLE,
+        GET_DB_DETAILS, GET_TABLE_DETAILS,
+        ADD_COLUMN, 
+        ADD_FOREIGN_KEY, 
+        GET_TABLES, 
+        GET_FOREIGN_KEYS }
     class RequestHandler
     {
         private TcpClient _tcpClient;
@@ -18,18 +26,20 @@ namespace GerGO
 
         static RequestHandler()
         {
-            s_commands = new List<Command>();
-            s_commands.Add(new ExitCommand());
-            s_commands.Add(new CreateDBCommand());
-            s_commands.Add(new DropDBCommand());
-            s_commands.Add(new CreateTableCommand());
-            s_commands.Add(new DropTableCommand());
-            s_commands.Add(new GetDBDetailsCommand());
-            s_commands.Add(new GetTableDetailsCommand());
-            s_commands.Add(new AddColumnCommand());
-            s_commands.Add(new AddForeignKeyCommand());
-            s_commands.Add(new GetTablesCommand());
-            s_commands.Add(new GetForeignKeysCommand());
+            s_commands =
+            [
+                new ExitCommand(),
+                new CreateDBCommand(),
+                new DropDBCommand(),
+                new CreateTableCommand(),
+                new DropTableCommand(),
+                new GetDBDetailsCommand(),
+                new GetTableDetailsCommand(),
+                new AddColumnCommand(),
+                new AddForeignKeyCommand(),
+                new GetTablesCommand(),
+                new GetForeignKeysCommand(),
+            ];
         }
         public RequestHandler(TcpClient tcpClient)
         {
