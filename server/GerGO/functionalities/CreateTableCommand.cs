@@ -24,13 +24,13 @@ namespace GerGO.Functionalities
             }
             catch (IndexOutOfRangeException)
             {
-                _logger.Error("Not enough arguments provided!");
-                throw new CommandException("Not enough arguments provided!");
+                _logger.Error("Not enough arguments provided for creating Table!");
+                throw new CommandException("Not enough arguments provided for creating Table!");
             }
             catch (DataResourceException ex)
             {
-                _logger.Error("Failed to complete command: " + ex.Message);
-                throw new CommandException(ex.Message);
+                _logger.Error($"Failed to create table {arguments[2]}: {ex.Message}");
+                throw new CommandException($"Failed to create table {arguments[2]}: {ex.Message}");
             }
 
             try

@@ -22,13 +22,13 @@ namespace GerGO.Functionalities
             }
             catch (IndexOutOfRangeException)
             {
-                _logger.Error("No arguments provided!");
-                throw new CommandException("No arguments provided!");
+                _logger.Error("Not enough arguments provided for creating DB!");
+                throw new CommandException("Not enough arguments provided for creating DB!");
             }
             catch (DataResourceException ex)
             {
-                _logger.Error("Failed to complete command: " + ex.Message);
-                throw new CommandException(ex.Message);
+                _logger.Error($"Failed to create DB {arguments[1]}: {ex.Message}");
+                throw new CommandException($"Failed to create DB {arguments[1]}: {ex.Message}");
             }
 
             try

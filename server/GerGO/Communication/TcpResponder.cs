@@ -18,8 +18,8 @@ namespace GerGO.Communication
             }
             catch (IOException)
             {
-                _logger.Error("Failed to send dataMessage!");
-                throw new CommunicationException("Failed to send dataMessage!");
+                _logger.Error("Failed to send dataMessage: IOException on the network stream!");
+                throw new CommunicationException("IOException on the network stream!");
             }
         }
 
@@ -34,8 +34,8 @@ namespace GerGO.Communication
             }
             catch (IOException)
             {
-                _logger.Error("Failed to send error message!");
-                throw new CommunicationException("Failed to send error message!");
+                _logger.Error("Failed to send error message: IOException on the network stream!");
+                throw new CommunicationException("IOException on the network stream!");
             }
         }
 
@@ -50,8 +50,8 @@ namespace GerGO.Communication
             }
             catch (IOException)
             {
-                _logger.Error("Failed to send message!");
-                throw new CommunicationException("Failed to send message!");
+                _logger.Error("Failed to send message: IOException on the network stream!");
+                throw new CommunicationException("IOException on the network stream!");
             }
         }
     }

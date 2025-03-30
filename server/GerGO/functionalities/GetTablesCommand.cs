@@ -21,18 +21,18 @@ namespace GerGO.Functionalities
             }
             catch (IndexOutOfRangeException)
             {
-                _logger.Error("Wrong request format!");
-                throw new CommandException("Wrong request format!");
+                _logger.Error("Not enough arguments for retrieving table data!");
+                throw new CommandException("Not enough arguments for retrieving table data!");
             }
             catch (DataResourceException ex)
             {
-                _logger.Error("Failed to retrieve table data!");
-                throw new CommandException("Failed to retrieve table data!");
+                _logger.Error($"Failed to retrieve database data: {ex.Message}");
+                throw new CommandException($"Failed to retrieve database data {ex.Message}");
             }
             catch (CommunicationException ex)
             {
-                _logger.Error("Failed to send table data!");
-                throw new CommandException("Failed to send table data!");
+                _logger.Error($"Failed to send database data: {ex.Message}");
+                throw new CommandException($"Failed to send database data: {ex.Message}");
             }
         }
     }

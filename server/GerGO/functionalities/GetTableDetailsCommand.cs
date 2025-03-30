@@ -42,18 +42,18 @@ namespace GerGO.Functionalities
             }
             catch (IOException)
             {
-                _logger.Error("Error in reqest!");
-                throw new CommandException("Failed to retrieve database data!");
+                _logger.Error("Failed to retrieve table data!");
+                throw new CommandException("Failed to retrieve table data!");
             }
             catch (DataResourceException ex)
             {
-                _logger.Error("Failed to retrive database data! " + ex.Message);
-                throw new CommandException("Failed to retrieve database data!");
+                _logger.Error($"Failed to retrive table data: {ex.Message}");
+                throw new CommandException($"Failed to retrive table data: {ex.Message}");
             }
             catch (CommunicationException ex)
             {
-                _logger.Error("Error in communication! " + ex.Message);
-                throw new CommandException("Error in communication! ");
+                _logger.Error($"Error in communication: {ex.Message}");
+                throw new CommandException($"Error in communication: {ex.Message}");
             }
         }
     }

@@ -32,7 +32,7 @@ namespace GerGO.Utils
             }
             catch (Exception ex)
             {
-                _logger.Error("Failed to serialize! " + ex.Message);
+                _logger.Error($"Failed to serialize: {ex.Message}");
                 throw new FileHandlerException("Failed to serialize!");
             }
         }
@@ -66,7 +66,7 @@ namespace GerGO.Utils
             }
             catch (Exception ex)
             {
-                _logger.Error("Failed to deserialize! " + ex.Message);
+                _logger.Error($"Failed to deserialize: {ex.Message}");
                 throw new FileHandlerException("Failed to deserialize!");
             }
         }

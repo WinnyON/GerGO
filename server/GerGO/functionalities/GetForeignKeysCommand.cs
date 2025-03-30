@@ -42,18 +42,18 @@ namespace GerGO.Functionalities
             }
             catch (IOException)
             {
-                _logger.Error("Error in reqest!");
+                _logger.Error("Failed to retrieve foreign keys!");
                 throw new CommandException("Failed to retrieve foreign keys!");
             }
             catch (DataResourceException ex)
             {
-                _logger.Error("Failed to retrive foreign keys! " + ex.Message);
-                throw new CommandException("Failed to retrieve foreign keys!");
+                _logger.Error($"Failed to retrieve foreign keys; {ex.Message}");
+                throw new CommandException($"Failed to retrieve foreign keys; {ex.Message}");
             }
             catch (CommunicationException ex)
             {
-                _logger.Error("Error in communication! " + ex.Message);
-                throw new CommandException("Error in communication! ");
+                _logger.Error($"Error in communication: {ex.Message}");
+                throw new CommandException($"Error in communication: {ex.Message}");
             }
         }
     }

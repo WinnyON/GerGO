@@ -21,13 +21,13 @@ namespace GerGO.Functionalities
             }
             catch (IndexOutOfRangeException)
             {
-                _logger.Error("No arguments provided!");
-                throw new CommandException("No arguments provided!");
+                _logger.Error("Not enough arguments provided for dropping DB!");
+                throw new CommandException("Not enough arguments provided for dropping DB!");
             }
             catch (DataResourceException ex)
             {
-                _logger.Error("Failed to complete command: " + ex.Message);
-                throw new CommandException(ex.Message);
+                _logger.Error($"Failed to drop DB {arguments[1]}: {ex.Message}");
+                throw new CommandException($"Failed to drop DB {arguments[1]}: {ex.Message}");
             }
 
             try

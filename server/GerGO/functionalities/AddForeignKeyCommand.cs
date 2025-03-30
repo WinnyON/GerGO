@@ -26,13 +26,13 @@ namespace GerGO.Functionalities
             }
             catch (IndexOutOfRangeException)
             {
-                _logger.Error("Not enough arguments provided!");
-                throw new CommandException("Not enough arguments provided!");
+                _logger.Error("Not enough arguments provided for adding foreign key!");
+                throw new CommandException("Not enough arguments provided for adding foreign key!");
             }
             catch (DataResourceException ex)
             {
-                _logger.Error("Failed to complete command: " + ex.Message);
-                throw new CommandException(ex.Message);
+                _logger.Error($"Failed to add foreign key: {ex.Message}");
+                throw new CommandException($"Failed to add foreign key: {ex.Message}");
             }
 
             try

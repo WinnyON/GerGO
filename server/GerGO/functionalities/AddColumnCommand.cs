@@ -54,13 +54,13 @@ namespace GerGO.Functionalities
             }
             catch (IndexOutOfRangeException)
             {
-                _logger.Error("Not enough arguments provided!");
-                throw new CommandException("Not enough arguments provided!");
+                _logger.Error("Not enough arguments provided for adding column!");
+                throw new CommandException("Not enough arguments provided for adding column!");
             }
             catch (DataResourceException ex)
             {
-                _logger.Error("Failed to complete command: " + ex.Message);
-                throw new CommandException(ex.Message);
+                _logger.Error($"Failed to add column: {ex.Message}");
+                throw new CommandException($"Failed to add column: {ex.Message}");
             }
 
             try

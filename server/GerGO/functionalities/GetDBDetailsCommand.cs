@@ -27,7 +27,7 @@ namespace GerGO.Functionalities
             }
             catch (DataResourceException ex)
             {
-                _logger.Error("Failed to retrive database data! " + ex.Message);
+                _logger.Error($"Failed to retrive database data: {ex.Message}");
                 throw new CommandException("Failed to retrieve database data!");
             }
             catch (CommunicationException ex)

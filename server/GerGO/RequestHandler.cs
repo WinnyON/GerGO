@@ -34,62 +34,72 @@ namespace GerGO
         public RequestHandler(TcpClient tcpClient)
         {
             _tcpClient = tcpClient;
+            _tcpClient.ReceiveTimeout = 15000;
             NetworkStream stream = _tcpClient.GetStream();
 
-            _logger.Info("Thread " + Thread.CurrentThread.ManagedThreadId + " - Got request!");
+            _logger.Info($"Thread {Thread.CurrentThread.ManagedThreadId} - Got request!");
             string[] commandArgs;
 
-            try
+            while (true)
             {
-                byte[] buffer = new byte[1024];
-                stream.Read(buffer, 0, buffer.Length);
-
-                string request = Encoding.UTF8.GetString(buffer);
-
-                commandArgs = request.Split("^");
-                for (int i = 0; i < commandArgs.Length; i++)
+                try
                 {
-                    commandArgs[i] = commandArgs[i].Replace("\0", "");
+                    byte[] buffer = new byte[1024];
+                    stream.Read(buffer, 0, buffer.Length);
+
+                    string request = Encoding.UTF8.GetString(buffer);
+                    //Console.WriteLine(request);
+
+                    commandArgs = request.Split("^");
+                    for (int i = 0; i < commandArgs.Length; i++)
+                    {
+                        commandArgs[i] = commandArgs[i].Replace("\0", "");
+                    }
+
+                    if (commandArgs.Length == 0 || string.IsNullOrEmpty(commandArgs[0]))
+                    {
+                        _logger.Error("No arguments provided in the request!");
+                        TcpResponder.SendErrorMessage(stream, "No arguments provided in the request!");
+                        tcpClient.Close();
+                        return;
+                    }
+
+                    try
+                    {
+                        RequestType type = (RequestType)int.Parse(commandArgs[0]);
+
+                        s_commands[(int)type].Execute(stream, commandArgs);
+
+                        _logger.Info($"Thread {Thread.CurrentThread.ManagedThreadId} - Finished command succesfully: {type.ToString()} - {_tcpClient.Client.RemoteEndPoint}");
+                    }
+                    catch (FormatException)
+                    {
+                        _logger.Error("Badly formatted request: not numeric request code!");
+                        TcpResponder.SendErrorMessage(stream, "Badly formatted request: not numeric request code!");
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        _logger.Error("Badly formatted request: not valid request code!");
+                        TcpResponder.SendErrorMessage(stream, "Badly formatted request: not valid request code!");
+                    }
+                    catch (CommandException ex)
+                    {
+                        _logger.Error($"Got command exception: {ex.Message}");
+                        TcpResponder.SendErrorMessage(stream, ex.Message);
+                    }
+                }
+                catch (IOException)
+                {
+                    _logger.Warning($"Thread {Thread.CurrentThread.ManagedThreadId} - Connection {_tcpClient.Client.RemoteEndPoint} timed out!");
+                    break;
+                }
+                catch (CommunicationException)
+                {
+                    _logger.Error($"Thread {Thread.CurrentThread.ManagedThreadId} - got communication exception,  Connection {_tcpClient.Client.RemoteEndPoint} timed out!");
+                    break;
                 }
             }
-            catch (IOException)
-            {
-                _logger.Error("Failed to read request!");
-                return;
-            }
-
-            if (commandArgs.Length == 0)
-            {
-                _logger.Error("No request!");
-                TcpResponder.SendErrorMessage(stream, "No request!");
-                tcpClient.Close();
-                return;
-            }
-
-            try
-            {
-                RequestType type = (RequestType)int.Parse(commandArgs[0]);
-
-                s_commands[(int)type].Execute(stream, commandArgs);
-
-                _logger.Info("Thread " + Thread.CurrentThread.ManagedThreadId + " - Finished command succesfully: " + type.ToString());
-            }
-            catch (FormatException)
-            {
-                _logger.Error("Error in request!");
-                TcpResponder.SendErrorMessage(stream, "Error in request!");
-            }
-            catch (IndexOutOfRangeException)
-            {
-                _logger.Error("Not valid request!");
-                TcpResponder.SendErrorMessage(stream, "Not valid request!");
-            }
-            catch (CommandException ex)
-            {
-                _logger.Error("Got command exception: " + ex.Message);
-                TcpResponder.SendErrorMessage(stream, "Failed to complete command: " + ex.Message);
-            }
-            //tcpClient.Close();
+            _tcpClient.Close();
         }
     }
 }

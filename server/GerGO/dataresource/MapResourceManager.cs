@@ -6,16 +6,15 @@ namespace GerGO.DataResource
 {
     class MapResourceManager : ResourceManager
     {
-        private List<DataBase> _dataBases;
         private Logger _logger = LoggerFactory.GetLogger();
-        private FileHandler _fileHandler = FileHandlerFactory.GetHandler();
 
+        private List<DataBase> _dataBases;
+        private FileHandler _fileHandler = FileHandlerFactory.GetHandler();
         private string _dbDataSourceFile;
 
         public MapResourceManager()
         {
             _dbDataSourceFile = "Catalog.xml";
-            //_dataBases = new List<DataBase>();
             _dataBases = _fileHandler.ReadDataBaseData(_dbDataSourceFile);
         }
 
@@ -35,7 +34,7 @@ namespace GerGO.DataResource
             catch (FileHandlerException ex)
             {
                 _dataBases.Remove(dataBase);
-                _logger.Error("Failed to write db data: " + ex.Message);
+                _logger.Error($"Failed to write db data: {ex.Message}");
                 throw new DataResourceException("Failed to create db!");
             }
         }
@@ -45,8 +44,8 @@ namespace GerGO.DataResource
             DataBase result = _dataBases.FirstOrDefault((db) => db.Name.Equals(dataBase.Name), null);
             if (result == null)
             {
-                _logger.Error("The database doesn't exists!");
-                throw new DataResourceException("The database doesn't exists!");
+                _logger.Error("The database doesn't exist!");
+                throw new DataResourceException("The database doesn't exist!");
             }
 
             try
@@ -57,7 +56,7 @@ namespace GerGO.DataResource
             catch (FileHandlerException ex)
             {
                 _dataBases.Add(result);
-                _logger.Error("Failed to write db data: " + ex.Message);
+                _logger.Error($"Failed to write db data: {ex.Message}");
                 throw new DataResourceException("Failed to delete db!");
             }
         }
@@ -66,8 +65,8 @@ namespace GerGO.DataResource
             DataBase result = _dataBases.FirstOrDefault((db) => db.Name.Equals(dbName), null);
             if (result == null)
             {
-                _logger.Error("The database doesn't exists!");
-                throw new DataResourceException("The database doesn't exists!");
+                _logger.Error("The database doesn't exist!");
+                throw new DataResourceException("The database doesn't exist!");
             }
 
             Table resTable = result.Tables.FirstOrDefault((t) => t.Name.Equals(table.Name), null);
@@ -85,7 +84,7 @@ namespace GerGO.DataResource
             catch (FileHandlerException ex)
             {
                 _dataBases.First((db) => db.Name.Equals(dbName)).Tables.Remove(table);
-                _logger.Error("Failed to write db data: " + ex.Message);
+                _logger.Error($"Failed to write db data: {ex.Message}");
                 throw new DataResourceException("Failed to create table!");
             }
         }
@@ -95,15 +94,15 @@ namespace GerGO.DataResource
             DataBase result = _dataBases.FirstOrDefault((db) => db.Name.Equals(dbName), null);
             if (result == null)
             {
-                _logger.Error("The database doesn't exists!");
-                throw new DataResourceException("The database doesn't exists!");
+                _logger.Error("The database doesn't exist!");
+                throw new DataResourceException("The database doesn't exist!");
             }
 
             Table resTable = result.Tables.FirstOrDefault((t) => t.Name.Equals(table.Name), null);
             if (resTable == null)
             {
-                _logger.Error("The table doesn't exists!");
-                throw new DataResourceException("The table doesn't exists!");
+                _logger.Error("The table doesn't exist!");
+                throw new DataResourceException("The table doesn't exist!");
             }
 
             try
@@ -114,7 +113,7 @@ namespace GerGO.DataResource
             catch (FileHandlerException ex)
             {
                 _dataBases.First((db) => db.Name.Equals(dbName)).Tables.Add(resTable);
-                _logger.Error("Failed to write db data: " + ex.Message);
+                _logger.Error($"Failed to write db data: {ex.Message}");
                 throw new DataResourceException("Failed to drop table!");
             }
         }
@@ -142,15 +141,15 @@ namespace GerGO.DataResource
             DataBase result = _dataBases.FirstOrDefault((db) => db.Name.Equals(dbName), null);
             if (result == null)
             {
-                _logger.Error("The database doesn't exists!");
-                throw new DataResourceException("The database doesn't exists!");
+                _logger.Error("The database doesn't exist!");
+                throw new DataResourceException("The database doesn't exist!");
             }
 
             Table resTable = result.Tables.FirstOrDefault((t) => t.Name.Equals(tableName), null);
             if (resTable == null)
             {
-                _logger.Error("The table doesn't exists!");
-                throw new DataResourceException("The table doesn't exists!");
+                _logger.Error("The table doesn't exist!");
+                throw new DataResourceException("The table doesn't exist!");
             }
 
             Column resColumn = resTable.Columns.FirstOrDefault(c =>  c.Name.Equals(column.Name), null);
@@ -167,8 +166,8 @@ namespace GerGO.DataResource
             catch (FileHandlerException ex)
             {
                 _dataBases.First((db) => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.Remove(column);
-                _logger.Error("Failed to write db data: " + ex.Message);
-                throw new DataResourceException("Failed to drop table!");
+                _logger.Error($"Failed to write db data: {ex.Message}");
+                throw new DataResourceException("Failed to add column!");
             }
         }
 
@@ -177,36 +176,36 @@ namespace GerGO.DataResource
             DataBase result = _dataBases.FirstOrDefault((db) => db.Name.Equals(dbName), null);
             if (result == null)
             {
-                _logger.Error("The database doesn't exists!");
-                throw new DataResourceException("The database doesn't exists!");
+                _logger.Error("The database doesn't exist!");
+                throw new DataResourceException("The database doesn't exist!");
             }
 
             Table resTable = result.Tables.FirstOrDefault((t) => t.Name.Equals(tableName), null);
             if (resTable == null)
             {
-                _logger.Error("The table doesn't exists!");
-                throw new DataResourceException("The table doesn't exists!");
+                _logger.Error("The table doesn't exist!");
+                throw new DataResourceException("The table doesn't exist!");
             }
 
             Column resColumn = resTable.Columns.FirstOrDefault(c => c.Name.Equals(foreignKey.AttributeName), null);
             if (resColumn == null)
             {
-                _logger.Error("The attribute doesn't exists!");
-                throw new DataResourceException("The attribute doesn't exists!");
+                _logger.Error("The attribute doesn't exist!");
+                throw new DataResourceException("The attribute doesn't exist!");
             }
 
             Table refTable = result.Tables.FirstOrDefault((t) => t.Name.Equals(foreignKey.RefTableName), null);
             if (refTable == null)
             {
-                _logger.Error("The referrenced table doesn't exists!");
-                throw new DataResourceException("The referrenced table doesn't exists!");
+                _logger.Error("The referrenced table doesn't exist!");
+                throw new DataResourceException("The referrenced table doesn't exist!");
             }
 
             Column refColumn = refTable.Columns.FirstOrDefault(c => c.Name.Equals(foreignKey.RefAttributeName), null);
             if (refColumn == null)
             {
-                _logger.Error("The referrenced attribute doesn't exists!");
-                throw new DataResourceException("The referrenced attribute doesn't exists!");
+                _logger.Error("The referrenced attribute doesn't exist!");
+                throw new DataResourceException("The referrenced attribute doesn't exist!");
             }
 
             ForeignKey resFk = resTable.ForeignKeys.FirstOrDefault(fk => fk.Name.Equals(foreignKey.Name), null);
@@ -223,7 +222,7 @@ namespace GerGO.DataResource
             catch (FileHandlerException ex)
             {
                 _dataBases.First((db) => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).ForeignKeys.Remove(foreignKey);
-                _logger.Error("Failed to write db data: " + ex.Message);
+                _logger.Error($"Failed to write db data: {ex.Message}");
                 throw new DataResourceException("Failed to drop table!");
             }
         }
@@ -256,14 +255,14 @@ namespace GerGO.DataResource
             DataBase result = _dataBases.FirstOrDefault((db) => db.Name.Equals(dbName), null);
             if (result == null)
             {
-                _logger.Warning("The database doesn't exists!");
+                _logger.Warning("The database doesn't exist!");
                 return false;
             }
 
             Table resTable = result.Tables.FirstOrDefault((t) => t.Name.Equals(tableName), null);
             if (resTable == null)
             {
-                _logger.Warning("The table doesn't exists!");
+                _logger.Warning("The table doesn't exist!");
                 return false;
             }
 
@@ -275,8 +274,8 @@ namespace GerGO.DataResource
             DataBase result = _dataBases.FirstOrDefault((db) => db.Name.Equals(dbName), null);
             if (result == null)
             {
-                _logger.Error("The database doesn't exists!");
-                throw new DataResourceException("The database doesn't exists!");
+                _logger.Error("The database doesn't exist!");
+                throw new DataResourceException("The database doesn't exist!");
             }
 
             string[] resTables = new string[result.Tables.Count];
