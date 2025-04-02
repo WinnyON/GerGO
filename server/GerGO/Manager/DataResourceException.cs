@@ -1,4 +1,4 @@
-﻿namespace GerGO.DataResource
+﻿namespace GerGO.Manager
 {
     class DataResourceException : Exception
     {

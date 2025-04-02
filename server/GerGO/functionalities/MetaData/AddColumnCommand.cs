@@ -1,14 +1,14 @@
 ﻿using GerGO.Communication;
-using GerGO.DataResource;
+using GerGO.Manager;
 using GerGO.Models;
 using GerGO.Utils;
 using System.Net.Sockets;
 
 namespace GerGO.Functionalities.MetaData
 {
-    class AddColumnCommand : Command
+    class AddColumnCommand : ICommand
     {
-        private Logger _logger = LoggerFactory.GetLogger();
+        private ILogger _logger = LoggerFactory.GetLogger();
         public void Execute(NetworkStream stream, string[] arguments)
         {
             Column column = new Column();
@@ -49,7 +49,7 @@ namespace GerGO.Functionalities.MetaData
                 else
                     column.Check = arguments[11];
 
-                ResourceManager manager = ResourceManagerFactory.GetInstance();
+                IResourceManager manager = ResourceManagerFactory.GetInstance();
                 manager.AddColumn(dbName, tableName, column);
             }
             catch (IndexOutOfRangeException)

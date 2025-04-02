@@ -20,9 +20,9 @@ namespace GerGO
     {
         private TcpClient _tcpClient;
 
-        private Logger _logger = LoggerFactory.GetLogger();
+        private ILogger _logger = LoggerFactory.GetLogger();
 
-        private static List<Command> s_commands;
+        private static List<ICommand> s_commands;
 
         static RequestHandler()
         {

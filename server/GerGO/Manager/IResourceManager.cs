@@ -1,0 +1,26 @@
+﻿using GerGO.Models;
+
+namespace GerGO.Manager
+{
+    interface IResourceManager
+    {
+        public void AddDataBase(DataBase dataBase);
+        public void DropDataBase(DataBase dataBase);
+        public void AddTable(string dbName, Table table);
+        public void DropTable(string dbName, Table table);
+        public void AddColumn(string dbName, string tableName, Column column);
+        public void AddForeignKey(string dbName, string tableName, ForeignKey foreignKey);
+        // returns the list of the tables of a db
+        public string[] GetTables(string dbName);
+        //return all table of all db
+        public List<string[]> GetDBData();
+        // return the columns with constraints
+        public List<string[]> GetTableData(string dbName, string tableName);
+        //return the column names
+        public List<string[]> GetColumns(string dbName, string tableName);
+        public List<string[]> GetForeignKeys(string dbName, string tableName);
+        //public void AddIndex(string dbName, string tableName, string columnName);
+        public int Insert(string dbName, string tableName, string value);
+        public int Delete(string dbName, string tableName, string value);
+    }
+}

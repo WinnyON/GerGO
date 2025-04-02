@@ -1,22 +1,23 @@
 ﻿using GerGO.Models;
+using GerGO.Utils;
 using System.Xml.Serialization;
 
-namespace GerGO.Utils
+namespace GerGO.DataAcces.MetaData.FileHandler
 {
     [XmlRoot("DataBaseXmlWrapper")]
     public class DataBaseXmlWrapper
     {
         [XmlArray("Databases")]
         [XmlArrayItem("DataBase")]
-        public List<DataBase> DataBases {  get; set; }
+        public List<DataBase> DataBases { get; set; }
         public DataBaseXmlWrapper()
         {
 
         }
     }
-    class XMLFileHandler : FileHandler
+    class XMLFileHandler : IFileHandler
     {
-        private Logger _logger = LoggerFactory.GetLogger();
+        private ILogger _logger = LoggerFactory.GetLogger();
         public void WriteDataBaseData(string path, List<DataBase> dataBases)
         {
             try

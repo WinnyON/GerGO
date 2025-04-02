@@ -2,8 +2,8 @@
 {
     class LoggerFactory
     {
-        private static Logger loggerInstance = new ConsoleLogger();
-        public static Logger GetLogger()
+        private static ILogger loggerInstance = new ConsoleLogger();
+        public static ILogger GetLogger()
         {
             return loggerInstance;
         }

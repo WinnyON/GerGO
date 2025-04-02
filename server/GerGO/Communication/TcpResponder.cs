@@ -4,9 +4,9 @@ using System.Text;
 
 namespace GerGO.Communication
 {
-    class TcpResponder : Responder
+    class TcpResponder : IResponder
     {
-        private static Logger _logger = LoggerFactory.GetLogger();
+        private static ILogger _logger = LoggerFactory.GetLogger();
 
         public static void SendDataMessage(NetworkStream stream, string dataMessage)
         {

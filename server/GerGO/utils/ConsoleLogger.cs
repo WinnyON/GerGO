@@ -1,6 +1,6 @@
 ﻿namespace GerGO.Utils
 {
-    class ConsoleLogger : Logger
+    class ConsoleLogger : ILogger
     {
         public void Error(string message)
         {

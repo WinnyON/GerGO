@@ -1,14 +1,14 @@
 ﻿using System.Net.Sockets;
 using GerGO.Models;
-using GerGO.DataResource;
+using GerGO.Manager;
 using GerGO.Utils;
 using GerGO.Communication;
 
 namespace GerGO.Functionalities.MetaData
 {
-    class CreateDBCommand : Command
+    class CreateDBCommand : ICommand
     {
-        private Logger _logger = LoggerFactory.GetLogger();
+        private ILogger _logger = LoggerFactory.GetLogger();
         public void Execute(NetworkStream stream, string[] arguments)
         {
             DataBase db;
@@ -16,7 +16,7 @@ namespace GerGO.Functionalities.MetaData
             {
                 string name = arguments[1].ToLower();
                 db = new DataBase(name);
-                ResourceManager manager = ResourceManagerFactory.GetInstance();
+                IResourceManager manager = ResourceManagerFactory.GetInstance();
 
                 manager.AddDataBase(db);
             }

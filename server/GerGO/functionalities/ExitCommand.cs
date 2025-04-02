@@ -2,7 +2,7 @@
 
 namespace GerGO.Functionalities
 {
-    class ExitCommand : Command
+    class ExitCommand : ICommand
     {
         public void Execute(NetworkStream stream, string[] arguments)
         {

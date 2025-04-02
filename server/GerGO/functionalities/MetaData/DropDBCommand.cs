@@ -1,21 +1,21 @@
 ﻿using GerGO.Communication;
-using GerGO.DataResource;
+using GerGO.Manager;
 using GerGO.Models;
 using GerGO.Utils;
 using System.Net.Sockets;
 
 namespace GerGO.Functionalities.MetaData
 {
-    class DropDBCommand : Command
+    class DropDBCommand : ICommand
     {
-        private Logger _logger = LoggerFactory.GetLogger();
+        private ILogger _logger = LoggerFactory.GetLogger();
         public void Execute(NetworkStream stream, string[] arguments)
         {
             DataBase db;
             try
             {
                 db = new DataBase(arguments[1]);
-                ResourceManager manager = ResourceManagerFactory.GetInstance();
+                IResourceManager manager = ResourceManagerFactory.GetInstance();
 
                 manager.DropDataBase(db);
             }

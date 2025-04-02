@@ -1,16 +1,16 @@
 ﻿using GerGO.Communication;
-using GerGO.DataResource;
+using GerGO.Manager;
 using GerGO.Utils;
 using System.Net.Sockets;
 
 namespace GerGO.Functionalities.MetaData
 {
-    class GetDBDetailsCommand : Command
+    class GetDBDetailsCommand : ICommand
     {
-        private Logger _logger = LoggerFactory.GetLogger();
+        private ILogger _logger = LoggerFactory.GetLogger();
         public void Execute(NetworkStream stream, string[] arguments)
         {
-            ResourceManager manager = ResourceManagerFactory.GetInstance();
+            IResourceManager manager = ResourceManagerFactory.GetInstance();
 
             List<string[]> dbList;
             try

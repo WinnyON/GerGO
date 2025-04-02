@@ -1,18 +1,18 @@
-﻿using GerGO.Models;
+﻿using GerGO.DataAcces.MetaData.FileHandler;
+using GerGO.Models;
 using GerGO.Utils;
-using System.Data.Common;
 
-namespace GerGO.DataResource
+namespace GerGO.Manager
 {
-    class MapResourceManager : ResourceManager
+    class ResourceManagerImpl : IResourceManager
     {
-        private Logger _logger = LoggerFactory.GetLogger();
+        private ILogger _logger = LoggerFactory.GetLogger();
 
         private List<DataBase> _dataBases;
-        private FileHandler _fileHandler = FileHandlerFactory.GetHandler();
+        private IFileHandler _fileHandler = FileHandlerFactory.GetHandler();
         private string _dbDataSourceFile;
 
-        public MapResourceManager()
+        public ResourceManagerImpl()
         {
             _dbDataSourceFile = "Catalog.xml";
             _dataBases = _fileHandler.ReadDataBaseData(_dbDataSourceFile);
@@ -301,6 +301,21 @@ namespace GerGO.DataResource
             }
 
             return fkList;
+        }
+
+        public List<string[]> GetColumns(string dbName, string tableName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Insert(string dbName, string tableName, string value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Delete(string dbName, string tableName, string value)
+        {
+            throw new NotImplementedException();
         }
     }
 }

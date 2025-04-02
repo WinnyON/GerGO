@@ -1,14 +1,14 @@
 ﻿using GerGO.Communication;
-using GerGO.DataResource;
+using GerGO.Manager;
 using GerGO.Models;
 using GerGO.Utils;
 using System.Net.Sockets;
 
 namespace GerGO.Functionalities.MetaData
 {
-    class DropTableCommand : Command
+    class DropTableCommand : ICommand
     {
-        private Logger _logger = LoggerFactory.GetLogger();
+        private ILogger _logger = LoggerFactory.GetLogger();
         public void Execute(NetworkStream stream, string[] arguments)
         {
             Table table = new Table();
@@ -19,7 +19,7 @@ namespace GerGO.Functionalities.MetaData
                 table.Name = name;
                 table.FileName = dbName + "_" + name + ".data";
 
-                ResourceManager manager = ResourceManagerFactory.GetInstance();
+                IResourceManager manager = ResourceManagerFactory.GetInstance();
                 manager.DropTable(dbName, table);
             }
             catch (IndexOutOfRangeException)

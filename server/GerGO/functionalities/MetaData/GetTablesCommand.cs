@@ -1,20 +1,20 @@
 ﻿using GerGO.Communication;
-using GerGO.DataResource;
+using GerGO.Manager;
 using GerGO.Utils;
 using System.Net.Sockets;
 
 namespace GerGO.Functionalities.MetaData
 {
-    class GetTablesCommand : Command
+    class GetTablesCommand : ICommand
     {
-        private Logger _logger = LoggerFactory.GetLogger();
+        private ILogger _logger = LoggerFactory.GetLogger();
         public void Execute(NetworkStream stream, string[] arguments)
         {
             try
             {
                 string dbName = arguments[1].ToLower();
 
-                ResourceManager manager = ResourceManagerFactory.GetInstance();
+                IResourceManager manager = ResourceManagerFactory.GetInstance();
                 string[] tables = manager.GetTables(dbName);
 
                 TcpResponder.SendDataMessage(stream, string.Join('^', tables));

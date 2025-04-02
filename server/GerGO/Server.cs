@@ -10,7 +10,7 @@ namespace GerGO
         private static bool s_running = false;
         private static TcpListener s_listener;
 
-        private static Logger s_logger = LoggerFactory.GetLogger();
+        private static ILogger s_logger = LoggerFactory.GetLogger();
 
         public static void InitializeServer(string IpAddress, int port)
         {
