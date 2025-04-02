@@ -67,14 +67,16 @@ class CreatePage(QWidget):
 		code, msg = self.repository.create_db(self.name_text.text())
 		print(code)
 		self.parent_stack_layout.setCurrentIndex(0)
+			# set selected db to current
+			# set selected db to none
 		#create popup for success or error
 
 		if code == 0:
 			self.db_tree.add_db(self.name_text.text())
+			self.db_tree.current_table = None
+			self.db_tree.current_db = self.name_text.text()
 
 		# self.name_text.setText("")
-
-		#TODO: send data to server to create db
 
 	def switch_to_create(self):
 		print(self.name_text.text())

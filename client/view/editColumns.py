@@ -38,7 +38,7 @@ class EditColumns(QTableWidget):
 			super().keyPressEvent(event)
 
 	def set_table_data(self, table_data):
-		header_labels = ["Name", "Type", "Check", "Default", "Primary Key", "Identity", "Not NULL", "Unique"]
+		header_labels = ["Name", "Type", "Check", "Default", "Identity", "Primary Key", "Not NULL", "Unique"]
 		self.setRowCount(len(table_data))
 		self.setColumnCount(8)
 		self.setHorizontalHeaderLabels(header_labels)
@@ -46,7 +46,7 @@ class EditColumns(QTableWidget):
 		for row in range(self.rowCount()):
 			col = table_data[row]
 			for column in range(self.columnCount()):
-				if column > 3:
+				if column > 4:
 					container = QWidget()
 					container_layout = QHBoxLayout()
 					container_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -77,7 +77,7 @@ class EditColumns(QTableWidget):
 		header.setMinimumSectionSize(50)
 		header.setMaximumSectionSize(500)
 		for column in range(self.columnCount()):
-			if column > 3:
+			if column > 4:
 				header.setSectionResizeMode(column, QHeaderView.ResizeToContents)
 			else:
 				header.setSectionResizeMode(column, QHeaderView.Interactive)
@@ -94,7 +94,7 @@ class EditColumns(QTableWidget):
 
 		for row in range(self.rowCount()):
 			for column in range(self.columnCount()):
-				if column > 3:
+				if column > 4:
 					container = QWidget()
 					container_layout = QHBoxLayout()
 					container_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -140,7 +140,7 @@ class EditColumns(QTableWidget):
 			column_data = {}
 			for column in range(self.columnCount()):
 				print(row, column)
-				if column < 4:
+				if column < 5:
 					column_data[self.horizontalHeaderItem(column).text()] = self.item(row, column).text()
 				else:
 					column_data[self.horizontalHeaderItem(column).text()] = self.cellWidget(row, column).findChild(QCheckBox).isChecked()
@@ -151,7 +151,7 @@ class EditColumns(QTableWidget):
 		self.setRowCount(self.rowCount() + 1)
 		row = self.rowCount() - 1
 		for column in range(self.columnCount()):
-			if column > 3:
+			if column > 4:
 				container = QWidget()
 				container_layout = QHBoxLayout()
 				container_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)

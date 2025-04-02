@@ -7,6 +7,7 @@ class Repository():
 	def create_db(self, db_name):
 		command = "1^" + db_name
 		try:
+			self.client.connect()  # added for persistent connection for server timeout
 			code = self.client.send_message(command)
 			print(code)
 			if code[0] == '1':
@@ -30,12 +31,12 @@ class Repository():
 		else:
 			command += "--^"
 		if column["Identity"]:
-			# command += column["identity"] + "^"
-			command += "1^"
+			command += column["Identity"] + "^"
+			# command += "1^"
 		else:
 			command += "--^"
 		if column["Unique"]:
-			command += "1"
+			command += "1^"
 		else:
 			command += "--^"
 		if column["Check"]:
@@ -52,9 +53,12 @@ class Repository():
 
 	def add_column(self, db_name, table_name, column):
 		command = "7^" + db_name + "^" + table_name + "^" + self.build_column_command(column)
+		print(command)
 		return self.client.send_message(command)
 
+	# TODO: add try catch
 	def add_columns(self, db_name, table_name, columns):
+		self.client.connect()  # added for persistent connection for server timeout
 		for column in columns:
 			code = self.add_column(db_name, table_name, column)
 			if code[0] == '1':
@@ -62,6 +66,7 @@ class Repository():
 		return "0 OK"
 
 	def add_foreign_key(self, db_name, table_name, fk):
+		self.client.connect()  # added for persistent connection for server timeout
 		command = "8^" + db_name + "^" + table_name + "^" + self.build_fk_command(fk)
 		return self.client.send_message(command)
 
@@ -69,6 +74,7 @@ class Repository():
 		command = "3^" + db_name + "^" + table_name
 		try:
 			# print(command)
+			self.client.connect()  # added for persistent connection for server timeout
 			code = self.client.send_message(command)
 			if code[0] == '1':
 				return 1, code.split('^')[1]
@@ -96,6 +102,7 @@ class Repository():
 	def drop_database(self, db_name):
 		command = "2^" + db_name
 		try:
+			self.client.connect()  # added for persistent connection for server timeout
 			code = self.client.send_message(command)
 			if code[0] == '1':
 				return 1, code.split('^')[1]
@@ -106,6 +113,7 @@ class Repository():
 	def drop_table(self, db_name, table_name):
 		command = "4^" + db_name + "^" + table_name
 		try:
+			self.client.connect() # added for persistent connection for server timeout
 			code = self.client.send_message(command)
 			if code[0] == '1':
 				return 1, code.split('^')[1]
@@ -140,6 +148,7 @@ class Repository():
 	def get_tables(self, db_name):
 		command = "9^" + db_name
 		try:
+			self.client.connect() # added for persistent connection to handle timeout
 			code = self.client.send_message(command)
 			if code[0] == '1':
 				return 1, code.split('^')[0]
@@ -149,12 +158,13 @@ class Repository():
 			return 1, ce
 
 	# TODO: rename to get_table_columns
-	def get_table_data(self, db_name, table_name): 
+	def get_table_columns(self, db_name, table_name):
 		command = "6^" + db_name + "^" + table_name
 		table_data = []
 		try:
-			self.client.connect()
-			code = self.client.send_message_pers(command)
+			# self.client.connect()
+			# code = self.client.send_message_pers(command)
+			code = self.client.send_message(command)
 
 			if code[0] == '1':
 				return 1, code.split('^')[0]

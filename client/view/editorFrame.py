@@ -62,7 +62,7 @@ class EditorFrame(QWidget):
 		self.selected_editor_type = "rows"
 
 	def change_editor_to_columns(self):	
-		code, data = self.repository.get_table_data(self.selected_db, self.selected_table)
+		code, data = self.repository.get_table_columns(self.selected_db, self.selected_table)
 		if code != '1':
 			self.edit_columns_widget.set_table_data(data)
 			self.editor_type_layout.setCurrentIndex(1)
@@ -74,7 +74,7 @@ class EditorFrame(QWidget):
 			table_details = []
 			current_columns = []
 			for table in data:
-				code, columns = self.repository.get_table_data(db_name, table)
+				code, columns = self.repository.get_table_columns(db_name, table)
 				if code != '1':
 					if table == table_name:
 						current_columns = [column["Name"] for column in columns] 
@@ -97,7 +97,7 @@ class EditorFrame(QWidget):
 			self.editor_type_layout.setCurrentIndex(3)
 			self.selected_editor_type = "edit_fk"
 
-
+	#TODO: set this when new table and db is created
 	def set_selected_db(self, db):
 		self.selected_db = db
 
