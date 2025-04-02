@@ -46,5 +46,20 @@ namespace GerGO.Models
             ForeignKeys = new List<ForeignKey>();
             Columns = new List<Column>();
         }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj == null) return false;
+            if (obj is Table table)
+            {
+                return this.Name == table.Name;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode();
+        }
     }
 }

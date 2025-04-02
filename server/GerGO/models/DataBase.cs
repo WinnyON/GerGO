@@ -23,5 +23,20 @@ namespace GerGO.Models
             Name = name;
             Tables = new List<Table>();
         }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj == null) return false;
+            if (obj is DataBase db)
+            {
+                return this.Name == db.Name;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode();
+        }
     }
 }

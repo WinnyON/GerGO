@@ -53,5 +53,20 @@ namespace GerGO.Models
             Unique = unique;
             Check = check;
         }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj == null) return false;
+            if (obj is Column column)
+            {
+                return this.Name == column.Name;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode();
+        }
     }
 }
