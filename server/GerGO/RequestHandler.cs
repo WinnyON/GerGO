@@ -58,7 +58,12 @@ namespace GerGO
                     stream.Read(buffer, 0, buffer.Length);
 
                     string request = Encoding.UTF8.GetString(buffer);
-                    //Console.WriteLine(request);
+                    
+                    if (string.IsNullOrEmpty(request))
+                    {
+                        // this is for the client, checks if is still connected to the server
+                        return;
+                    }
 
                     commandArgs = request.Split("^");
                     for (int i = 0; i < commandArgs.Length; i++)
