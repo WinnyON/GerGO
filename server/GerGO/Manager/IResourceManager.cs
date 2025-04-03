@@ -17,7 +17,7 @@ namespace GerGO.Manager
         // return the columns with constraints
         public List<string[]> GetTableData(string dbName, string tableName);
         //return the column names
-        public List<string[]> GetColumns(string dbName, string tableName);
+        public string[] GetColumns(string dbName, string tableName);
         public List<string[]> GetForeignKeys(string dbName, string tableName);
         //public void AddIndex(string dbName, string tableName, string columnName);
         public int Insert(string dbName, string tableName, string value);

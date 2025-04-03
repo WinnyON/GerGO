@@ -16,9 +16,30 @@ namespace GerGO.Manager
         {
         }
 
+        // DATA DEFINITION
         public void AddColumn(string dbName, string tableName, Column column)
         {
-            throw new NotImplementedException();
+            if (!_metaDataManager.ExitsDb(dbName))
+            {
+                _logger.Error($"Database {dbName} doesn't exist!");
+                throw new DataResourceException($"Database {dbName} doesn't exist!");
+            }
+
+            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            {
+                _logger.Error($"Table {tableName} doesn't exist!");
+                throw new DataResourceException($"Table {tableName} doesn't exist!");
+            }
+
+            try
+            {
+                _metaDataManager.AddColumn(dbName, tableName, column);
+            }
+            catch (DataAccesException ex)
+            {
+                _logger.Error(ex.Message);
+                throw new DataResourceException(ex.Message);
+            }
         }
 
         public void AddDataBase(DataBase dataBase)
@@ -42,17 +63,70 @@ namespace GerGO.Manager
 
         public void AddForeignKey(string dbName, string tableName, ForeignKey foreignKey)
         {
-            throw new NotImplementedException();
+            if (!_metaDataManager.ExitsDb(dbName))
+            {
+                _logger.Error($"Database {dbName} doesn't exist!");
+                throw new DataResourceException($"Database {dbName} doesn't exist!");
+            }
+
+            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            {
+                _logger.Error($"Table {tableName} doesn't exist!");
+                throw new DataResourceException($"Table {tableName} doesn't exist!");
+            }
+
+            if (!_metaDataManager.ExistsColumn(dbName, tableName, foreignKey.AttributeName))
+            {
+                _logger.Error($"Attribute {foreignKey.AttributeName} doesn't exist!");
+                throw new DataResourceException($"Attribute {foreignKey.AttributeName} doesn't exist!");
+            }
+
+            if (!_metaDataManager.ExitsTable(dbName, foreignKey.RefTableName))
+            {
+                _logger.Error($"Referenced table {foreignKey.RefTableName} doesn't exist!");
+                throw new DataResourceException($"Referenced table {foreignKey.RefTableName} doesn't exist!");
+            }
+
+            if (!_metaDataManager.ExistsColumn(dbName, tableName, foreignKey.RefAttributeName))
+            {
+                _logger.Error($"Referenced attribute {foreignKey.RefAttributeName} doesn't exist!");
+                throw new DataResourceException($"Referenced attribute {foreignKey.RefAttributeName} doesn't exist!");
+            }
+
+            try
+            {
+                _metaDataManager.AddForeignKey(dbName, tableName, foreignKey);
+            }
+            catch (DataAccesException ex)
+            {
+                _logger.Error(ex.Message);
+                throw new DataResourceException(ex.Message);
+            }
         }
 
         public void AddTable(string dbName, Table table)
         {
-            throw new NotImplementedException();
-        }
+            if (!_metaDataManager.ExitsDb(dbName))
+            {
+                _logger.Error($"Database {dbName} doesn't exist!");
+                throw new DataResourceException($"Database {dbName} doesn't exist!");
+            }
 
-        public int Delete(string dbName, string tableName, string value)
-        {
-            throw new NotImplementedException();
+            if (_metaDataManager.ExitsTable(dbName, table.Name))
+            {
+                _logger.Error($"Table {table.Name} already exists!");
+                throw new DataResourceException($"Table {table.Name} already exists!");
+            }
+
+            try
+            {
+                _metaDataManager.AddTable(dbName, table);
+            }
+            catch (DataAccesException ex)
+            {
+                _logger.Error(ex.Message);
+                throw new DataResourceException(ex.Message);
+            }
         }
 
         public void DropDataBase(DataBase dataBase)
@@ -60,7 +134,7 @@ namespace GerGO.Manager
             if (!_metaDataManager.ExitsDb(dataBase.Name))
             {
                 _logger.Error($"Database {dataBase.Name} doesn't exist!");
-                throw new DataResourceException($"Database {dataBase.Name} doesn't exists!");
+                throw new DataResourceException($"Database {dataBase.Name} doesn't exist!");
             }
 
             try
@@ -76,35 +150,104 @@ namespace GerGO.Manager
 
         public void DropTable(string dbName, Table table)
         {
-            throw new NotImplementedException();
+            if (!_metaDataManager.ExitsDb(dbName))
+            {
+                _logger.Error($"Database {dbName} doesn't exist!");
+                throw new DataResourceException($"Database {dbName} doesn't exist!");
+            }
+
+            if (!_metaDataManager.ExitsTable(dbName, table.Name))
+            {
+                _logger.Error($"Table {table.Name} doesn't exist!");
+                throw new DataResourceException($"Table {table.Name} doesn't exist!");
+            }
+
+            try
+            {
+                _metaDataManager.DropTable(dbName, table);
+            }
+            catch (DataAccesException ex)
+            {
+                _logger.Error(ex.Message);
+                throw new DataResourceException(ex.Message);
+            }
         }
 
-        public List<string[]> GetColumns(string dbName, string tableName)
+        public string[] GetColumns(string dbName, string tableName)
         {
-            throw new NotImplementedException();
+            if (!_metaDataManager.ExitsDb(dbName))
+            {
+                _logger.Error($"Database {dbName} doesn't exist!");
+                throw new DataResourceException($"Database {dbName} doesn't exist!");
+            }
+
+            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            {
+                _logger.Error($"Table {tableName} doesn't exist!");
+                throw new DataResourceException($"Table {tableName} doesn't exist!");
+            }
+
+            return _metaDataManager.GetColumns(dbName, tableName);
         }
 
         public List<string[]> GetDBData()
         {
-            throw new NotImplementedException();
+            return _metaDataManager.GetDBData();
         }
 
         public List<string[]> GetForeignKeys(string dbName, string tableName)
         {
-            throw new NotImplementedException();
+            if (!_metaDataManager.ExitsDb(dbName))
+            {
+                _logger.Error($"Database {dbName} doesn't exist!");
+                throw new DataResourceException($"Database {dbName} doesn't exist!");
+            }
+
+            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            {
+                _logger.Error($"Table {tableName} doesn't exist!");
+                throw new DataResourceException($"Table {tableName} doesn't exist!");
+            }
+
+            return _metaDataManager.GetForeignKeys(dbName, tableName);
         }
 
         public List<string[]> GetTableData(string dbName, string tableName)
         {
-            throw new NotImplementedException();
+            if (!_metaDataManager.ExitsDb(dbName))
+            {
+                _logger.Error($"Database {dbName} doesn't exist!");
+                throw new DataResourceException($"Database {dbName} doesn't exist!");
+            }
+
+            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            {
+                _logger.Error($"Table {tableName} doesn't exist!");
+                throw new DataResourceException($"Table {tableName} doesn't exist!");
+            }
+
+            return _metaDataManager.GetTableData(dbName, tableName);
         }
 
         public string[] GetTables(string dbName)
         {
-            throw new NotImplementedException();
+            if (!_metaDataManager.ExitsDb(dbName))
+            {
+                _logger.Error($"Database {dbName} doesn't exist!");
+                throw new DataResourceException($"Database {dbName} doesn't exist!");
+            }
+
+            return _metaDataManager.GetTables(dbName);
         }
 
+
+        // DATA MANIPULATION
+
         public int Insert(string dbName, string tableName, string value)
+        {
+            throw new NotImplementedException();
+        }
+        public int Delete(string dbName, string tableName, string value)
         {
             throw new NotImplementedException();
         }
