@@ -21,5 +21,20 @@ namespace GerGO.Models
             Name = name;
             Attributes = attributes;
         }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj == null) return false;
+            if (obj is IndexFile index)
+            {
+                return this.Name == index.Name;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode();
+        }
     }
 }

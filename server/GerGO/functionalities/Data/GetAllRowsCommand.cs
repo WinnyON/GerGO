@@ -17,21 +17,26 @@ namespace GerGO.Functionalities.Data
             {
                 dbName = arguments[1];
                 tableName = arguments[2];
-
-                List<string> rows = resourceManager.GetAllRows(dbName, tableName);
-
-                foreach (string row in rows)
-                {
-                    TcpResponder.SendDataMessage(stream, row);
-                    byte[] buffer = new byte[10];
-                    stream.Read(buffer, 0, buffer.Length);
-                }
-                TcpResponder.SendMessage(stream, "OK");
             }
             catch (IndexOutOfRangeException)
             {
-                _logger.Error("Not enough arguments for getting all row!");
-                throw new CommandException("Not enough arguments for getting all row!");
+                _logger.Error("Not enough arguments for retrieving all rows!");
+                throw new CommandException("Not enough arguments for retrieving all rows!");
+            }
+
+            try
+            {
+                TcpResponder.SendMessage(stream, "OK");
+                List<string> rows = resourceManager.GetAllRows(dbName, tableName);
+                byte[] buffer = new byte[10];
+                stream.Read(buffer, 0, buffer.Length);
+                foreach (string row in rows)
+                {
+                    TcpResponder.SendDataMessage(stream, row);
+                    buffer = new byte[10];
+                    stream.Read(buffer, 0, buffer.Length);
+                }
+                TcpResponder.SendMessage(stream, "OK");
             }
             catch (IOException)
             {

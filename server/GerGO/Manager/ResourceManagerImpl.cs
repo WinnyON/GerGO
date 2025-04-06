@@ -104,7 +104,7 @@ namespace GerGO.Manager
             }
         }
 
-        public void AddIndexFile(string dbName, string tableName, IndexFile indexFile)
+        public void AddIndexFile(string dbName, string tableName, string indexName, string columnName)
         {
             if (!_metaDataManager.ExitsDb(dbName))
             {
@@ -118,9 +118,15 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
             }
 
+            if (!_metaDataManager.ExistsColumn(dbName, tableName, columnName))
+            {
+                _logger.Error($"Column {columnName} doesn't exist!");
+                throw new DataResourceException($"Column {columnName} doesn't exist!");
+            }
+
             try
             {
-                _metaDataManager.AddIndex(dbName, tableName, indexFile);
+                _metaDataManager.AddIndex(dbName, tableName, indexName, columnName);
             }
             catch (DataAccesException ex)
             {
@@ -266,6 +272,30 @@ namespace GerGO.Manager
             return _metaDataManager.GetTables(dbName);
         }
 
+        public List<string> GetIndexes(string dbName, string tableName)
+        {
+            if (!_metaDataManager.ExitsDb(dbName))
+            {
+                _logger.Error($"Database {dbName} doesn't exist!");
+                throw new DataResourceException($"Database {dbName} doesn't exist!");
+            }
+
+            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            {
+                _logger.Error($"Table {tableName} doesn't exist!");
+                throw new DataResourceException($"Table {tableName} doesn't exist!");
+            }
+
+            try
+            {
+                return _metaDataManager.GetIndexData(dbName, tableName);
+            }
+            catch (DataAccesException ex)
+            {
+                _logger.Error($"Failed to get index data: {ex.Message}");
+                throw new DataResourceException("Failed to get index data!");
+            }
+        }
 
         // DATA MANIPULATION
 
@@ -315,6 +345,13 @@ namespace GerGO.Manager
 
         public List<string> GetAllRows(string dbName, string tableName)
         {
+            if (!_metaDataManager.ExitsDb(dbName))
+                throw new DataResourceException("Db doesn't exists!");
+
+            if (!_metaDataManager.ExitsTable(dbName, tableName))
+                throw new DataResourceException("Table doesn't exists!");
+
+
             List<string> rows;
 
             try

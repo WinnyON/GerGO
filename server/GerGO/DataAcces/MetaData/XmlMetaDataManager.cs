@@ -2,6 +2,7 @@
 using GerGO.Manager;
 using GerGO.Models;
 using GerGO.Utils;
+using System;
 
 namespace GerGO.DataAcces.MetaData
 {
@@ -74,21 +75,39 @@ namespace GerGO.DataAcces.MetaData
             }
         }
 
-        public void AddIndex(string dbName, string tableName, IndexFile index)
+        public void AddIndex(string dbName, string tableName, string indexName, string columnName)
         {
-            IndexFile? indFile = _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.FirstOrDefault(ind => ind.Name.Equals(index.Name));
+            IndexFile? indFile = _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.FirstOrDefault(ind => ind.Name.Equals(indexName));
             if (indFile != null)
-                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.Remove(indFile);
+            {
+                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.First(ind => ind.Name.Equals(indexName)).Attributes.Add(columnName);
 
-            _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.Add(index);
+                try
+                {
+                    _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
+                    return;
+                }
+                catch (FileHandlerException ex)
+                {
+                    _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.First(ind => ind.Name.Equals(indexName)).Attributes.Remove(columnName);
+                    _logger.Error($"Failed to write db data: {ex.Message}");
+                    throw new DataAccesException("Failed to add index!");
+                }
+            }
+
+            indFile = new IndexFile();
+            indFile.Name = indexName;
+            indFile.Attributes.Add(columnName);
+            _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.Add(indFile);
 
             try
             {
                 _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
+                return;
             }
             catch (FileHandlerException ex)
             {
-                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.Remove(index);
+                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.Remove(indFile);
                 _logger.Error($"Failed to write db data: {ex.Message}");
                 throw new DataAccesException("Failed to add index!");
             }
@@ -229,6 +248,25 @@ namespace GerGO.DataAcces.MetaData
             }
 
             return fkList;
+        }
+
+        public List<string> GetIndexData(string dbName, string tableName)
+        {
+            List<string> result = [];
+
+            List<IndexFile> indexList = _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles;
+
+            foreach (var index in indexList)
+            {
+                string data = index.Name;
+                foreach (string col in index.Attributes)
+                {
+                    data = data + "^" + col;
+                }
+                result.Add(data);
+            }
+
+            return result;
         }
 
         public string GetNextKey(string dbName, string tableName)

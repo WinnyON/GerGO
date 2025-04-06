@@ -14,7 +14,7 @@ namespace GerGO.DataAcces.MetaData
         public void DropTable(string dbName, Table table);
         public void AddColumn(string dbName, string tableName, Column column);
         public void AddForeignKey(string dbName, string tableName, ForeignKey foreignKey);
-        public void AddIndex(string dbName, string tableName, IndexFile index);
+        public void AddIndex(string dbName, string tableName, string indexName, string columnName);
         public string GetTableMongoId(string dbName, string tableName);
         public string GetNextKey(string dbName, string tableName);
         // returns the list of the tables of a db
@@ -26,5 +26,6 @@ namespace GerGO.DataAcces.MetaData
         // return the column names
         public string[] GetColumns(string dbName, string tableName);
         public List<string[]> GetForeignKeys(string dbName, string tableName);
+        public List<string> GetIndexData(string dbName, string tableName);
     }
 }

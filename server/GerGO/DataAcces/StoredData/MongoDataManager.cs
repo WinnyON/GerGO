@@ -1,7 +1,6 @@
 ﻿using GerGO.Utils;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using System.Xml.Linq;
 
 namespace GerGO.DataAcces.StoredData
 {
@@ -45,8 +44,8 @@ namespace GerGO.DataAcces.StoredData
 
             foreach (var item in table)
             {
-                if (item.Name != "_id")
-                    result.Add($"{item.Name}^{item.Value}");
+                if (!item.Name.Equals("_id"))
+                    result.Add($"1^{item.Name}^{item.Value}");
             }
 
             return result;

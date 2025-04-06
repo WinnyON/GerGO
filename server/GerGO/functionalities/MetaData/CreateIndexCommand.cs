@@ -11,15 +11,15 @@ namespace GerGO.Functionalities.MetaData
         private ILogger _logger = LoggerFactory.GetLogger();
         public void Execute(NetworkStream stream, string[] arguments)
         {
-            IndexFile indexFile = new IndexFile();
             try
             {
                 string dbName = arguments[1].ToLower();
                 string tableNname = arguments[2].ToLower();
-                indexFile.Name = arguments[3].ToLower();
+                string indexName = arguments[3].ToLower();
+                string columnName = arguments[4].ToLower();
 
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
-                manager.AddIndexFile(dbName, tableNname, indexFile);
+                manager.AddIndexFile(dbName, tableNname, indexName, columnName);
             }
             catch (IndexOutOfRangeException)
             {
