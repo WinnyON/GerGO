@@ -24,11 +24,11 @@ namespace GerGO
     }
     class RequestHandler
     {
-        private TcpClient _tcpClient;
+        private readonly TcpClient _tcpClient;
 
-        private ILogger _logger = LoggerFactory.GetLogger();
+        private readonly ILogger _logger = LoggerFactory.GetLogger();
 
-        private static List<ICommand> s_commands;
+        private static readonly List<ICommand> s_commands;
 
         static RequestHandler()
         {

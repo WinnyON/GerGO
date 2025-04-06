@@ -2,9 +2,9 @@
 {
     class ResourceManagerFactory
     {
-        private static IResourceManager s_instance = null;
+        private static IResourceManager? s_instance = null;
 
-        private static object s_instanceLock = new object();
+        private static readonly object s_instanceLock = new object();
         public static IResourceManager GetInstance()
         {
             lock (s_instanceLock)

@@ -17,7 +17,7 @@ namespace GerGO.DataAcces.MetaData.FileHandler
     }
     class XMLFileHandler : IFileHandler
     {
-        private ILogger _logger = LoggerFactory.GetLogger();
+        private readonly ILogger _logger = LoggerFactory.GetLogger();
         public void WriteDataBaseData(string path, List<DataBase> dataBases)
         {
             try

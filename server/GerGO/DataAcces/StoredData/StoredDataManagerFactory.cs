@@ -2,7 +2,7 @@
 {
     class StoredDataManagerFactory
     {
-        private static IStoredDataManager _storedDataManager = null;
+        private static IStoredDataManager? _storedDataManager = null;
         public static IStoredDataManager GetStoredDataManager()
         {
             if (_storedDataManager == null)

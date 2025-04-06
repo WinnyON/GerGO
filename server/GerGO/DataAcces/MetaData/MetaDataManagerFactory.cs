@@ -2,7 +2,7 @@
 {
     class MetaDataManagerFactory
     {
-        private static IMetaDataManager _metaDataManager = null;
+        private static IMetaDataManager? _metaDataManager;
         public static IMetaDataManager GetMetaDataManager()
         {
             if (_metaDataManager == null)

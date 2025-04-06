@@ -6,10 +6,9 @@ namespace GerGO.DataAcces.StoredData
 {
     class MongoDataManager : IStoredDataManager
     {
-        private ILogger _logger = LoggerFactory.GetLogger();
-        private MongoClient _client;
-        private string connectionString = "mongodb://localhost:27017";
-        private IMongoDatabase _coreDB;
+        private readonly MongoClient _client;
+        private readonly string connectionString = "mongodb://localhost:27017";
+        private readonly IMongoDatabase _coreDB;
         public MongoDataManager()
         {
             _client = new MongoClient(connectionString);

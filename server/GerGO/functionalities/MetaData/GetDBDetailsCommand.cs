@@ -7,7 +7,7 @@ namespace GerGO.Functionalities.MetaData
 {
     class GetDBDetailsCommand : ICommand
     {
-        private ILogger _logger = LoggerFactory.GetLogger();
+        private readonly ILogger _logger = LoggerFactory.GetLogger();
         public void Execute(NetworkStream stream, string[] arguments)
         {
             IResourceManager manager = ResourceManagerFactory.GetInstance();

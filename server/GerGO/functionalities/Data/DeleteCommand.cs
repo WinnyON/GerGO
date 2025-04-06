@@ -8,11 +8,9 @@ namespace GerGO.Functionalities.Data
 {
     class DeleteCommand : ICommand
     {
-        private ILogger _logger = LoggerFactory.GetLogger();
+        private readonly ILogger _logger = LoggerFactory.GetLogger();
         public void Execute(NetworkStream stream, string[] arguments)
         {
-            IResourceManager resourceManager = ResourceManagerFactory.GetInstance();
-
             string dbName, tableName;
             try
             {

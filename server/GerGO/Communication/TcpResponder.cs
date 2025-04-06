@@ -6,7 +6,7 @@ namespace GerGO.Communication
 {
     class TcpResponder : IResponder
     {
-        private static ILogger _logger = LoggerFactory.GetLogger();
+        private static readonly ILogger _logger = LoggerFactory.GetLogger();
 
         public static void SendDataMessage(NetworkStream stream, string dataMessage)
         {

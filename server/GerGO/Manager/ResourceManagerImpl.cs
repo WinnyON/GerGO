@@ -8,9 +8,9 @@ namespace GerGO.Manager
 {
     class ResourceManagerImpl : IResourceManager
     {
-        private ILogger _logger = LoggerFactory.GetLogger();
-        private IMetaDataManager _metaDataManager = MetaDataManagerFactory.GetMetaDataManager();
-        private IStoredDataManager _storedDataManager = StoredDataManagerFactory.GetStoredDataManager();
+        private readonly ILogger _logger = LoggerFactory.GetLogger();
+        private readonly IMetaDataManager _metaDataManager = MetaDataManagerFactory.GetMetaDataManager();
+        private readonly IStoredDataManager _storedDataManager = StoredDataManagerFactory.GetStoredDataManager();
 
         public ResourceManagerImpl()
         {

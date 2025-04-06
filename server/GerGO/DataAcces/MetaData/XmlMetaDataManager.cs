@@ -2,17 +2,16 @@
 using GerGO.Manager;
 using GerGO.Models;
 using GerGO.Utils;
-using System;
 
 namespace GerGO.DataAcces.MetaData
 {
     class XmlMetaDataManager : IMetaDataManager
     {
-        private ILogger _logger = LoggerFactory.GetLogger();
+        private readonly ILogger _logger = LoggerFactory.GetLogger();
 
-        private List<DataBase> _dataBases;
-        private IFileHandler _fileHandler = FileHandlerFactory.GetHandler();
-        private string _dbDataSourceFile;
+        private readonly List<DataBase> _dataBases;
+        private readonly IFileHandler _fileHandler = FileHandlerFactory.GetHandler();
+        private readonly string _dbDataSourceFile;
 
         public XmlMetaDataManager()
         {
