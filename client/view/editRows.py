@@ -21,7 +21,13 @@ class EditRows(QTableWidget):
 		self.verticalHeader().setDefaultAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
 
 		self.verticalHeader().sectionClicked.connect(self.select_row)
-		self.set_demo_data()
+		# self.set_demo_data()
+		self.modified_rows = {}
+		self.deleted_rows = []
+		self.itemChanged.connect(self.on_item_changed)
+
+		self.primary_keys = []
+		self.create_state = False
 
 
 	def select_row(self, row):
@@ -33,6 +39,11 @@ class EditRows(QTableWidget):
 		if event.key() == Qt.Key_Delete:
 			row = self.currentRow()
 			if row != -1:
+				row_data = []
+				for column in range(self.columnCount()):
+					if self.horizontalHeaderItem(column).text() in self.primary_keys:
+						row_data.append(self.item(row, column).text())
+				self.deleted_rows.append(row_data)
 				self.removeRow(row)
 		else:
 			super().keyPressEvent(event)
@@ -48,20 +59,67 @@ class EditRows(QTableWidget):
 				item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
 				self.setItem(row, column, item)
 
-	def get_data(self):
-		data = []
+	def set_data(self, column_names, rows, pk):
+		self.create_state = True
+		self.primary_keys = pk
+		self.setRowCount(len(rows))
+		self.setColumnCount(len(column_names))
+		self.setHorizontalHeaderLabels(column_names)
+		print(rows)
+		print(column_names)
 		for row in range(self.rowCount()):
-			row_data = {}
 			for column in range(self.columnCount()):
-				row_data[self.horizontalHeaderItem(column).text()] = self.item(row, column).text()
-			data.append(row_data)
+				item = QTableWidgetItem(rows[row][column])
+				print(rows[row][column])
+				item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
+				self.setItem(row, column, item)
+
+		self.create_state = False
+
+	# def get_data(self):
+	# 	data = []
+	# 	for row in range(self.rowCount()):
+	# 		row_data = {}
+	# 		for column in range(self.columnCount()):
+	# 			row_data[self.horizontalHeaderItem(column).text()] = self.item(row, column).text()
+	# 		data.append(row_data)
+	# 	return data
+
+	def get_modified_rows(self):
+		# data = []
+		# for row in self.modified_rows.keys():
+			# row_data = []
+			# for column in range(self.columnCount()):
+			# 	row_data.append(self.item(row, column).text())
+			# data.append(row_data)
+		data = self.modified_rows.values()
+		self.modified_rows = {}
 		return data
 
+	def get_deleted_rows(self):
+		removed = self.deleted_rows
+		self.deleted_rows = []
+		return removed
+
 	def add_row(self):
+		self.create_state = True
 		self.setRowCount(self.rowCount() + 1)
 		row = self.rowCount() - 1
+		print("HERE")
 		for column in range(self.columnCount()):
 			item = QTableWidgetItem("")
 			item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
+
 			self.setItem(row, column, item)
 
+		self.create_state = False
+
+
+	def on_item_changed(self, item):
+		if self.create_state:
+			return
+		row = item.row()
+		row_data = []
+		for column in range(self.columnCount()):
+			row_data.append(self.item(row, column).text())
+		self.modified_rows[row] = row_data

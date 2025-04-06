@@ -65,6 +65,8 @@ class EditColumns(QTableWidget):
 					item.setTextAlignment(Qt.AlignCenter)
 					self.setItem(row, column, item)
 
+			self.setRowHeight(row, 50)
+
 
 		self.setStyleSheet("""
 			    QTableWidget::item {
@@ -141,6 +143,7 @@ class EditColumns(QTableWidget):
 			for column in range(self.columnCount()):
 				print(row, column)
 				if column < 5:
+					self.item(row, column).setText(self.item(row, column).text().replace('^', ''))
 					column_data[self.horizontalHeaderItem(column).text()] = self.item(row, column).text()
 				else:
 					column_data[self.horizontalHeaderItem(column).text()] = self.cellWidget(row, column).findChild(QCheckBox).isChecked()
@@ -153,6 +156,7 @@ class EditColumns(QTableWidget):
 		for column in range(self.columnCount()):
 			if column > 4:
 				container = QWidget()
+				container.setMaximumHeight(50)
 				container_layout = QHBoxLayout()
 				container_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 				container.setLayout(container_layout)
@@ -162,9 +166,13 @@ class EditColumns(QTableWidget):
 				container_layout.addWidget(checkbox)
 				
 				self.setCellWidget(row, column, container)
-
 			else:
 				item = QTableWidgetItem("")
 				item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
 				item.setTextAlignment(Qt.AlignCenter)
 				self.setItem(row, column, item)
+
+		self.setRowHeight(row, 50)
+
+	def delete_row(self):
+		pass

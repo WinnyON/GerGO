@@ -35,11 +35,14 @@ class DbTree(QTreeWidget):
 		self.create_constraint_action.triggered.connect(self.create_fk_action_handler)
 		self.delete_action = QAction('Delete')
 		self.delete_action.triggered.connect(self.delete_action_handler)
+		self.create_index_action = QAction('Create Index')
+		self.create_index_action.triggered.connect(self.create_index_action_handler)
 
 		self.edit_menu.addAction(self.create_db_action)
 		self.edit_menu.addAction(self.create_table_action)
 		self.edit_menu.addAction(self.create_constraint_action)
 		self.edit_menu.addAction(self.delete_action)
+		self.edit_menu.addAction(self.create_index_action)
 
 		self.setContextMenuPolicy(Qt.CustomContextMenu)
 		self.customContextMenuRequested.connect(self.show_context_menu)
@@ -80,6 +83,8 @@ class DbTree(QTreeWidget):
 		if item and self.get_item_level(item) == 1:
 			self.parent_widget.show_selected_state(item.parent().text(0), item.text(0))
 			self.editor_frame.change_editor_to_rows()
+		elif item and self.get_item_level(item) == 0:
+			self.parent_widget.show_unselected_state()
 
 			# self.editor_frame.set_selected_db(item.parent)
 			# self.editor_frame.set_selected_table(self.current_table)
@@ -117,6 +122,10 @@ class DbTree(QTreeWidget):
 					index = self.indexOfTopLevelItem(items[0])
 					self.takeTopLevelItem(index)
 
+	def create_index_action_handler(self):
+		if self.current_table:
+			self.editor_frame.change_editor_to_create_index(self.current_db, self.current_table)
+
 	def add_db(self, db_name):
 		db_item = QTreeWidgetItem([db_name])
 		self.addTopLevelItem(db_item)
@@ -127,17 +136,90 @@ class DbTree(QTreeWidget):
 			table_item = QTreeWidgetItem([table_name])
 			items[0].addChild(table_item)
 
+	def add_indexes(self, db_name, table_name, indexes):
+		items = self.findItems(db_name, Qt.MatchExactly | Qt.MatchRecursive, 0)
+		if not items:
+			return
+		table_item = self.find_child_item(items[0], table_name)
+		if not table_item:
+			return
+		indexes_item = self.find_child_item(table_item, "Indexes")
+		if not indexes_item:
+			return
+		for index in indexes:
+			index_item = QTreeWidgetItem([index["name"]])
+			indexes_item.addChild(index_item)
+			for column in index["columns"]:
+				column_item = QTreeWidgetItem([column])
+				index_item.addChild(column_item)
+
+	def add_columns(self, db_name, table_name, columns):
+		items = self.findItems(db_name, Qt.MatchExactly | Qt.MatchRecursive, 0)
+		if not items:
+			return
+		table_item = self.find_child_item(items[0], table_name)
+		if not table_item:
+			return
+		columns_item = self.find_child_item(table_item, "Columns")
+		if not columns_item:
+			return
+		for column in columns:
+			column_item = QTreeWidgetItem([column])
+			columns_item.addChild(column_item)
+
+	def add_foreign_keys(self, db_name, table_name, foreign_keys):
+		items = self.findItems(db_name, Qt.MatchExactly | Qt.MatchRecursive, 0)
+		if not items:
+			return
+		table_item = self.find_child_item(items[0], table_name)
+		if not table_item:
+			return
+		fk_items = self.find_child_item(table_item, "Foreign Keys")
+		if not fk_items:
+			return
+		for fk in foreign_keys:
+			fk_item = QTreeWidgetItem([fk])
+			fk_items.addChild(fk_item)
+
+	def add_primary_keys(self, db_name, table_name, primary_keys):
+		items = self.findItems(db_name, Qt.MatchExactly | Qt.MatchRecursive, 0)
+		if not items:
+			return
+		table_item = self.find_child_item(items[0], table_name)
+		if not table_item:
+			return
+		pk_items = self.find_child_item(table_item, "Primary Keys")
+		if not pk_items:
+			return
+		for pk in primary_keys:
+			pk_item = QTreeWidgetItem([pk])
+			pk_items.addChild(pk_item)
 
 	def create_tree(self, databases):
 		print(databases)
 		for db in databases:
-			print(db)
+			# print(db)
 			root_item = QTreeWidgetItem([db["name"]])
 			self.addTopLevelItem(root_item)
 			for table in db["tables"]:
 				table_item = QTreeWidgetItem([table])
 				root_item.addChild(table_item)
+				columns_item = QTreeWidgetItem(["Columns"])
+				foreign_key_item = QTreeWidgetItem(["Foreign Keys"])
+				primary_key_item = QTreeWidgetItem(["Primary Keys"])
+				indexes_item = QTreeWidgetItem(["Indexes"])
+				table_item.addChild(columns_item)
+				table_item.addChild(primary_key_item)
+				table_item.addChild(foreign_key_item)
+				table_item.addChild(indexes_item)
 
+
+	def find_child_item(self, parent_item, name):
+		for i in range(parent_item.childCount()):
+			child = parent_item.child(i)
+			if child.text(0) == name:
+				return child
+		return None
 
 	# def create_demo_tree(self):
 	# 	rootItem1 = QTreeWidgetItem(['Root Item 1'])
