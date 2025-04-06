@@ -38,6 +38,8 @@ namespace GerGO.Functionalities.Data
                     response = Encoding.UTF8.GetString(buffer);
                     response = response.Replace("\0", string.Empty);
 
+                    if (response.Equals("0"))
+                        break; 
                     try
                     {
                         resourceManager.Insert(dbName, tableName, response);
@@ -48,7 +50,7 @@ namespace GerGO.Functionalities.Data
                         continue;
                     }
 
-                } while (!response.Contains('0'));
+                } while (!response.Equals("0"));
 
                 TcpResponder.SendMessage(stream, $"{count}");
             }

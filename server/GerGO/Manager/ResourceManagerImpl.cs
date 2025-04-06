@@ -104,6 +104,31 @@ namespace GerGO.Manager
             }
         }
 
+        public void AddIndexFile(string dbName, string tableName, IndexFile indexFile)
+        {
+            if (!_metaDataManager.ExitsDb(dbName))
+            {
+                _logger.Error($"Database {dbName} doesn't exist!");
+                throw new DataResourceException($"Database {dbName} doesn't exist!");
+            }
+
+            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            {
+                _logger.Error($"Table {tableName} doesn't exist!");
+                throw new DataResourceException($"Table {tableName} doesn't exist!");
+            }
+
+            try
+            {
+                _metaDataManager.AddIndex(dbName, tableName, indexFile);
+            }
+            catch (DataAccesException ex)
+            {
+                _logger.Error(ex.Message);
+                throw new DataResourceException(ex.Message);
+            }
+        }
+
         public void AddTable(string dbName, Table table)
         {
             if (!_metaDataManager.ExitsDb(dbName))
@@ -267,9 +292,43 @@ namespace GerGO.Manager
                 throw new DataResourceException(ex.Message);
             }
         }
-        public void Delete(string dbName, string tableName, string value)
+        public void Delete(string dbName, string tableName, string key)
         {
-            throw new NotImplementedException();
+            if (!_metaDataManager.ExitsDb(dbName) || !_metaDataManager.ExitsTable(dbName, tableName))
+            {
+                throw new DataResourceException("Table doesn't exist");
+            }
+
+            string tableMongoId = _metaDataManager.GetTableMongoId(dbName, tableName);
+            try
+            {
+                _storedDataManager.Delete(dbName, tableMongoId, key);
+            }
+            catch (DataAccesException ex)
+            {
+                _logger.Error($"Failed to delete: {ex.Message}");
+                throw new DataResourceException(ex.Message);
+            }
+        }
+
+        // DATA QUERY
+
+        public List<string> GetAllRows(string dbName, string tableName)
+        {
+            List<string> rows;
+
+            try
+            {
+                string mongoId = _metaDataManager.GetTableMongoId(dbName, tableName);
+                rows = _storedDataManager.GetAllRows(dbName, mongoId);
+            }
+            catch (DataAccesException ex)
+            {
+                _logger.Error($"Failed to retrieve all rows: {ex.Message}");
+                throw new DataResourceException("Failed to retrieve all rows!");
+            }
+
+            return rows;
         }
     }
 }

@@ -3,31 +3,26 @@ using GerGO.Manager;
 using GerGO.Utils;
 using System.Net.Sockets;
 
-namespace GerGO.Functionalities.MetaData
+namespace GerGO.Functionalities.Data
 {
-    class GetForeignKeysCommand : ICommand
+    class GetAllRowsCommand : ICommand
     {
         private ILogger _logger = LoggerFactory.GetLogger();
         public void Execute(NetworkStream stream, string[] arguments)
         {
-            IResourceManager manager = ResourceManagerFactory.GetInstance();
+            IResourceManager resourceManager = ResourceManagerFactory.GetInstance();
 
-            List<string[]> fkList;
+            string dbName, tableName;
             try
             {
-                string dbName = arguments[1].ToLower();
-                string tableName = arguments[2].ToLower();
+                dbName = arguments[1];
+                tableName = arguments[2];
 
-                TcpResponder.SendMessage(stream, "OK");
+                List<string> rows = resourceManager.GetAllRows(dbName, tableName);
 
-                byte[] okMesBuffer = new byte[4];
-                stream.Read(okMesBuffer, 0, okMesBuffer.Length);
-
-                fkList = manager.GetForeignKeys(dbName, tableName);
-
-                foreach (var foreignKey in fkList)
+                foreach (string row in rows)
                 {
-                    TcpResponder.SendDataMessage(stream, string.Join('^', foreignKey));
+                    TcpResponder.SendDataMessage(stream, row);
                     byte[] buffer = new byte[10];
                     stream.Read(buffer, 0, buffer.Length);
                 }
@@ -40,19 +35,21 @@ namespace GerGO.Functionalities.MetaData
             }
             catch (IOException)
             {
-                _logger.Error("Failed to retrieve foreign keys!");
-                throw new CommandException("Failed to retrieve foreign keys!");
+                _logger.Error("Failed to retrieve all rows!");
+                throw new CommandException("Failed to retrieve all rows!");
             }
             catch (DataResourceException ex)
             {
-                _logger.Error($"Failed to retrieve foreign keys: {ex.Message}");
-                throw new CommandException($"Failed to retrieve foreign keys: {ex.Message}");
+                _logger.Error($"Failed to retrieve all rows: {ex.Message}");
+                throw new CommandException($"Failed to retrieve all rows: {ex.Message}");
             }
             catch (CommunicationException ex)
             {
                 _logger.Error($"Error in communication: {ex.Message}");
                 throw new CommandException($"Error in communication: {ex.Message}");
             }
+
+
         }
     }
 }

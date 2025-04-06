@@ -74,6 +74,26 @@ namespace GerGO.DataAcces.MetaData
             }
         }
 
+        public void AddIndex(string dbName, string tableName, IndexFile index)
+        {
+            IndexFile? indFile = _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.FirstOrDefault(ind => ind.Name.Equals(index.Name));
+            if (indFile != null)
+                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.Remove(indFile);
+
+            _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.Add(index);
+
+            try
+            {
+                _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
+            }
+            catch (FileHandlerException ex)
+            {
+                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.Remove(index);
+                _logger.Error($"Failed to write db data: {ex.Message}");
+                throw new DataAccesException("Failed to add index!");
+            }
+        }
+
         public void AddTable(string dbName, string tableId, Table table)
         {
             table.MongoID = tableId;

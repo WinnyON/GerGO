@@ -10,12 +10,12 @@ namespace GerGO.Models
         [XmlAttribute("MongoID")]
         public string MongoID { get; set; }
         
-        [XmlAttribute("RowCount")]
-        public int RowCount {  get; set; }
-        
         [XmlArray("ForeignKeys")]
         [XmlArrayItem("ForeignKey")]
         public List<ForeignKey> ForeignKeys { get; set; }
+        [XmlArray("IndexFiles")]
+        [XmlArrayItem("Index")]
+        public List<IndexFile> IndexFiles { get; set; }
 
         [XmlArray("Structure")]
         [XmlArrayItem("Column")]
@@ -25,26 +25,18 @@ namespace GerGO.Models
         {
             Name = string.Empty;
             MongoID = string.Empty;
-            RowCount = 0;
             ForeignKeys = new List<ForeignKey>();
             Columns = new List<Column>();
+            IndexFiles = new List<IndexFile>();
         }
 
         public Table(string name)
         {
             Name = name;
             MongoID = string.Empty;
-            RowCount = 0;
             ForeignKeys = new List<ForeignKey>();
             Columns = new List<Column>();
-        }
-        public Table(string name, string fileName)
-        {
-            Name = name;
-            MongoID = fileName;
-            RowCount = 0;
-            ForeignKeys = new List<ForeignKey>();
-            Columns = new List<Column>();
+            IndexFiles = new List<IndexFile>();
         }
 
         public override bool Equals(object? obj)

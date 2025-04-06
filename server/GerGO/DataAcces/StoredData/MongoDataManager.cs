@@ -1,6 +1,7 @@
 ﻿using GerGO.Utils;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using System.Xml.Linq;
 
 namespace GerGO.DataAcces.StoredData
 {
@@ -13,20 +14,42 @@ namespace GerGO.DataAcces.StoredData
         public MongoDataManager()
         {
             _client = new MongoClient(connectionString);
-            // Connect to the 'local' database
+            // Connect to the 'GerGOStorage' database
             _coreDB = _client.GetDatabase("GerGOStorage");
+        }
 
-            // List collections in 'GerGOStorage' database
-            var collections = _coreDB.ListCollectionNames().ToList();
-            _logger.Info("Collections in 'GerGOStorage' database:");
-            foreach (var collection in collections)
+        public void Delete(string dbName, string tableID, string key)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+
+            ObjectId objId = ObjectId.Parse(tableID);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+
+            var deletedRow = Builders<BsonDocument>.Update.Unset(key);
+            var result = collection.UpdateOne(filter, deletedRow);
+
+            if (result.ModifiedCount == 0)
             {
-                _logger.Info(collection);
+                throw new DataAccesException("No matching key!");
             }
         }
 
-        public void Delete(string tableID, string key)
+        public List<string> GetAllRows(string dbName, string tableID)
         {
+            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+            ObjectId objId = ObjectId.Parse(tableID);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+
+            var table = collection.Find(filter).First();
+            var result = new List<string>();
+
+            foreach (var item in table)
+            {
+                if (item.Name != "_id")
+                    result.Add($"{item.Name}^{item.Value}");
+            }
+
+            return result;
         }
 
         public void Insert(string dbName, string tableID, string key, string value)
@@ -34,8 +57,6 @@ namespace GerGO.DataAcces.StoredData
             var collection = _coreDB.GetCollection<BsonDocument>(dbName);
 
             ObjectId objId = ObjectId.Parse(tableID);
-            //var filter = Builders<BsonDocument>.Filter.And(Builders<BsonDocument>.Filter.Eq("_id", objId),
-            //    Builders<BsonDocument>.Filter.Exists(key, false));
             var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
 
             var insertedRow = Builders<BsonDocument>.Update.Set(key, value);
@@ -56,7 +77,6 @@ namespace GerGO.DataAcces.StoredData
 
             string id = newTable["_id"].AsObjectId.ToString();
 
-            _logger.Info($"Created table id: {id}");
             return id;
         }
     }

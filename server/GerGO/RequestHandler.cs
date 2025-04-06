@@ -16,7 +16,11 @@ namespace GerGO
         ADD_COLUMN, 
         ADD_FOREIGN_KEY, 
         GET_TABLES, 
-        GET_FOREIGN_KEYS }
+        GET_FOREIGN_KEYS,
+        INSERT, DELETE,
+        CREATE_INDEX,
+        GET_ALL_ROWS
+    }
     class RequestHandler
     {
         private TcpClient _tcpClient;
@@ -40,7 +44,10 @@ namespace GerGO
                 new AddForeignKeyCommand(),
                 new GetTablesCommand(),
                 new GetForeignKeysCommand(),
-                new InsertCommand()
+                new InsertCommand(),
+                new DeleteCommand(),
+                new CreateIndexCommand(),
+                new GetAllRowsCommand()
             ];
         }
         public RequestHandler(TcpClient tcpClient)
@@ -94,7 +101,7 @@ namespace GerGO
                         _logger.Error("Badly formatted request: not numeric request code!");
                         TcpResponder.SendErrorMessage(stream, "Badly formatted request: not numeric request code!");
                     }
-                    catch (IndexOutOfRangeException)
+                    catch (ArgumentOutOfRangeException)
                     {
                         _logger.Error("Badly formatted request: not valid request code!");
                         TcpResponder.SendErrorMessage(stream, "Badly formatted request: not valid request code!");
