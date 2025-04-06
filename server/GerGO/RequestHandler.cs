@@ -4,6 +4,7 @@ using GerGO.Utils;
 using GerGO.Communication;
 using System.Net.Sockets;
 using System.Text;
+using GerGO.Functionalities.Data;
 
 namespace GerGO
 {
@@ -39,6 +40,7 @@ namespace GerGO
                 new AddForeignKeyCommand(),
                 new GetTablesCommand(),
                 new GetForeignKeysCommand(),
+                new InsertCommand()
             ];
         }
         public RequestHandler(TcpClient tcpClient)

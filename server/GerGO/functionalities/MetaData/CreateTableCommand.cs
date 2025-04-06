@@ -17,7 +17,7 @@ namespace GerGO.Functionalities.MetaData
                 string dbName = arguments[1].ToLower();
                 string name = arguments[2].ToLower();
                 table.Name = name;
-                table.FileName = dbName + "_" + name + ".data";
+                // table.FileName = dbName + "_" + name + ".data";
 
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
                 manager.AddTable(dbName, table);

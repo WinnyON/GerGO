@@ -74,8 +74,9 @@ namespace GerGO.DataAcces.MetaData
             }
         }
 
-        public void AddTable(string dbName, Table table)
+        public void AddTable(string dbName, string tableId, Table table)
         {
+            table.MongoID = tableId;
             _dataBases.First(db => db.Name.Equals(dbName)).Tables.Add(table);
             try
             {
@@ -209,6 +210,33 @@ namespace GerGO.DataAcces.MetaData
 
             return fkList;
         }
+
+        public string GetNextKey(string dbName, string tableName)
+        {
+            List<Column> columns = _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns;
+
+            int nrKeys = 0;
+            List<Identity> identityList = [];
+            foreach (var column in columns)
+            {
+                if (column.PrimaryKey)
+                {
+                    nrKeys++;
+                    identityList.Add(column.PKIdentity);
+                }
+            }
+
+            if (nrKeys == 0 || nrKeys > 1)
+            {
+                return string.Empty;
+            }
+
+            _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.First(c => c.PrimaryKey).PKIdentity.Seed += identityList[0].Step;
+            _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
+
+            return $"{identityList[0].Seed + identityList[0].Step}";
+        }
+
         // return the columns with constraints
         public List<string[]> GetTableData(string dbName, string tableName)
         {
@@ -234,6 +262,12 @@ namespace GerGO.DataAcces.MetaData
 
             return columnList;
         }
+
+        public string GetTableMongoId(string dbName, string tableName)
+        {
+            return _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).MongoID;
+        }
+
         // returns the list of the tables of a db
         public string[] GetTables(string dbName)
         {

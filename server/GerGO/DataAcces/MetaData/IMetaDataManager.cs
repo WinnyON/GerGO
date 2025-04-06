@@ -10,10 +10,12 @@ namespace GerGO.DataAcces.MetaData
         public bool ExistsColumn(string dbName, string tableName, string columnName);
         public void AddDatabase(DataBase database);
         public void DropDatabase(DataBase database);
-        public void AddTable(string dbName, Table table);
+        public void AddTable(string dbName, string tableId, Table table);
         public void DropTable(string dbName, Table table);
         public void AddColumn(string dbName, string tableName, Column column);
         public void AddForeignKey(string dbName, string tableName, ForeignKey foreignKey);
+        public string GetTableMongoId(string dbName, string tableName);
+        public string GetNextKey(string dbName, string tableName);
         // returns the list of the tables of a db
         public string[] GetTables(string dbName);
         // return all table of all db

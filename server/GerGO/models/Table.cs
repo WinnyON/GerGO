@@ -7,8 +7,8 @@ namespace GerGO.Models
         [XmlAttribute("TableName")]
         public string Name { get; set; }
         
-        [XmlAttribute("FileName")]
-        public string FileName { get; set; }
+        [XmlAttribute("MongoID")]
+        public string MongoID { get; set; }
         
         [XmlAttribute("RowCount")]
         public int RowCount {  get; set; }
@@ -24,7 +24,7 @@ namespace GerGO.Models
         public Table()
         {
             Name = string.Empty;
-            FileName = string.Empty;
+            MongoID = string.Empty;
             RowCount = 0;
             ForeignKeys = new List<ForeignKey>();
             Columns = new List<Column>();
@@ -33,7 +33,7 @@ namespace GerGO.Models
         public Table(string name)
         {
             Name = name;
-            FileName = string.Empty;
+            MongoID = string.Empty;
             RowCount = 0;
             ForeignKeys = new List<ForeignKey>();
             Columns = new List<Column>();
@@ -41,7 +41,7 @@ namespace GerGO.Models
         public Table(string name, string fileName)
         {
             Name = name;
-            FileName = fileName;
+            MongoID = fileName;
             RowCount = 0;
             ForeignKeys = new List<ForeignKey>();
             Columns = new List<Column>();

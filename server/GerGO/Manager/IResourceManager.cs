@@ -20,7 +20,7 @@ namespace GerGO.Manager
         public string[] GetColumns(string dbName, string tableName);
         public List<string[]> GetForeignKeys(string dbName, string tableName);
         //public void AddIndex(string dbName, string tableName, string columnName);
-        public int Insert(string dbName, string tableName, string value);
-        public int Delete(string dbName, string tableName, string value);
+        public void Insert(string dbName, string tableName, string value);
+        public void Delete(string dbName, string tableName, string value);
     }
 }

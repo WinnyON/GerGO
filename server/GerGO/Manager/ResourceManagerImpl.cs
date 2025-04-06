@@ -120,7 +120,8 @@ namespace GerGO.Manager
 
             try
             {
-                _metaDataManager.AddTable(dbName, table);
+                string mongoId = _storedDataManager.PrepareTable(dbName, table.Name);
+                _metaDataManager.AddTable(dbName, mongoId, table);
             }
             catch (DataAccesException ex)
             {
@@ -243,11 +244,30 @@ namespace GerGO.Manager
 
         // DATA MANIPULATION
 
-        public int Insert(string dbName, string tableName, string value)
+        public void Insert(string dbName, string tableName, string value)
         {
-            throw new NotImplementedException();
+            if (!_metaDataManager.ExitsDb(dbName) || !_metaDataManager.ExitsTable(dbName, tableName))
+            {
+                throw new DataResourceException("Table doesn't exist");
+            }
+
+            string mongoID = _metaDataManager.GetTableMongoId(dbName, tableName);
+            string key = _metaDataManager.GetNextKey(dbName, tableName);
+            if (string.IsNullOrEmpty(key))
+            {
+                key = value;
+            }
+            try
+            {
+                _storedDataManager.Insert(dbName, mongoID, key, value);
+            }
+            catch (DataAccesException ex)
+            {
+                _logger.Error($"Failed to insert: {ex.Message}");
+                throw new DataResourceException(ex.Message);
+            }
         }
-        public int Delete(string dbName, string tableName, string value)
+        public void Delete(string dbName, string tableName, string value)
         {
             throw new NotImplementedException();
         }
