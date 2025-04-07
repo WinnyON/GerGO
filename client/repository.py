@@ -1,4 +1,5 @@
 from connectionException import ConnectionError
+import re
 
 class Repository():
 	def __init__(self,client):
@@ -16,13 +17,34 @@ class Repository():
 		except ConnectionError as ce:
 			return 1, ce
 
+	def is_valid_column(self, column):
+		if not column["Default"]:
+			return True
+		pattern = r'^[0-9]*$'
+		if column["Type"] == "int" and not re.match(pattern, column["Default"]):
+			return False
+		if column["Type"] == "float" and not re.match(r'^[0-9]+\.[0-9]+$', column["Default"]):
+			return False
+		if column["Type"] == "bit" and not re.match(r'^[0-1]$', column["Default"]):
+			return False
+		if column["Type"] == "date" and not re.match(r'^[0-9]{4}:[0-9]{2}:[0-9]{2}$', column["Default"]):
+			return False
+		if column["Type"] == "datetime" and not re.match(r'^[0-9]{4}:[0-9]{2}:[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$', column["Default"]):
+			return False
+		return True
+
+
 	def build_column_command(self, column):
 		# column["Name"] = column["Name"].replace('^', '')
 		# column["Type"] = column["Type"].replace('^', '')
 		# column["Default"] = column["Default"].replace('^', '')
 		# column["Identity"] = column["Identity"].replace('^', '')
 		# column["Check"] = column["Check"].replace('^', '')
-
+		column["Type"] = column["Type"].lower()
+		if column["Type"] not in ["string", "int", "float", "bit", "date", "datetime"]:
+			return 1, "Invalid column type"
+		if not self.is_valid_column(column):
+			return 1, "Invalid default value.\nFormat examples:\nint(1, 2,..)\nfloat(1.23, 3.99)\nbit(0, 1)\ndate(1984:01:01)\ndatetime(2001:09:11 10:23:33)"
 		command = column["Name"] + "^" + column["Type"] + "^"
 		if column["Primary Key"]:
 			command += "1^"
@@ -41,9 +63,11 @@ class Repository():
 			# command += "1^"
 			identity_data = column["Identity"].split(",")
 			if len(identity_data) == 2:
+				if not re.match(r'^[0-9]+$', identity_data[0]) or not re.match(r'^[0-9]+$', identity_data[1]):
+					return 1, "Invalid Identity Format.\n(Format example: 1,1)"
 				command += identity_data[0] + "^" + identity_data[1] + "^"
 			else:
-				return 1, "Invalid Identity Format"
+				return 1, "Invalid Identity Format.\n(Format example: 1,1)"
 		else:
 			command += "--^--^"
 		if column["Unique"]:
