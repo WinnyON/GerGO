@@ -1,7 +1,6 @@
 ﻿using GerGO.DataAcces;
 using GerGO.DataAcces.MetaData;
 using GerGO.DataAcces.StoredData;
-using GerGO.Functionalities;
 using GerGO.Models;
 using GerGO.Utils;
 
@@ -376,14 +375,17 @@ namespace GerGO.Manager
             string key = _metaDataManager.GetNextKey(dbName, tableName);
             if (string.IsNullOrEmpty(key))
             {
-                key = value;
+                _logger.Error("No primary key in the table!");
+                throw new DataResourceException("No primary key in the table!");
             }
             try
             {
                 lock (_locks[dbName])
                 {
-                    if (_storedDataManager.IsValidRow(dbName, tableName, _metaDataManager.GetTableData(dbName, tableName), ref value))
-                        _storedDataManager.Insert(dbName, mongoID, key, value);
+                    if (!_storedDataManager.IsValidRow(dbName, tableName, _metaDataManager.GetTableData(dbName, tableName), key, ref value))
+                        throw new DataResourceException("");
+                    
+                    _storedDataManager.Insert(dbName, mongoID, key, value);
                 }
             }
             catch (DataAccesException ex)

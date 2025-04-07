@@ -3,7 +3,7 @@
     interface IStoredDataManager
     {
         public string PrepareTable(string dbName, string tableName);
-        public bool IsValidRow(string dbName, string tableName, List<string[]> columns, ref string value);
+        public bool IsValidRow(string dbName, string tableName, List<string[]> columns, string key, ref string value);
         public void Insert(string dbName, string tableID, string key, string value);
         public void Delete(string dbName, string tableID, string key);
 

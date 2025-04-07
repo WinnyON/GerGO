@@ -21,6 +21,9 @@ namespace GerGO.DataAcces.StoredData
             var filter = Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(tableID));
             var document = collection.Find(filter).FirstOrDefault();
 
+            if (document.Elements.Count() == 1)
+                return;
+
             var updateDef = new List<UpdateDefinition<BsonDocument>>();
 
             foreach (var element in document.Elements)
@@ -109,17 +112,20 @@ namespace GerGO.DataAcces.StoredData
             }
         }
 
-        public bool IsValidRow(string dbName, string tableName, List<string[]> columns, ref string value)
+        public bool IsValidRow(string dbName, string tableName, List<string[]> columns, string key, ref string value)
         {
             string[] insertedRow = value.Split('^');
-            if (insertedRow.Length != columns.Count - 1)
+            if (insertedRow.Length != columns.Count)
                 return false;
 
-            for (int i = 1; i < columns.Count; i++)
+            for (int i = 0; i < columns.Count; i++)
             {
                 // if the column is the primary key
                 if (!columns[i][2].Equals("--"))
+                {
+                    insertedRow[i] = key;
                     continue;
+                }
 
                 try
                 {
@@ -140,6 +146,8 @@ namespace GerGO.DataAcces.StoredData
                             break;
                         case "datetime":
                             _ = TimeSpan.Parse(insertedRow[i]);
+                            break;
+                        case "string":
                             break;
                         default:
                             return false;
@@ -164,7 +172,7 @@ namespace GerGO.DataAcces.StoredData
                 // unique check
                 if (!columns[i][7].Equals("--"))
                 {
-                    List<string> values = GetAllRows(dbName, tableName).Select(row => row.Split('^')[i+1]).ToList();
+                    List<string> values = GetAllRows(dbName, tableName).Select(row => row.Split('^')[i+2]).ToList();
 
                     if (values.Contains(insertedRow[i]))
                         return false;
