@@ -306,9 +306,9 @@ namespace GerGO.DataAcces.MetaData
                 [
                     col.Name,
                     col.Type,
+                    col.PrimaryKey.ToString(),
                     col.NotNull.ToString(),
                     col.DefaultVal,
-                    col.PrimaryKey.ToString(),
                     col.PKIdentity.Seed.ToString(),
                     col.PKIdentity.Step.ToString(),
                     col.Unique.ToString(),

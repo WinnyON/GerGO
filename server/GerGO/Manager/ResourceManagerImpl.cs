@@ -11,9 +11,20 @@ namespace GerGO.Manager
         private readonly ILogger _logger = LoggerFactory.GetLogger();
         private readonly IMetaDataManager _metaDataManager = MetaDataManagerFactory.GetMetaDataManager();
         private readonly IStoredDataManager _storedDataManager = StoredDataManagerFactory.GetStoredDataManager();
-
+        private Dictionary<string, object> _locks;
         public ResourceManagerImpl()
         {
+            LoadLocks();
+        }
+
+        private void LoadLocks()
+        {
+            List<string[]> dbData = _metaDataManager.GetDBData();
+            _locks = new Dictionary<string, object>();
+            foreach (var db in dbData)
+            {
+                _locks[db[0]] = new object();
+            }
         }
 
         // DATA DEFINITION
@@ -33,7 +44,10 @@ namespace GerGO.Manager
 
             try
             {
-                _metaDataManager.AddColumn(dbName, tableName, column);
+                lock (_locks[dbName])
+                {
+                    _metaDataManager.AddColumn(dbName, tableName, column);
+                }
             }
             catch (DataAccesException ex)
             {
@@ -53,6 +67,7 @@ namespace GerGO.Manager
             try
             {
                 _metaDataManager.AddDatabase(dataBase);
+                _locks[dataBase.Name] = new object();
             }
             catch (DataAccesException ex)
             {
@@ -95,7 +110,10 @@ namespace GerGO.Manager
 
             try
             {
-                _metaDataManager.AddForeignKey(dbName, tableName, foreignKey);
+                lock (_locks[dbName])
+                {
+                    _metaDataManager.AddForeignKey(dbName, tableName, foreignKey);
+                }
             }
             catch (DataAccesException ex)
             {
@@ -126,7 +144,10 @@ namespace GerGO.Manager
 
             try
             {
-                _metaDataManager.AddIndex(dbName, tableName, indexName, columnName);
+                lock (_locks[dbName])
+                {
+                    _metaDataManager.AddIndex(dbName, tableName, indexName, columnName);
+                }
             }
             catch (DataAccesException ex)
             {
@@ -151,8 +172,11 @@ namespace GerGO.Manager
 
             try
             {
-                string mongoId = _storedDataManager.PrepareTable(dbName, table.Name);
-                _metaDataManager.AddTable(dbName, mongoId, table);
+                lock (_locks[dbName])
+                {
+                    string mongoId = _storedDataManager.PrepareTable(dbName, table.Name);
+                    _metaDataManager.AddTable(dbName, mongoId, table);
+                }
             }
             catch (DataAccesException ex)
             {
@@ -171,7 +195,11 @@ namespace GerGO.Manager
 
             try
             {
-                _metaDataManager.DropDatabase(dataBase);
+                lock (_locks[dataBase.Name])
+                {
+                    _metaDataManager.DropDatabase(dataBase);
+                }
+                _locks.Remove(dataBase.Name);
             }
             catch (DataAccesException ex)
             {
@@ -196,7 +224,10 @@ namespace GerGO.Manager
 
             try
             {
-                _metaDataManager.DropTable(dbName, table);
+                lock (_locks[dbName])
+                {
+                    _metaDataManager.DropTable(dbName, table);
+                }
             }
             catch (DataAccesException ex)
             {
@@ -219,7 +250,12 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
             }
 
-            return _metaDataManager.GetColumns(dbName, tableName);
+            string[] columns;
+            lock (_locks[dbName])
+            {
+                columns = _metaDataManager.GetColumns(dbName, tableName);
+            }
+            return columns;
         }
 
         public List<string[]> GetDBData()
@@ -241,7 +277,12 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
             }
 
-            return _metaDataManager.GetForeignKeys(dbName, tableName);
+            List<string[]> fKeys;
+            lock (_locks[dbName])
+            {
+                fKeys = _metaDataManager.GetForeignKeys(dbName, tableName);
+            }
+            return fKeys;
         }
 
         public List<string[]> GetTableData(string dbName, string tableName)
@@ -258,7 +299,12 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
             }
 
-            return _metaDataManager.GetTableData(dbName, tableName);
+            List<string[]> tableData;
+            lock (_locks[dbName])
+            {
+                tableData = _metaDataManager.GetTableData(dbName, tableName);
+            }
+            return tableData;
         }
 
         public string[] GetTables(string dbName)
@@ -269,7 +315,12 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Database {dbName} doesn't exist!");
             }
 
-            return _metaDataManager.GetTables(dbName);
+            string[] tables;
+            lock (_locks[dbName])
+            {
+                tables = _metaDataManager.GetTables(dbName);
+            }
+            return tables;
         }
 
         public List<string> GetIndexes(string dbName, string tableName)
@@ -286,15 +337,12 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
             }
 
-            try
+            List<string> indexData;
+            lock (_locks[dbName])
             {
-                return _metaDataManager.GetIndexData(dbName, tableName);
+                indexData = _metaDataManager.GetIndexData(dbName, tableName);
             }
-            catch (DataAccesException ex)
-            {
-                _logger.Error($"Failed to get index data: {ex.Message}");
-                throw new DataResourceException("Failed to get index data!");
-            }
+            return indexData;
         }
 
         // DATA MANIPULATION
@@ -314,7 +362,10 @@ namespace GerGO.Manager
             }
             try
             {
-                _storedDataManager.Insert(dbName, mongoID, key, value);
+                lock (_locks[dbName])
+                {
+                    _storedDataManager.Insert(dbName, mongoID, key, value);
+                }
             }
             catch (DataAccesException ex)
             {
@@ -332,7 +383,10 @@ namespace GerGO.Manager
             string tableMongoId = _metaDataManager.GetTableMongoId(dbName, tableName);
             try
             {
-                _storedDataManager.Delete(dbName, tableMongoId, key);
+                lock (_locks[dbName])
+                {
+                    _storedDataManager.Delete(dbName, tableMongoId, key);
+                }
             }
             catch (DataAccesException ex)
             {
@@ -356,8 +410,11 @@ namespace GerGO.Manager
 
             try
             {
-                string mongoId = _metaDataManager.GetTableMongoId(dbName, tableName);
-                rows = _storedDataManager.GetAllRows(dbName, mongoId);
+                lock (_locks[dbName])
+                {
+                    string mongoId = _metaDataManager.GetTableMongoId(dbName, tableName);
+                    rows = _storedDataManager.GetAllRows(dbName, mongoId);
+                }
             }
             catch (DataAccesException ex)
             {

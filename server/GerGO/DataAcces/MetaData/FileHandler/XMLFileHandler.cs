@@ -18,29 +18,37 @@ namespace GerGO.DataAcces.MetaData.FileHandler
     class XMLFileHandler : IFileHandler
     {
         private readonly ILogger _logger = LoggerFactory.GetLogger();
+        private readonly object _lock = new object();
         public void WriteDataBaseData(string path, List<DataBase> dataBases)
         {
-            try
+            lock (_lock)
             {
-                string resultXml = SerializeToXml(new DataBaseXmlWrapper() { DataBases = dataBases });
+                try
+                {
+                    string resultXml = SerializeToXml(new DataBaseXmlWrapper() { DataBases = dataBases });
 
-                File.WriteAllText(path, resultXml);
-            }
-            catch (IOException)
-            {
-                _logger.Error("Failed to write to file!");
-                throw new FileHandlerException("Failed to write to file!");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"Failed to serialize: {ex.Message}");
-                throw new FileHandlerException("Failed to serialize!");
+                    File.WriteAllText(path, resultXml);
+                }
+                catch (IOException)
+                {
+                    _logger.Error("Failed to write to file!");
+                    throw new FileHandlerException("Failed to write to file!");
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error($"Failed to serialize: {ex.Message}");
+                    throw new FileHandlerException("Failed to serialize!");
+                }
             }
         }
 
         public List<DataBase> ReadDataBaseData(string path)
         {
-            DataBaseXmlWrapper wrapper = DeserializeFromXml(path);
+            DataBaseXmlWrapper wrapper;
+            lock (_lock)
+            {
+                wrapper = DeserializeFromXml(path);
+            }
 
             return wrapper.DataBases;
         }
