@@ -306,12 +306,12 @@ namespace GerGO.DataAcces.MetaData
                 [
                     col.Name,
                     col.Type,
-                    col.PrimaryKey.ToString(),
-                    col.NotNull.ToString(),
+                    col.PrimaryKey ? "1" : "--",
+                    col.NotNull ? "1" : "--",
                     col.DefaultVal,
                     col.PKIdentity.Seed.ToString(),
                     col.PKIdentity.Step.ToString(),
-                    col.Unique.ToString(),
+                    col.Unique ? "1" : "--",
                     col.Check,
                 ];
                 columnList.Add(columnData);

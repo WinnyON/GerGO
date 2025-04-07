@@ -1,6 +1,7 @@
 ﻿using GerGO.DataAcces;
 using GerGO.DataAcces.MetaData;
 using GerGO.DataAcces.StoredData;
+using GerGO.Functionalities;
 using GerGO.Models;
 using GerGO.Utils;
 
@@ -42,11 +43,26 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
             }
 
+            if (column.PrimaryKey && (column.NotNull || column.DefaultVal != string.Empty || column.Unique || column.Check != string.Empty))
+            {
+                _logger.Error("Not valid column: pk key can have no other constraints!");
+                throw new DataResourceException("Not valid column: pk key can have no other constraints!");
+            }
+
+            if (column.NotNull && column.DefaultVal == string.Empty)
+            {
+                _logger.Error("When set NOT NULL, default value is required!");
+                throw new DataResourceException("When set NOT NULL, default value is required!");
+            }
+
             try
             {
                 lock (_locks[dbName])
                 {
                     _metaDataManager.AddColumn(dbName, tableName, column);
+                    string mongoId = _metaDataManager.GetTableMongoId(dbName, tableName);
+                    string value = column.DefaultVal == string.Empty ? "null" : column.DefaultVal;
+                    _storedDataManager.AddColumn(dbName, mongoId, value);
                 }
             }
             catch (DataAccesException ex)
@@ -198,6 +214,7 @@ namespace GerGO.Manager
                 lock (_locks[dataBase.Name])
                 {
                     _metaDataManager.DropDatabase(dataBase);
+                    _storedDataManager.DropDatabase(dataBase.Name);
                 }
                 _locks.Remove(dataBase.Name);
             }
@@ -226,6 +243,7 @@ namespace GerGO.Manager
             {
                 lock (_locks[dbName])
                 {
+                    _storedDataManager.DropTable(dbName, _metaDataManager.GetTableMongoId(dbName, table.Name));
                     _metaDataManager.DropTable(dbName, table);
                 }
             }
@@ -364,7 +382,8 @@ namespace GerGO.Manager
             {
                 lock (_locks[dbName])
                 {
-                    _storedDataManager.Insert(dbName, mongoID, key, value);
+                    if (_storedDataManager.IsValidRow(dbName, tableName, _metaDataManager.GetTableData(dbName, tableName), ref value))
+                        _storedDataManager.Insert(dbName, mongoID, key, value);
                 }
             }
             catch (DataAccesException ex)
@@ -405,9 +424,7 @@ namespace GerGO.Manager
             if (!_metaDataManager.ExitsTable(dbName, tableName))
                 throw new DataResourceException("Table doesn't exists!");
 
-
             List<string> rows;
-
             try
             {
                 lock (_locks[dbName])

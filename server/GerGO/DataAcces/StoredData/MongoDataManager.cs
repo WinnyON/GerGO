@@ -1,5 +1,4 @@
-﻿using GerGO.Utils;
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace GerGO.DataAcces.StoredData
@@ -16,6 +15,31 @@ namespace GerGO.DataAcces.StoredData
             _coreDB = _client.GetDatabase("GerGOStorage");
         }
 
+        public void AddColumn(string dbName, string tableID, string value)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(tableID));
+            var document = collection.Find(filter).FirstOrDefault();
+
+            var updateDef = new List<UpdateDefinition<BsonDocument>>();
+
+            foreach (var element in document.Elements)
+            {
+                if (element.Name != "_id")
+                {
+                    updateDef.Add(Builders<BsonDocument>.Update.Set(element.Name, $"{element.Value}^{value}"));
+                }
+            }
+
+            var combinedUpdate = Builders<BsonDocument>.Update.Combine(updateDef);
+            var result = collection.UpdateOne(filter, combinedUpdate);
+
+            if (result.ModifiedCount == 0)
+            {
+                throw new DataAccesException("Document was not updated.");
+            }
+        }
+
         public void Delete(string dbName, string tableID, string key)
         {
             var collection = _coreDB.GetCollection<BsonDocument>(dbName);
@@ -29,6 +53,24 @@ namespace GerGO.DataAcces.StoredData
             if (result.ModifiedCount == 0)
             {
                 throw new DataAccesException("No matching key!");
+            }
+        }
+
+        public void DropDatabase(string dbName)
+        {
+            _coreDB.DropCollection(dbName);
+        }
+
+        public void DropTable(string dbName, string mongoId)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(mongoId));
+
+            var result = collection.DeleteOne(filter);
+
+            if (result.DeletedCount == 0)
+            {
+                throw new DataAccesException("No document found to delete.");
             }
         }
 
@@ -65,6 +107,73 @@ namespace GerGO.DataAcces.StoredData
             {
                 throw new DataAccesException("Failed to insert!");
             }
+        }
+
+        public bool IsValidRow(string dbName, string tableName, List<string[]> columns, ref string value)
+        {
+            string[] insertedRow = value.Split('^');
+            if (insertedRow.Length != columns.Count - 1)
+                return false;
+
+            for (int i = 1; i < columns.Count; i++)
+            {
+                // if the column is the primary key
+                if (!columns[i][2].Equals("--"))
+                    continue;
+
+                try
+                {
+                    // type check
+                    switch (columns[i][1])
+                    {
+                        case "int":
+                            _ = int.Parse(insertedRow[i]);
+                            break;
+                        case "float":
+                            _ = float.Parse(insertedRow[i]);
+                            break;
+                        case "bit":
+                            _ = bool.Parse(insertedRow[i]);
+                            break;
+                        case "date":
+                            _ = DateTime.Parse(insertedRow[i]);
+                            break;
+                        case "datetime":
+                            _ = TimeSpan.Parse(insertedRow[i]);
+                            break;
+                        default:
+                            return false;
+                    }
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+
+                // not null check
+                if (!columns[i][3].Equals("--"))
+                {
+                    if (insertedRow[i].Equals("0") || insertedRow[i].Equals("null") || insertedRow[i].Equals(string.Empty))
+                        return false;
+                }
+
+                // defaultval check
+                if (!columns[i][4].Equals("--") && (insertedRow[i].Equals("0") || insertedRow[i].Equals("null") || insertedRow[i].Equals(string.Empty)))
+                    insertedRow[i] = columns[i][3];
+
+                // unique check
+                if (!columns[i][7].Equals("--"))
+                {
+                    List<string> values = GetAllRows(dbName, tableName).Select(row => row.Split('^')[i+1]).ToList();
+
+                    if (values.Contains(insertedRow[i]))
+                        return false;
+                }
+
+                // check condition
+            }
+
+            return true;
         }
 
         public string PrepareTable(string dbName, string tableName)
