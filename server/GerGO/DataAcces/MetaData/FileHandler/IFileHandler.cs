@@ -1,8 +1,8 @@
 ﻿using GerGO.Models;
 
-namespace GerGO.Utils
+namespace GerGO.DataAcces.MetaData.FileHandler
 {
-    interface FileHandler
+    interface IFileHandler
     {
         public void WriteDataBaseData(string path, List<DataBase> dataBases);
         public List<DataBase> ReadDataBaseData(string path);

@@ -2,7 +2,7 @@
 
 namespace GerGO.Functionalities
 {
-    interface Command
+    interface ICommand
     {
         void Execute(NetworkStream stream, string[] arguments);
     }

@@ -1,16 +1,16 @@
 ﻿using GerGO.Communication;
-using GerGO.DataResource;
+using GerGO.Manager;
 using GerGO.Utils;
 using System.Net.Sockets;
 
-namespace GerGO.Functionalities
+namespace GerGO.Functionalities.MetaData
 {
-    class GetForeignKeysCommand : Command
+    class GetForeignKeysCommand : ICommand
     {
-        private Logger _logger = LoggerFactory.GetLogger();
+        private readonly ILogger _logger = LoggerFactory.GetLogger();
         public void Execute(NetworkStream stream, string[] arguments)
         {
-            ResourceManager manager = ResourceManagerFactory.GetInstance();
+            IResourceManager manager = ResourceManagerFactory.GetInstance();
 
             List<string[]> fkList;
             try
@@ -18,15 +18,8 @@ namespace GerGO.Functionalities
                 string dbName = arguments[1].ToLower();
                 string tableName = arguments[2].ToLower();
 
-                if (manager.ExistsTable(dbName, tableName))
-                {
-                    TcpResponder.SendMessage(stream, "OK");
-                }
-                else
-                {
-                    TcpResponder.SendErrorMessage(stream, "Fail!");
-                    return;
-                }
+                TcpResponder.SendMessage(stream, "OK");
+
                 byte[] okMesBuffer = new byte[4];
                 stream.Read(okMesBuffer, 0, okMesBuffer.Length);
 
@@ -40,20 +33,25 @@ namespace GerGO.Functionalities
                 }
                 TcpResponder.SendMessage(stream, "OK");
             }
+            catch (IndexOutOfRangeException)
+            {
+                _logger.Error("Not enough arguments for getting all row!");
+                throw new CommandException("Not enough arguments for getting all row!");
+            }
             catch (IOException)
             {
-                _logger.Error("Error in reqest!");
+                _logger.Error("Failed to retrieve foreign keys!");
                 throw new CommandException("Failed to retrieve foreign keys!");
             }
             catch (DataResourceException ex)
             {
-                _logger.Error("Failed to retrive foreign keys! " + ex.Message);
-                throw new CommandException("Failed to retrieve foreign keys!");
+                _logger.Error($"Failed to retrieve foreign keys: {ex.Message}");
+                throw new CommandException($"Failed to retrieve foreign keys: {ex.Message}");
             }
             catch (CommunicationException ex)
             {
-                _logger.Error("Error in communication! " + ex.Message);
-                throw new CommandException("Error in communication! ");
+                _logger.Error($"Error in communication: {ex.Message}");
+                throw new CommandException($"Error in communication: {ex.Message}");
             }
         }
     }

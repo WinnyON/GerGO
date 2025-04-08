@@ -1,14 +1,14 @@
 ﻿using System.Net.Sockets;
 using GerGO.Models;
-using GerGO.DataResource;
+using GerGO.Manager;
 using GerGO.Utils;
 using GerGO.Communication;
 
-namespace GerGO.Functionalities
+namespace GerGO.Functionalities.MetaData
 {
-    class CreateDBCommand : Command
+    class CreateDBCommand : ICommand
     {
-        private Logger _logger = LoggerFactory.GetLogger();
+        private readonly ILogger _logger = LoggerFactory.GetLogger();
         public void Execute(NetworkStream stream, string[] arguments)
         {
             DataBase db;
@@ -16,19 +16,19 @@ namespace GerGO.Functionalities
             {
                 string name = arguments[1].ToLower();
                 db = new DataBase(name);
-                ResourceManager manager = ResourceManagerFactory.GetInstance();
+                IResourceManager manager = ResourceManagerFactory.GetInstance();
 
                 manager.AddDataBase(db);
             }
             catch (IndexOutOfRangeException)
             {
-                _logger.Error("No arguments provided!");
-                throw new CommandException("No arguments provided!");
+                _logger.Error("Not enough arguments provided for creating DB!");
+                throw new CommandException("Not enough arguments provided for creating DB!");
             }
             catch (DataResourceException ex)
             {
-                _logger.Error("Failed to complete command: " + ex.Message);
-                throw new CommandException(ex.Message);
+                _logger.Error($"Failed to create DB {arguments[1]}: {ex.Message}");
+                throw new CommandException($"Failed to create DB {arguments[1]}: {ex.Message}");
             }
 
             try

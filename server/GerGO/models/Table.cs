@@ -7,15 +7,15 @@ namespace GerGO.Models
         [XmlAttribute("TableName")]
         public string Name { get; set; }
         
-        [XmlAttribute("FileName")]
-        public string FileName { get; set; }
-        
-        [XmlAttribute("RowCount")]
-        public int RowCount {  get; set; }
+        [XmlAttribute("MongoID")]
+        public string MongoID { get; set; }
         
         [XmlArray("ForeignKeys")]
         [XmlArrayItem("ForeignKey")]
         public List<ForeignKey> ForeignKeys { get; set; }
+        [XmlArray("IndexFiles")]
+        [XmlArrayItem("Index")]
+        public List<IndexFile> IndexFiles { get; set; }
 
         [XmlArray("Structure")]
         [XmlArrayItem("Column")]
@@ -24,27 +24,34 @@ namespace GerGO.Models
         public Table()
         {
             Name = string.Empty;
-            FileName = string.Empty;
-            RowCount = 0;
+            MongoID = string.Empty;
             ForeignKeys = new List<ForeignKey>();
             Columns = new List<Column>();
+            IndexFiles = new List<IndexFile>();
         }
 
         public Table(string name)
         {
             Name = name;
-            FileName = string.Empty;
-            RowCount = 0;
+            MongoID = string.Empty;
             ForeignKeys = new List<ForeignKey>();
             Columns = new List<Column>();
+            IndexFiles = new List<IndexFile>();
         }
-        public Table(string name, string fileName)
+
+        public override bool Equals(object? obj)
         {
-            Name = name;
-            FileName = fileName;
-            RowCount = 0;
-            ForeignKeys = new List<ForeignKey>();
-            Columns = new List<Column>();
+            if (obj == null) return false;
+            if (obj is Table table)
+            {
+                return this.Name == table.Name;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode();
         }
     }
 }

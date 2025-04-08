@@ -28,5 +28,20 @@ namespace GerGO.Models
             RefAttributeName = refAttributeName;
             AttributeName = attributeName;
         }
+        
+        public override bool Equals(object? obj)
+        {
+            if (obj == null) return false;
+            if (obj is ForeignKey fk)
+            {
+                return this.Name == fk.Name;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode();
+        }
     }
 }

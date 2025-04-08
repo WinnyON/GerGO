@@ -1,16 +1,16 @@
 ﻿using GerGO.Communication;
-using GerGO.DataResource;
+using GerGO.Manager;
 using GerGO.Utils;
 using System.Net.Sockets;
 
-namespace GerGO.Functionalities
+namespace GerGO.Functionalities.MetaData
 {
-    class GetDBDetailsCommand : Command
+    class GetDBDetailsCommand : ICommand
     {
-        private Logger _logger = LoggerFactory.GetLogger();
+        private readonly ILogger _logger = LoggerFactory.GetLogger();
         public void Execute(NetworkStream stream, string[] arguments)
         {
-            ResourceManager manager = ResourceManagerFactory.GetInstance();
+            IResourceManager manager = ResourceManagerFactory.GetInstance();
 
             List<string[]> dbList;
             try
@@ -27,7 +27,7 @@ namespace GerGO.Functionalities
             }
             catch (DataResourceException ex)
             {
-                _logger.Error("Failed to retrive database data! " + ex.Message);
+                _logger.Error($"Failed to retrive database data: {ex.Message}");
                 throw new CommandException("Failed to retrieve database data!");
             }
             catch (CommunicationException ex)

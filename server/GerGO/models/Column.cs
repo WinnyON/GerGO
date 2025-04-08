@@ -21,8 +21,8 @@ namespace GerGO.Models
         [XmlElement("PrimaryKey")]
         public bool PrimaryKey{ get; set; }
 
-        [XmlAttribute("Identity")]
-        public bool Identity { get; set; }
+        [XmlElement("Identity")]
+        public Identity PKIdentity { get; set; }
         
         [XmlAttribute("Unique")]
         public bool Unique { get; set; }
@@ -37,21 +37,36 @@ namespace GerGO.Models
             NotNull = false;
             DefaultVal = string.Empty;
             PrimaryKey = false;
-            Identity = false;
+            PKIdentity = new Identity(0, 0);
             Unique = false;
             Check = string.Empty;
         }
 
-        public Column(string name, string type, bool notNull, string defaultVal, bool primaryKey, bool identity, bool unique, string check)
+        public Column(string name, string type, bool notNull, string defaultVal, bool primaryKey, Identity identity, bool unique, string check)
         {
             Name = name;
             Type = type;
             NotNull = notNull;
             DefaultVal = defaultVal;
             PrimaryKey = primaryKey;
-            Identity = identity;
+            PKIdentity = identity;
             Unique = unique;
             Check = check;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj == null) return false;
+            if (obj is Column column)
+            {
+                return this.Name == column.Name;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode();
         }
     }
 }

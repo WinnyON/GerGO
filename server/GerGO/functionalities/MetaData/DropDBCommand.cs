@@ -1,33 +1,33 @@
 ﻿using GerGO.Communication;
-using GerGO.DataResource;
+using GerGO.Manager;
 using GerGO.Models;
 using GerGO.Utils;
 using System.Net.Sockets;
 
-namespace GerGO.Functionalities
+namespace GerGO.Functionalities.MetaData
 {
-    class DropDBCommand : Command
+    class DropDBCommand : ICommand
     {
-        private Logger _logger = LoggerFactory.GetLogger();
+        private readonly ILogger _logger = LoggerFactory.GetLogger();
         public void Execute(NetworkStream stream, string[] arguments)
         {
             DataBase db;
             try
             {
                 db = new DataBase(arguments[1]);
-                ResourceManager manager = ResourceManagerFactory.GetInstance();
+                IResourceManager manager = ResourceManagerFactory.GetInstance();
 
                 manager.DropDataBase(db);
             }
             catch (IndexOutOfRangeException)
             {
-                _logger.Error("No arguments provided!");
-                throw new CommandException("No arguments provided!");
+                _logger.Error("Not enough arguments provided for dropping DB!");
+                throw new CommandException("Not enough arguments provided for dropping DB!");
             }
             catch (DataResourceException ex)
             {
-                _logger.Error("Failed to complete command: " + ex.Message);
-                throw new CommandException(ex.Message);
+                _logger.Error($"Failed to drop DB {arguments[1]}: {ex.Message}");
+                throw new CommandException($"Failed to drop DB {arguments[1]}: {ex.Message}");
             }
 
             try

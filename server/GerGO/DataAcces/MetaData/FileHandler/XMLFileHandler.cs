@@ -1,45 +1,54 @@
 ﻿using GerGO.Models;
+using GerGO.Utils;
 using System.Xml.Serialization;
 
-namespace GerGO.Utils
+namespace GerGO.DataAcces.MetaData.FileHandler
 {
     [XmlRoot("DataBaseXmlWrapper")]
     public class DataBaseXmlWrapper
     {
         [XmlArray("Databases")]
         [XmlArrayItem("DataBase")]
-        public List<DataBase> DataBases {  get; set; }
+        public List<DataBase> DataBases { get; set; }
         public DataBaseXmlWrapper()
         {
 
         }
     }
-    class XMLFileHandler : FileHandler
+    class XMLFileHandler : IFileHandler
     {
-        private Logger _logger = LoggerFactory.GetLogger();
+        private readonly ILogger _logger = LoggerFactory.GetLogger();
+        private readonly object _lock = new object();
         public void WriteDataBaseData(string path, List<DataBase> dataBases)
         {
-            try
+            lock (_lock)
             {
-                string resultXml = SerializeToXml(new DataBaseXmlWrapper() { DataBases = dataBases });
+                try
+                {
+                    string resultXml = SerializeToXml(new DataBaseXmlWrapper() { DataBases = dataBases });
 
-                File.WriteAllText(path, resultXml);
-            }
-            catch (IOException)
-            {
-                _logger.Error("Failed to write to file!");
-                throw new FileHandlerException("Failed to write to file!");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("Failed to serialize! " + ex.Message);
-                throw new FileHandlerException("Failed to serialize!");
+                    File.WriteAllText(path, resultXml);
+                }
+                catch (IOException)
+                {
+                    _logger.Error("Failed to write to file!");
+                    throw new FileHandlerException("Failed to write to file!");
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error($"Failed to serialize: {ex.Message}");
+                    throw new FileHandlerException("Failed to serialize!");
+                }
             }
         }
 
         public List<DataBase> ReadDataBaseData(string path)
         {
-            DataBaseXmlWrapper wrapper = DeserializeFromXml(path);
+            DataBaseXmlWrapper wrapper;
+            lock (_lock)
+            {
+                wrapper = DeserializeFromXml(path);
+            }
 
             return wrapper.DataBases;
         }
@@ -66,7 +75,7 @@ namespace GerGO.Utils
             }
             catch (Exception ex)
             {
-                _logger.Error("Failed to deserialize! " + ex.Message);
+                _logger.Error($"Failed to deserialize: {ex.Message}");
                 throw new FileHandlerException("Failed to deserialize!");
             }
         }

@@ -1,14 +1,14 @@
 ﻿using GerGO.Communication;
-using GerGO.DataResource;
+using GerGO.Manager;
 using GerGO.Models;
 using GerGO.Utils;
 using System.Net.Sockets;
 
-namespace GerGO.Functionalities
+namespace GerGO.Functionalities.MetaData
 {
-    class AddForeignKeyCommand : Command
+    class AddForeignKeyCommand : ICommand
     {
-        private Logger _logger = LoggerFactory.GetLogger();
+        private readonly ILogger _logger = LoggerFactory.GetLogger();
         public void Execute(NetworkStream stream, string[] arguments)
         {
             ForeignKey foreignKey = new ForeignKey();
@@ -21,18 +21,18 @@ namespace GerGO.Functionalities
                 foreignKey.RefAttributeName = arguments[5].ToLower();
                 foreignKey.AttributeName = arguments[6].ToLower();
 
-                ResourceManager manager = ResourceManagerFactory.GetInstance();
+                IResourceManager manager = ResourceManagerFactory.GetInstance();
                 manager.AddForeignKey(dbName, tableNname, foreignKey);
             }
             catch (IndexOutOfRangeException)
             {
-                _logger.Error("Not enough arguments provided!");
-                throw new CommandException("Not enough arguments provided!");
+                _logger.Error("Not enough arguments provided for adding foreign key!");
+                throw new CommandException("Not enough arguments provided for adding foreign key!");
             }
             catch (DataResourceException ex)
             {
-                _logger.Error("Failed to complete command: " + ex.Message);
-                throw new CommandException(ex.Message);
+                _logger.Error($"Failed to add foreign key: {ex.Message}");
+                throw new CommandException($"Failed to add foreign key: {ex.Message}");
             }
 
             try

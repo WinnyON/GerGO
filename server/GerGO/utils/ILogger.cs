@@ -1,6 +1,6 @@
 ﻿namespace GerGO.Utils
 {
-    interface Logger
+    interface ILogger
     {
         void Info(string message);
         void Warning(string message);

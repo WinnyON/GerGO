@@ -1,14 +1,14 @@
 ﻿using GerGO.Communication;
-using GerGO.DataResource;
+using GerGO.Manager;
 using GerGO.Models;
 using GerGO.Utils;
 using System.Net.Sockets;
 
-namespace GerGO.Functionalities
+namespace GerGO.Functionalities.MetaData
 {
-    class AddColumnCommand : Command
+    class AddColumnCommand : ICommand
     {
-        private Logger _logger = LoggerFactory.GetLogger();
+        private readonly ILogger _logger = LoggerFactory.GetLogger();
         public void Execute(NetworkStream stream, string[] arguments)
         {
             Column column = new Column();
@@ -34,33 +34,33 @@ namespace GerGO.Functionalities
                 else
                     column.DefaultVal = arguments[7];
 
-                if (arguments[8].Equals("--"))
-                    column.Identity = false;
-                else
-                    column.Identity = true;
-
-                if (arguments[9].Equals("--"))
-                    column.Unique = false;
-                else
-                    column.Unique= true;
+                if (!arguments[8].Equals("--"))
+                    column.PKIdentity.Seed = int.Parse(arguments[8]);
+                if (!arguments[9].Equals("--"))
+                    column.PKIdentity.Step = int.Parse(arguments[9]);
 
                 if (arguments[10].Equals("--"))
+                    column.Unique = false;
+                else
+                    column.Unique = true;
+
+                if (arguments[11].Equals("--"))
                     column.Check = string.Empty;
                 else
-                    column.Check= arguments[10];
+                    column.Check = arguments[11];
 
-                ResourceManager manager = ResourceManagerFactory.GetInstance();
+                IResourceManager manager = ResourceManagerFactory.GetInstance();
                 manager.AddColumn(dbName, tableName, column);
             }
             catch (IndexOutOfRangeException)
             {
-                _logger.Error("Not enough arguments provided!");
-                throw new CommandException("Not enough arguments provided!");
+                _logger.Error("Not enough arguments provided for adding column!");
+                throw new CommandException("Not enough arguments provided for adding column!");
             }
             catch (DataResourceException ex)
             {
-                _logger.Error("Failed to complete command: " + ex.Message);
-                throw new CommandException(ex.Message);
+                _logger.Error($"Failed to add column: {ex.Message}");
+                throw new CommandException($"Failed to add column: {ex.Message}");
             }
 
             try

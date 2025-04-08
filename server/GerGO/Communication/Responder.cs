@@ -2,7 +2,7 @@
 
 namespace GerGO.Communication
 {
-    interface Responder
+    interface IResponder
     {
         static abstract void SendErrorMessage(NetworkStream stream, string message);
         static abstract void SendMessage(NetworkStream stream, string message);
