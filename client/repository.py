@@ -15,7 +15,7 @@ class Repository():
 				return 1, code.split('^')[1]
 			return 0, "OK"
 		except ConnectionError as ce:
-			return 1, ce
+			return 1, ce.get_text()
 
 	def is_valid_column(self, column):
 		if not column["Default"]:
@@ -104,17 +104,19 @@ class Repository():
 					return 1, code.split('^')[1]
 			return 0, "OK"
 		except ConnectionError as ce:
-			return 1, ce
+			return 1, ce.get_text()
 
 	def add_foreign_key(self, db_name, table_name, fk):
 		self.client.connect()
 		command = "8^" + db_name + "^" + table_name + "^" + self.build_fk_command(fk)
 		# return self.client.send_message(command)
-		code = self.client.send_message(command)
-		if code[0] == '1':
-			return 1, code.split('^')[1]
-		else:
+		try:
+			code = self.client.send_message(command)
+			if code[0] == '1':
+				return 1, code.split('^')[1]
 			return 0, "OK"
+		except ConnectionError as ce:
+			return 1, ce.get_text()
 
 	def create_table(self, db_name, table_name):
 		command = "3^" + db_name + "^" + table_name
@@ -143,7 +145,7 @@ class Repository():
 			# 	return 1, code.split('^')[1]
 			return 0, 'OK'
 		except ConnectionError as ce:
-			return 1, ce
+			return 1, ce.get_text()
 
 	def drop_database(self, db_name):
 		command = "2^" + db_name
@@ -154,7 +156,7 @@ class Repository():
 				return 1, code.split('^')[1]
 			return 0, 'OK'
 		except ConnectionError as ce:
-			return 1, ce
+			return 1, ce.get_text()
 
 	def drop_table(self, db_name, table_name):
 		command = "4^" + db_name + "^" + table_name
@@ -165,7 +167,7 @@ class Repository():
 				return 1, code.split('^')[1]
 			return 0, 'OK'
 		except ConnectionError as ce:
-			return 1, ce
+			return 1, ce.get_text()
 
 
 	def get_db_data(self):
@@ -190,7 +192,7 @@ class Repository():
 					return 1, code.split('^')[0]
 			return 0, databases
 		except ConnectionError as ce:
-			return 1, ce
+			return 1, ce.get_text()
 
 	def get_tables(self, db_name):
 		command = "9^" + db_name
@@ -202,7 +204,7 @@ class Repository():
 			tables = code.split('^')
 			return 0, tables 
 		except ConnectionError as ce:
-			return 1, ce
+			return 1, ce.get_text()
 
 	def get_table_columns(self, db_name, table_name):
 		command = "6^" + db_name + "^" + table_name
@@ -234,7 +236,7 @@ class Repository():
 					return 1, code.split('^')[0]
 			return 0, table_data
 		except ConnectionError as ce:
-			return 1, ce
+			return 1, ce.get_text()
 
 	def get_table_foreign_keys(self, db_name, table_name): 
 		command = "10^" + db_name + "^" + table_name
@@ -262,7 +264,7 @@ class Repository():
 					return 1, code.split('^')[0]
 			return 0, key_data
 		except ConnectionError as ce:
-			return 1, ce
+			return 1, ce.get_text()
 
 	def get_table_rows(self, db_name, table_name):
 		command = "14^" + db_name + "^" + table_name
@@ -279,7 +281,7 @@ class Repository():
 				code = self.client.send_message("1")
 			return 0, rows
 		except ConnectionError as ce:
-			return 1, ce
+			return 1, ce.get_text()
 
 		#
 		# except ConnectionError as ce:
@@ -303,7 +305,7 @@ class Repository():
 				code = self.client.send_message("0")
 			return 0, indexes
 		except ConnectionError as ce:
-			return 1, ce
+			return 1, ce.get_text()
 
 
 	def build_row_command(self, row):
@@ -328,7 +330,7 @@ class Repository():
 			self.client.send_message("0")
 			return 0, "OK"
 		except ConnectionError as ce:
-			return 1, ce
+			return 1, ce.get_text()
 
 	def insert_rows(self, db_name, table_name, rows):
 		command = "11^" + db_name + "^" + table_name
@@ -345,7 +347,7 @@ class Repository():
 			self.client.send_message("0")
 			return 0, "OK"
 		except ConnectionError as ce:
-			return 1, ce
+			return 1, ce.get_text()
 
 	def create_index(self, db_name, table_name, name, columns):
 		name = name.replace('^', '')
@@ -357,4 +359,4 @@ class Repository():
 				return 1, code.split('^')[1]
 			return 0, "OK"
 		except ConnectionError as ce:
-			return 1, ce
+			return 1, ce.get_text()

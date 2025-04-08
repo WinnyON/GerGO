@@ -38,7 +38,7 @@ class Client():
         print(message)
         try:
             self.client_socket.send(message.encode())
-            # print("SENT MESSAGE: ", message)
+            print("SENT MESSAGE: ", message)
             data =  self.client_socket.recv(2048).decode()
             return data
         except timeout:

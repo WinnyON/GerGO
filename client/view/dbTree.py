@@ -67,13 +67,16 @@ class DbTree(QTreeWidget):
 				self.current_table  = item.text(0)
 				self.current_db = item.parent().text(0)
 				self.create_constraint_action.setEnabled(True)
+				self.create_index_action.setEnabled(True)
 			else:
 				if self.get_item_level(item) == 0:
 					self.current_db = item.text(0)
 					self.current_table = None
 				self.create_constraint_action.setEnabled(False)
+				self.create_index_action.setEnabled(False)
 		else:
 			self.create_constraint_action.setEnabled(False)
+			self.create_index_action.setEnabled(False)
 			self.create_table_action.setEnabled(False)
 			self.delete_action.setEnabled(False)
 		self.edit_menu.exec_(self.viewport().mapToGlobal(position))	
@@ -135,6 +138,14 @@ class DbTree(QTreeWidget):
 		if items:
 			table_item = QTreeWidgetItem([table_name])
 			items[0].addChild(table_item)
+			columns_item = QTreeWidgetItem(["Columns"])
+			foreign_key_item = QTreeWidgetItem(["Foreign Keys"])
+			primary_key_item = QTreeWidgetItem(["Primary Keys"])
+			indexes_item = QTreeWidgetItem(["Indexes"])
+			table_item.addChild(columns_item)
+			table_item.addChild(primary_key_item)
+			table_item.addChild(foreign_key_item)
+			table_item.addChild(indexes_item)
 
 	def add_indexes(self, db_name, table_name, indexes):
 		items = self.findItems(db_name, Qt.MatchExactly | Qt.MatchRecursive, 0)

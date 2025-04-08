@@ -3,12 +3,12 @@ from PyQt5.QtCore import Qt
 from fonts import h2_font
 
 class CreatePage(QWidget):
-	def __init__(self, parent_stack_layout, repository, db_tree):
+	def __init__(self, parent_widget, repository, db_tree):
 		super().__init__()
 		self.repository = repository
 		self.db_tree = db_tree
 		self.db_name = None
-		self.parent_stack_layout = parent_stack_layout
+		self.parent_widget = parent_widget
 		self.layout = QGridLayout()
 		self.submit_layout = QHBoxLayout()
 		self.title_layout = QHBoxLayout()
@@ -70,7 +70,7 @@ class CreatePage(QWidget):
 			# set selected db to none
 		#create popup for success or error
 
-		self.parent_stack_layout.setCurrentIndex(0)
+		self.parent_widget.editor_layout.setCurrentIndex(0)
 		if code == 0:
 			self.db_tree.add_db(self.name_text.text())
 			self.db_tree.current_table = None
@@ -86,9 +86,11 @@ class CreatePage(QWidget):
 		print(self.db_name)
 		code, msg = self.repository.create_table(self.db_name, self.name_text.text())
 		print(code)
-		self.parent_stack_layout.setCurrentIndex(1)
+		self.parent_widget.editor_layout.setCurrentIndex(0)
 		if code == 0:
 			self.db_tree.add_table(self.db_name, self.name_text.text())
+			# self.parent_widget.editor_frame.set_selected_db(self.db_name)
+			# self.parent_widget.editor_frame.set_selected_table(self.name_text.text())
 			self.show_message("SUCCESS", "Table created successfully")
 		else:
 			self.show_message("Error creating the table", msg)

@@ -23,7 +23,7 @@ class MainEditorPage(QWidget):
 
 		self.editor_frame = EditorFrame(repository, self)
 		self.db_tree = DbTree(self, self.editor_frame)
-		self.create_page = CreatePage(self.editor_layout, self.repository, self.db_tree)
+		self.create_page = CreatePage(self, self.repository, self.db_tree)
 		# self.menu_bar = MenuBar(self)
 
 		# self.extended_layout.addWidget(self.menu_bar)
