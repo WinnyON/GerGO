@@ -3,12 +3,12 @@ from PyQt5.QtCore import Qt
 from fonts import h2_font
 
 class CreatePage(QWidget):
-	def __init__(self, parent_stack_layout, repository, db_tree):
+	def __init__(self, parent_widget, repository, db_tree):
 		super().__init__()
 		self.repository = repository
 		self.db_tree = db_tree
 		self.db_name = None
-		self.parent_stack_layout = parent_stack_layout
+		self.parent_widget = parent_widget
 		self.layout = QGridLayout()
 		self.submit_layout = QHBoxLayout()
 		self.title_layout = QHBoxLayout()
@@ -65,25 +65,43 @@ class CreatePage(QWidget):
 	def switch_to_empty(self):
 		print(self.name_text.text())
 		code, msg = self.repository.create_db(self.name_text.text())
-		print(code)
-		self.parent_stack_layout.setCurrentIndex(0)
+		# print(code)
+			# set selected db to current
+			# set selected db to none
 		#create popup for success or error
 
+		self.parent_widget.editor_layout.setCurrentIndex(0)
 		if code == 0:
 			self.db_tree.add_db(self.name_text.text())
+			self.db_tree.current_table = None
+			self.db_tree.current_db = self.name_text.text()
+			self.show_message("SUCCESS", "Database created successfully")
+		else:
+			self.show_message("Error creating the database", msg)
 
 		# self.name_text.setText("")
-
-		#TODO: send data to server to create db
 
 	def switch_to_create(self):
 		print(self.name_text.text())
 		print(self.db_name)
 		code, msg = self.repository.create_table(self.db_name, self.name_text.text())
 		print(code)
-		self.parent_stack_layout.setCurrentIndex(1)
+		self.parent_widget.editor_layout.setCurrentIndex(0)
 		if code == 0:
 			self.db_tree.add_table(self.db_name, self.name_text.text())
+			# self.parent_widget.editor_frame.set_selected_db(self.db_name)
+			# self.parent_widget.editor_frame.set_selected_table(self.name_text.text())
+			self.show_message("SUCCESS", "Table created successfully")
+		else:
+			self.show_message("Error creating the table", msg)
 		# self.name_text.clear()
 
 		#TODO: load empty column edit page
+
+	def show_message(self, title, message):
+		msg_box = QMessageBox()
+		msg_box.setWindowTitle(title)
+		msg_box.setText(message)
+		msg_box.setIcon(QMessageBox.Information)
+		msg_box.setStandardButtons(QMessageBox.Ok)
+		msg_box.exec_()

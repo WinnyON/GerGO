@@ -1,6 +1,6 @@
-
 client/__pycache__/
 client/view/__pycache__/
+client/.idea/
 server/*/bin/
 server/*/obj/
 server/*/.vs/
