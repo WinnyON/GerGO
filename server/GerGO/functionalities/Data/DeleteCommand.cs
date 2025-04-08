@@ -30,26 +30,33 @@ namespace GerGO.Functionalities.Data
                 throw new CommandException("Failed to send response!");
             }
 
-            byte[] buffer = new byte[1024];
-            stream.Read(buffer, 0, buffer.Length);
-            string response = Encoding.UTF8.GetString(buffer);
-            response = response.Replace("\0", string.Empty);
-            string[] keys = response.Split('^');
-
-            IResourceManager _manager = ResourceManagerFactory.GetInstance();
+            string response;
             int count = 0;
-            foreach (string key in keys)
+            do
             {
-                try
+                byte[] buffer = new byte[1024];
+                stream.Read(buffer, 0, buffer.Length);
+                response = Encoding.UTF8.GetString(buffer);
+                response = response.Replace("\0", string.Empty);
+                if (response.StartsWith('0'))
+                    break;
+                string[] keys = response.Split('^');
+
+                IResourceManager _manager = ResourceManagerFactory.GetInstance();
+                foreach (string key in keys)
                 {
-                    _manager.Delete(dbName, tableName, key);
-                    count++;
+                    try
+                    {
+                        _manager.Delete(dbName, tableName, key);
+                        TcpResponder.SendMessage(stream, "OK");
+                        count++;
+                    }
+                    catch (DataResourceException)
+                    {
+                        continue;
+                    }
                 }
-                catch (DataResourceException)
-                {
-                    continue;
-                }
-            }
+            } while (!response.StartsWith('0'));
 
             try
             {

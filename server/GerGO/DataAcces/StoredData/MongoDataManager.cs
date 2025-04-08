@@ -89,7 +89,7 @@ namespace GerGO.DataAcces.StoredData
             foreach (var item in table)
             {
                 if (!item.Name.Equals("_id"))
-                    result.Add($"1^{item.Name}^{item.Value}");
+                    result.Add($"1^{item.Value}");
             }
 
             return result;
@@ -180,6 +180,8 @@ namespace GerGO.DataAcces.StoredData
 
                 // check condition
             }
+
+            value = string.Join('^', insertedRow);
 
             return true;
         }
