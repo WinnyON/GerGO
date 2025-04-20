@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using GerGO.Models;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace GerGO.DataAcces.StoredData
@@ -89,7 +90,7 @@ namespace GerGO.DataAcces.StoredData
             foreach (var item in table)
             {
                 if (!item.Name.Equals("_id"))
-                    result.Add($"1^{item.Value}");
+                    result.Add($"{item.Name}^{item.Value}");
             }
 
             return result;
@@ -112,40 +113,59 @@ namespace GerGO.DataAcces.StoredData
             }
         }
 
-        public bool IsValidRow(string dbName, string tableName, List<string[]> columns, string key, ref string value)
+        public bool IsValidRow(Table table, List<string> columnNames, ref string key, ref string value, ref int innerSeed)
         {
             string[] insertedRow = value.Split('^');
-            if (insertedRow.Length != columns.Count)
-                return false;
+            string row = "";
+            key = "";
 
-            for (int i = 0; i < columns.Count; i++)
+            foreach (var column in table.Columns)
             {
-                // if the column is the primary key
-                if (!columns[i][2].Equals("--"))
+                if (!columnNames.Contains(column.Name) && !column.PrimaryKey)
                 {
-                    insertedRow[i] = key;
+                    row = string.IsNullOrEmpty(row) ? "null" : row + "^null";
                     continue;
+                }
+
+                int index = columnNames.IndexOf(column.Name);
+
+                if (column.PrimaryKey)
+                {
+                    string tmp = "";
+                    if (index != -1)
+                    {
+                        tmp = insertedRow[index];
+                    }
+                    if (column.PKIdentity.Step > 0)
+                    {
+                        tmp = (column.PKIdentity.InnerSeed + column.PKIdentity.Step).ToString();
+                        column.PKIdentity.InnerSeed += column.PKIdentity.Step;
+                        innerSeed = column.PKIdentity.InnerSeed;
+                        key = string.IsNullOrEmpty(key) ? tmp : (key + "^" + tmp);
+                        continue;
+                    }
+                    key = string.IsNullOrEmpty(key) ? tmp : (key + "^" + tmp);
                 }
 
                 try
                 {
                     // type check
-                    switch (columns[i][1])
+                    switch (column.Type)
                     {
                         case "int":
-                            _ = int.Parse(insertedRow[i]);
+                            _ = int.Parse(insertedRow[index]);
                             break;
                         case "float":
-                            _ = float.Parse(insertedRow[i]);
+                            _ = float.Parse(insertedRow[index]);
                             break;
                         case "bit":
-                            _ = bool.Parse(insertedRow[i]);
+                            _ = bool.Parse(insertedRow[index]);
                             break;
                         case "date":
-                            _ = DateTime.Parse(insertedRow[i]);
+                            _ = DateTime.Parse(insertedRow[index]);
                             break;
                         case "datetime":
-                            _ = TimeSpan.Parse(insertedRow[i]);
+                            _ = TimeSpan.Parse(insertedRow[index]);
                             break;
                         case "string":
                             break;
@@ -158,30 +178,34 @@ namespace GerGO.DataAcces.StoredData
                     return false;
                 }
 
-                // not null check
-                if (!columns[i][3].Equals("--"))
+                if (column.NotNull)
                 {
-                    if (insertedRow[i].Equals("0") || insertedRow[i].Equals("null") || insertedRow[i].Equals(string.Empty))
+                    if (insertedRow[index].Equals("0") || insertedRow[index].Equals("null") || insertedRow[index].Equals(string.Empty))
                         return false;
                 }
 
-                // defaultval check
-                if (!columns[i][4].Equals("--") && (insertedRow[i].Equals("0") || insertedRow[i].Equals("null") || insertedRow[i].Equals(string.Empty)))
-                    insertedRow[i] = columns[i][3];
+                if (!string.IsNullOrEmpty(column.DefaultVal) && (insertedRow[index].Equals("0") || insertedRow[index].Equals("null") || insertedRow[index].Equals(string.Empty)))
+                    insertedRow[index] = column.DefaultVal;
 
                 // unique check
-                if (!columns[i][7].Equals("--"))
+                if (column.Unique)
                 {
-                    List<string> values = GetAllRows(dbName, tableName).Select(row => row.Split('^')[i+2]).ToList();
+                    //List<string> values = GetAllRows(dbName, tableName).Select(row => row.Split('^')[i + 2]).ToList();
 
-                    if (values.Contains(insertedRow[i]))
-                        return false;
+                    //if (values.Contains(insertedRow[i]))
+                    //    return false;
                 }
 
                 // check condition
+
+                if (!column.PrimaryKey)
+                    row = string.IsNullOrEmpty(row) ? insertedRow[index] : row + "^" + insertedRow[index];
             }
 
-            value = string.Join('^', insertedRow);
+            if (string.IsNullOrEmpty(key))
+                return false;
+
+            value = row;
 
             return true;
         }

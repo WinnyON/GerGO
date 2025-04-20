@@ -37,9 +37,9 @@ namespace GerGO.Functionalities.Data
                 byte[] buffer = new byte[1024];
                 stream.Read(buffer, 0, buffer.Length);
                 response = Encoding.UTF8.GetString(buffer);
-                response = response.Replace("\0", string.Empty);
                 if (response.StartsWith('0'))
                     break;
+                response = response.Replace("\0", string.Empty);
                 string[] keys = response.Split('^');
 
                 IResourceManager _manager = ResourceManagerFactory.GetInstance();

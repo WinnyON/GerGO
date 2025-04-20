@@ -14,6 +14,7 @@ namespace GerGO.Functionalities.Data
             IResourceManager resourceManager = ResourceManagerFactory.GetInstance();
 
             string dbName, tableName;
+            List<string> columnNames = [];
             try
             {
                 dbName = arguments[1];
@@ -24,6 +25,11 @@ namespace GerGO.Functionalities.Data
                 TcpResponder.SendErrorMessage(stream, "Error while inserting");
                 _logger.Error("Not enough arguments for inserting data!");
                 throw new CommandException("Not enough arguments for inserting data!");
+            }
+
+            for (int i = 3; i < arguments.Length; i++)
+            {
+                columnNames.Add(arguments[i]);
             }
 
             int count = 0;
@@ -42,7 +48,7 @@ namespace GerGO.Functionalities.Data
                         break; 
                     try
                     {
-                        resourceManager.Insert(dbName, tableName, response);
+                        resourceManager.Insert(dbName, tableName, columnNames, response);
                         count++;
                     }
                     catch (DataResourceException)

@@ -13,6 +13,7 @@ namespace GerGO.Functionalities.Data
             IResourceManager resourceManager = ResourceManagerFactory.GetInstance();
 
             string dbName, tableName;
+            List<string> columnNames = [];
             try
             {
                 dbName = arguments[1];
@@ -24,10 +25,15 @@ namespace GerGO.Functionalities.Data
                 throw new CommandException("Not enough arguments for retrieving all rows!");
             }
 
+            for (int i = 3; i < arguments.Length; i++)
+            {
+                columnNames.Add(arguments[i]);
+            }
+
             try
             {
                 TcpResponder.SendMessage(stream, "OK");
-                List<string> rows = resourceManager.GetAllRows(dbName, tableName);
+                List<string> rows = resourceManager.GetAllRows(dbName, tableName, columnNames);
                 byte[] buffer = new byte[10];
                 stream.Read(buffer, 0, buffer.Length);
                 foreach (string row in rows)
@@ -53,8 +59,6 @@ namespace GerGO.Functionalities.Data
                 _logger.Error($"Error in communication: {ex.Message}");
                 throw new CommandException($"Error in communication: {ex.Message}");
             }
-
-
         }
     }
 }

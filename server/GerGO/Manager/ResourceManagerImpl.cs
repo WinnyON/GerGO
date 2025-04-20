@@ -364,28 +364,32 @@ namespace GerGO.Manager
 
         // DATA MANIPULATION
 
-        public void Insert(string dbName, string tableName, string value)
+        public void Insert(string dbName, string tableName, List<string> columnNames, string value)
         {
             if (!_metaDataManager.ExitsDb(dbName) || !_metaDataManager.ExitsTable(dbName, tableName))
             {
                 throw new DataResourceException("Table doesn't exist");
             }
 
-            string mongoID = _metaDataManager.GetTableMongoId(dbName, tableName);
-            string key = _metaDataManager.GetNextKey(dbName, tableName);
-            if (string.IsNullOrEmpty(key))
+            foreach (var col in columnNames)
             {
-                _logger.Error("No primary key in the table!");
-                throw new DataResourceException("No primary key in the table!");
+                if (!_metaDataManager.ExistsColumn(dbName, tableName, col))
+                    throw new DataResourceException("Column doesn't exists!");
             }
+
+            Table table = _metaDataManager.GetTable(dbName, tableName);
             try
             {
                 lock (_locks[dbName])
                 {
-                    if (!_storedDataManager.IsValidRow(dbName, tableName, _metaDataManager.GetTableData(dbName, tableName), key, ref value))
+                    string key = "";
+                    int innerSeed = 0;
+                    if (!_storedDataManager.IsValidRow(table, columnNames, ref key, ref value, ref innerSeed))
                         throw new DataResourceException("");
                     
-                    _storedDataManager.Insert(dbName, mongoID, key, value);
+                    _storedDataManager.Insert(dbName, table.MongoID, key, value);
+                    if (innerSeed > 0)
+                        _metaDataManager.UpdateInnerSeed(dbName,tableName, innerSeed);
                 }
             }
             catch (DataAccesException ex)
@@ -418,13 +422,19 @@ namespace GerGO.Manager
 
         // DATA QUERY
 
-        public List<string> GetAllRows(string dbName, string tableName)
+        public List<string> GetAllRows(string dbName, string tableName, List<string> columnNames)
         {
             if (!_metaDataManager.ExitsDb(dbName))
                 throw new DataResourceException("Db doesn't exists!");
 
             if (!_metaDataManager.ExitsTable(dbName, tableName))
                 throw new DataResourceException("Table doesn't exists!");
+
+            foreach (var col in columnNames)
+            {
+                if (!_metaDataManager.ExistsColumn(dbName, tableName, col))
+                    throw new DataResourceException("Column doesn't exists!");
+            }
 
             List<string> rows;
             try
@@ -440,6 +450,18 @@ namespace GerGO.Manager
                 _logger.Error($"Failed to retrieve all rows: {ex.Message}");
                 throw new DataResourceException("Failed to retrieve all rows!");
             }
+
+            List<int> positions = _metaDataManager.GetColumnPostions(dbName, tableName, columnNames);
+            List<string> resultSet = rows.Select(r =>
+            {
+                string[] values = r.Split('^');
+                string tmp = values[positions[0]];
+                for (int i = 1;i<positions.Count;i++)
+                {
+                    tmp = tmp + "^" + values[positions[i]];
+                }
+                return tmp;
+            }).ToList();
 
             return rows;
         }

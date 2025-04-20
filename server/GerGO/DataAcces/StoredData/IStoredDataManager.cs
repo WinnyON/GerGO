@@ -1,9 +1,11 @@
-﻿namespace GerGO.DataAcces.StoredData
+﻿using GerGO.Models;
+
+namespace GerGO.DataAcces.StoredData
 {
     interface IStoredDataManager
     {
         public string PrepareTable(string dbName, string tableName);
-        public bool IsValidRow(string dbName, string tableName, List<string[]> columns, string key, ref string value);
+        public bool IsValidRow(Table table, List<string> columnNames, ref string key, ref string value, ref int innerSeed);
         public void Insert(string dbName, string tableID, string key, string value);
         public void Delete(string dbName, string tableID, string key);
 

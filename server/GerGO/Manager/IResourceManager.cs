@@ -21,8 +21,8 @@ namespace GerGO.Manager
         public string[] GetColumns(string dbName, string tableName);
         public List<string[]> GetForeignKeys(string dbName, string tableName);
         public List<string> GetIndexes(string dbName, string tableName);
-        public void Insert(string dbName, string tableName, string value);
+        public void Insert(string dbName, string tableName, List<string> columnNames, string value);
         public void Delete(string dbName, string tableName, string key);
-        public List<string>GetAllRows(string dbName, string tableName);
+        public List<string>GetAllRows(string dbName, string tableName, List<string> columnNames);
     }
 }

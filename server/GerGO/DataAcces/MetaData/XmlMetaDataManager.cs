@@ -209,9 +209,23 @@ namespace GerGO.DataAcces.MetaData
             Table table = _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName));
 
             string[] columns = new string[table.Columns.Count];
-            for (int i = 0; i < table.Columns.Count; i++)
+            int index = 0;
+            foreach (var column in  table.Columns)
             {
-                columns[i] = table.Columns[i].Name;
+                if (column.PrimaryKey)
+                {
+                    columns[index] = column.Name;
+                    index++;
+                }
+            }
+
+            foreach (var column in table.Columns)
+            {
+                if (!column.PrimaryKey)
+                {
+                    columns[index] = column.Name;
+                    index++;
+                }
             }
 
             return columns;
@@ -337,6 +351,39 @@ namespace GerGO.DataAcces.MetaData
             }
 
             return tables;
+        }
+
+        public Table GetTable(string dbName, string tableName)
+        {
+            return _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName));
+        }
+
+        public void UpdateInnerSeed(string dbName, string tableName, int value)
+        {
+            _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.First(c => c.PKIdentity.Seed != 0).PKIdentity.InnerSeed = value;
+            
+            try
+            {
+                _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
+            }
+            catch (FileHandlerException ex)
+            {
+                _logger.Error($"Failed to write db data: {ex.Message}");
+                throw new DataResourceException("Failed to update inner seed for identity!");
+            }
+        }
+
+        public List<int> GetColumnPostions(string dbName, string tableName, List<string> columnNames)
+        {
+            List<int> result = [];
+
+            List<string> columns = GetColumns(dbName, tableName).ToList();
+            foreach (string columnName in columnNames)
+            {
+                result.Add(columns.IndexOf(columnName));
+            }
+
+            return result;
         }
     }
 }

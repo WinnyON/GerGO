@@ -27,5 +27,10 @@ namespace GerGO.DataAcces.MetaData
         public string[] GetColumns(string dbName, string tableName);
         public List<string[]> GetForeignKeys(string dbName, string tableName);
         public List<string> GetIndexData(string dbName, string tableName);
+
+        public Table GetTable(string dbName, string tableName);
+
+        public void UpdateInnerSeed(string dbName, string tableName, int value);
+        public List<int> GetColumnPostions(string dbName, string tableName, List<string> columnNames);
     }
 }
