@@ -168,7 +168,8 @@ namespace GerGO.Manager
             {
                 lock (_locks[dbName])
                 {
-                    _metaDataManager.AddIndex(dbName, tableName, indexName, columnName);
+                    string mongoID = _storedDataManager.AddIndexFile(dbName, tableName);
+                    _metaDataManager.AddIndex(dbName, tableName, indexName, columnName, mongoID);
                 }
             }
             catch (DataAccesException ex)
@@ -178,6 +179,42 @@ namespace GerGO.Manager
             }
         }
 
+        public void DropIndex(string dbName, string tableName, string indexName)
+        {
+            if (!_metaDataManager.ExitsDb(dbName))
+            {
+                _logger.Error($"Database {dbName} doesn't exist!");
+                throw new DataResourceException($"Database {dbName} doesn't exist!");
+            }
+
+            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            {
+                _logger.Error($"Table {tableName} doesn't exist!");
+                throw new DataResourceException($"Table {tableName} doesn't exist!");
+            }
+
+            if (!_metaDataManager.ExistsIndex(dbName, tableName, indexName))
+            {
+                _logger.Error($"Index {indexName} doesn't exist!");
+                throw new DataResourceException($"Index {indexName} doesn't exist!");
+            }
+
+            IndexFile index = _metaDataManager.GetIndexFile(dbName, tableName, indexName);
+
+            try
+            {
+                lock (_locks[dbName])
+                {
+                    _storedDataManager.DropIndexFile(dbName, index.MongoID);
+                    _metaDataManager.DropIndex(dbName, tableName, index);
+                }
+            }
+            catch (DataAccesException ex)
+            {
+                _logger.Error(ex.Message);
+                throw new DataResourceException(ex.Message);
+            }
+        }
         public void AddTable(string dbName, Table table)
         {
             if (!_metaDataManager.ExitsDb(dbName))
@@ -385,6 +422,8 @@ namespace GerGO.Manager
             }
 
             Table table = _metaDataManager.GetTable(dbName, tableName);
+            Dictionary<string, string> indexFiles = [];
+            table.IndexFiles.ForEach(iFile => indexFiles.Add(iFile.Attributes[0], iFile.MongoID));
             try
             {
                 lock (_locks[dbName])
@@ -393,7 +432,15 @@ namespace GerGO.Manager
                     int innerSeed = 0;
                     if (!_storedDataManager.IsValidRow(dbName, table, columnNames, ref key, ref value, ref innerSeed))
                         throw new DataResourceException("");
-                    
+
+                    foreach (var iFile in table.IndexFiles)
+                    {
+                        string[] insertedValues = value.Split('^');
+                        int nrPKeys = _metaDataManager.GetNrPkeys(dbName, tableName);
+                        string val = insertedValues[_metaDataManager.GetColumnPostions(dbName, tableName, [iFile.Attributes[0]])[0] - nrPKeys];
+                        _storedDataManager.InsertToIndexFile(dbName, tableName, iFile.MongoID, key, val);
+                    }
+
                     _storedDataManager.Insert(dbName, table.MongoID, key, value);
                     if (innerSeed > 0)
                         _metaDataManager.UpdateInnerSeed(dbName,tableName, innerSeed);
@@ -413,11 +460,16 @@ namespace GerGO.Manager
             }
 
             string tableMongoId = _metaDataManager.GetTableMongoId(dbName, tableName);
+            Table table = _metaDataManager.GetTable(dbName, tableName);
             try
             {
                 lock (_locks[dbName])
                 {
                     _storedDataManager.Delete(dbName, tableMongoId, key);
+                    foreach (var indexFile in table.IndexFiles)
+                    {
+                        _storedDataManager.DeleteFromIndexFile(dbName, tableName, indexFile.MongoID, key);
+                    }
                 }
             }
             catch (DataAccesException ex)

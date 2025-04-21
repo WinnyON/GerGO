@@ -272,5 +272,86 @@ namespace GerGO.DataAcces.StoredData
 
             return id;
         }
+
+        public string AddIndexFile(string dbName, string tableName)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>($"{dbName}_{tableName}_indexfiles");
+            var newIndex = new BsonDocument();
+            collection.InsertOne(newIndex);
+
+            string id = newIndex["_id"].AsObjectId.ToString();
+
+            return id;
+        }
+
+        public void DropIndexFile(string colName, string mongoID)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>(colName);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(mongoID));
+
+            var result = collection.DeleteOne(filter);
+
+            if (result.DeletedCount == 0)
+            {
+                throw new DataAccesException("No document found to delete.");
+            }
+        }
+
+        public void InsertToIndexFile(string dbName, string tableName, string mongoID, string pKey, string value)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>($"{dbName}_{tableName}_indexfiles");
+            ObjectId objId = ObjectId.Parse(mongoID);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+            var document = collection.Find(filter).FirstOrDefault();
+
+            foreach (var item in document.Elements)
+            {
+                if (item.Name == value)
+                {
+                    var insertedRow = Builders<BsonDocument>.Update.Set(value, $"{item.Value}#{pKey}");
+                    var result = collection.UpdateOne(filter, insertedRow);
+                    if (result.ModifiedCount == 0)
+                    {
+                        throw new DataAccesException("Failed to insert index data!");
+                    }
+                    return;
+                }
+            }
+
+            var insertedIndex = Builders<BsonDocument>.Update.Set(value, pKey);
+            var res = collection.UpdateOne(filter, insertedIndex);
+            if (res.ModifiedCount == 0)
+            {
+                throw new DataAccesException("Failed to insert index data!");
+            }
+        }
+
+        public void DeleteFromIndexFile(string dbName, string tableName, string mongoID, string pKey)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>($"{dbName}_{tableName}_indexfiles");
+            ObjectId objId = ObjectId.Parse(mongoID);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+            var document = collection.Find(filter).FirstOrDefault();
+
+            foreach (var item in document.Elements)
+            {
+                if (!item.Name.Equals("_id"))
+                {
+                    string row = item.Value.AsString;
+                    List<string> values = row.Split('#').ToList();
+                    if (values.Contains(pKey))
+                    {
+                        values.Remove(pKey);
+                        string tmp = string.Join('#', values);
+                        var insertedRow = Builders<BsonDocument>.Update.Set(item.Name, $"{tmp}");
+                        var result = collection.UpdateOne(filter, insertedRow);
+                        if (result.ModifiedCount == 0)
+                        {
+                            throw new DataAccesException("Failed to delete index data!");
+                        }
+                    }
+                }
+            }
+        }
     }
 }

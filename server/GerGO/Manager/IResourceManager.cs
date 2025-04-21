@@ -8,6 +8,7 @@ namespace GerGO.Manager
         public void DropDataBase(DataBase dataBase);
         public void AddTable(string dbName, Table table);
         public void DropTable(string dbName, Table table);
+        public void DropIndex(string dbName, string tableName, string indexName);
         public void AddColumn(string dbName, string tableName, Column column);
         public void AddForeignKey(string dbName, string tableName, ForeignKey foreignKey);
         public void AddIndexFile(string dbName, string tableName, string indexName, string columnName);

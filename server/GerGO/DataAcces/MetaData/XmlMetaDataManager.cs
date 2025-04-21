@@ -74,8 +74,14 @@ namespace GerGO.DataAcces.MetaData
             }
         }
 
-        public void AddIndex(string dbName, string tableName, string indexName, string columnName)
+        public void AddIndex(string dbName, string tableName, string indexName, string columnName, string mongoID)
         {
+            if (GetColumn(dbName, tableName, columnName).PrimaryKey)
+            {
+                _logger.Error("Primary key is already an index!");
+                throw new DataAccesException("Primary key is already an index!");
+            }
+
             IndexFile? indFile = _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.FirstOrDefault(ind => ind.Name.Equals(indexName));
             if (indFile != null)
             {
@@ -97,6 +103,7 @@ namespace GerGO.DataAcces.MetaData
             indFile = new IndexFile();
             indFile.Name = indexName;
             indFile.Attributes.Add(columnName);
+            indFile.MongoID = mongoID;
             _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.Add(indFile);
 
             try
@@ -112,6 +119,20 @@ namespace GerGO.DataAcces.MetaData
             }
         }
 
+        public void DropIndex(string dbName, string tableName, IndexFile index)
+        {
+            _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.Remove(index);
+            try
+            {
+                _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
+            }
+            catch (FileHandlerException ex)
+            {
+                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.Add(index);
+                _logger.Error($"Failed to write db data: {ex.Message}");
+                throw new DataResourceException("Failed to drop table!");
+            }
+        }
         public void AddTable(string dbName, string tableId, Table table)
         {
             table.MongoID = tableId;
@@ -179,6 +200,20 @@ namespace GerGO.DataAcces.MetaData
 
         public bool ExistsIndex(string dbName, string tableName, string indexName)
         {
+            if (!ExitsDb(dbName))
+                return false;
+
+            if (!ExitsTable(dbName, tableName))
+                return false;
+
+            DataBase? db = _dataBases.First(db => db.Name.Equals(dbName));
+            Table? table = db.Tables.First(t => t.Name.Equals(tableName));
+
+            if (table.IndexFiles.Any(iFile => iFile.Name.Equals(indexName)))
+            {
+                return true;
+            }
+
             return false;
         }
 
@@ -356,6 +391,16 @@ namespace GerGO.DataAcces.MetaData
         public Table GetTable(string dbName, string tableName)
         {
             return _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName));
+        }
+
+        public Column GetColumn(string dbName, string tableName, string columnName)
+        {
+            return _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.First(c => c.Name.Equals(columnName));
+        }
+
+        public IndexFile GetIndexFile(string dbName, string tableName, string indexFileName)
+        {
+            return _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.First(iFile => iFile.Name.Equals(indexFileName));
         }
 
         public void UpdateInnerSeed(string dbName, string tableName, int value)

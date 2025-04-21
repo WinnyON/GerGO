@@ -6,6 +6,10 @@ namespace GerGO.Models
     {
         [XmlAttribute("Name")]
         public string Name {  get; set; }
+
+        [XmlAttribute("MongoID")]
+        public string MongoID { get; set; }
+
         [XmlArray("Attributes")]
         [XmlArrayItem("Attribute")]
         public List<string> Attributes { get; set; }
@@ -14,12 +18,14 @@ namespace GerGO.Models
         {
             Name = string.Empty;
             Attributes = new List<string>();
+            MongoID = string.Empty;
         }
 
-        public IndexFile(string name, List<string> attributes)
+        public IndexFile(string name, List<string> attributes, string mongoID)
         {
             Name = name;
             Attributes = attributes;
+            MongoID = mongoID;
         }
 
         public override bool Equals(object? obj)
