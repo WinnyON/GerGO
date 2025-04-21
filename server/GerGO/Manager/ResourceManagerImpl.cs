@@ -42,10 +42,10 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
             }
 
-            if (column.PrimaryKey && (column.NotNull || column.DefaultVal != string.Empty || column.Unique || column.Check != string.Empty))
+            if (column.PKIdentity.Seed != 0 && (column.NotNull || column.DefaultVal != string.Empty || column.Unique || column.Check != string.Empty))
             {
-                _logger.Error("Not valid column: pk key can have no other constraints!");
-                throw new DataResourceException("Not valid column: pk key can have no other constraints!");
+                _logger.Error("Not valid column: pk with identity can have no other constraints!");
+                throw new DataResourceException("Not valid column: pk with identity can have no other constraints!");
             }
 
             if (column.NotNull && column.DefaultVal == string.Empty)
@@ -58,8 +58,15 @@ namespace GerGO.Manager
             {
                 lock (_locks[dbName])
                 {
-                    _metaDataManager.AddColumn(dbName, tableName, column);
                     string mongoId = _metaDataManager.GetTableMongoId(dbName, tableName);
+                    if (_metaDataManager.ExistsColumn(dbName, tableName, column.Name))
+                    {
+                        int nrPkKeys = _metaDataManager.GetNrPkeys(dbName, tableName);
+                        int index = _metaDataManager.GetColumnPostions(dbName, tableName, new List<string> { column.Name })[0];
+                        _storedDataManager.RemoveColumn(dbName, mongoId, column.PrimaryKey, index - nrPkKeys);
+                    }
+
+                    _metaDataManager.AddColumn(dbName, tableName, column);
                     string value = column.DefaultVal == string.Empty ? "null" : column.DefaultVal;
                     _storedDataManager.AddColumn(dbName, mongoId, value);
                 }
@@ -384,7 +391,7 @@ namespace GerGO.Manager
                 {
                     string key = "";
                     int innerSeed = 0;
-                    if (!_storedDataManager.IsValidRow(table, columnNames, ref key, ref value, ref innerSeed))
+                    if (!_storedDataManager.IsValidRow(dbName, table, columnNames, ref key, ref value, ref innerSeed))
                         throw new DataResourceException("");
                     
                     _storedDataManager.Insert(dbName, table.MongoID, key, value);
@@ -463,7 +470,7 @@ namespace GerGO.Manager
                 return tmp;
             }).ToList();
 
-            return rows;
+            return resultSet;
         }
     }
 }

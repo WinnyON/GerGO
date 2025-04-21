@@ -43,6 +43,33 @@ namespace GerGO.DataAcces.StoredData
                 throw new DataAccesException("Document was not updated.");
             }
         }
+        public void RemoveColumn(string dbName, string tableID, bool isPkKey, int index)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(tableID));
+            var document = collection.Find(filter).FirstOrDefault();
+
+            if (document.Elements.Count() == 1)
+                return;
+
+            if (!isPkKey)
+            {
+                var updateDef = new List<UpdateDefinition<BsonDocument>>();
+                foreach (var element in document.Elements)
+                {
+                    if (element.Name != "_id")
+                    {
+                        List<string> values = element.Value.AsString.Split('^').ToList();
+                        values.RemoveAt(index);
+                        string res = string.Join('^', values);
+                        updateDef.Add(Builders<BsonDocument>.Update.Set(element.Name, $"{res}"));
+                    }
+                }
+                return;
+            }
+
+
+        }
 
         public void Delete(string dbName, string tableID, string key)
         {
@@ -113,7 +140,7 @@ namespace GerGO.DataAcces.StoredData
             }
         }
 
-        public bool IsValidRow(Table table, List<string> columnNames, ref string key, ref string value, ref int innerSeed)
+        public bool IsValidRow(string dbName, Table table, List<string> columnNames, ref string key, ref string value, ref int innerSeed)
         {
             string[] insertedRow = value.Split('^');
             string row = "";
@@ -190,13 +217,38 @@ namespace GerGO.DataAcces.StoredData
                 // unique check
                 if (column.Unique)
                 {
-                    //List<string> values = GetAllRows(dbName, tableName).Select(row => row.Split('^')[i + 2]).ToList();
+                    //List<string> values;
 
                     //if (values.Contains(insertedRow[i]))
                     //    return false;
                 }
 
                 // check condition
+                if (!column.Check.Equals("--"))
+                {
+                    string[] checkConst = column.Check.Split('^');
+                    switch (checkConst[0])
+                    {
+                        case "=":
+                        case "==":
+                            if (insertedRow[index] != checkConst[1]) return false;
+                            break;
+                        case ">":
+                            if (insertedRow[index].CompareTo(checkConst[1]) <= 0) return false;
+                            break;
+                        case ">=":
+                            if (insertedRow[index].CompareTo(checkConst[1]) < 0) return false;
+                            break;
+                        case "<":
+                            if (insertedRow[index].CompareTo(checkConst[1]) >= 0) return false;
+                            break;
+                        case "<=":
+                            if (insertedRow[index].CompareTo(checkConst[1]) > 0) return false;
+                            break;
+                        default:
+                            break;
+                    }
+                }
 
                 if (!column.PrimaryKey)
                     row = string.IsNullOrEmpty(row) ? insertedRow[index] : row + "^" + insertedRow[index];

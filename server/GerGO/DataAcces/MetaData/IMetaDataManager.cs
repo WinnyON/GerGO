@@ -32,5 +32,6 @@ namespace GerGO.DataAcces.MetaData
 
         public void UpdateInnerSeed(string dbName, string tableName, int value);
         public List<int> GetColumnPostions(string dbName, string tableName, List<string> columnNames);
+        public int GetNrPkeys(string dbName, string tableName);
     }
 }

@@ -385,5 +385,9 @@ namespace GerGO.DataAcces.MetaData
 
             return result;
         }
+        public int GetNrPkeys(string dbName, string tableName)
+        {
+            return _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.Count(c => c.PrimaryKey);
+        }
     }
 }
