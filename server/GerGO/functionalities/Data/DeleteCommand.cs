@@ -51,6 +51,7 @@ namespace GerGO.Functionalities.Data
                 }
                 catch (DataResourceException)
                 {
+                    TcpResponder.SendMessage(stream, "OK");
                     continue;
                 }
             } while (!response.StartsWith('0'));

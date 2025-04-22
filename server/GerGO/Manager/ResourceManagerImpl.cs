@@ -124,7 +124,7 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Referenced table {foreignKey.RefTableName} doesn't exist!");
             }
 
-            if (!_metaDataManager.ExistsColumn(dbName, tableName, foreignKey.RefAttributeName))
+            if (!_metaDataManager.ExistsColumn(dbName, foreignKey.RefTableName, foreignKey.RefAttributeName))
             {
                 _logger.Error($"Referenced attribute {foreignKey.RefAttributeName} doesn't exist!");
                 throw new DataResourceException($"Referenced attribute {foreignKey.RefAttributeName} doesn't exist!");
@@ -430,8 +430,24 @@ namespace GerGO.Manager
                 {
                     string key = "";
                     int innerSeed = 0;
-                    if (!_storedDataManager.IsValidRow(dbName, table, columnNames, ref key, ref value, ref innerSeed))
+                    if (!_storedDataManager.IsValidRow(dbName, table, columnNames, _metaDataManager.GetColumnPostions(dbName,tableName, columnNames), ref key, ref value, ref innerSeed))
                         throw new DataResourceException("");
+
+                    // foreign key check
+                    foreach (var fk in table.ForeignKeys)
+                    {
+                        if (columnNames.Contains(fk.AttributeName))
+                        {
+                            var refTable = _metaDataManager.GetTable(dbName, fk.RefTableName);
+                            int indexRef = _metaDataManager.GetColumnPostions(dbName, fk.RefTableName, [fk.RefAttributeName])[0];
+                            int index = _metaDataManager.GetColumnPostions(dbName, tableName, [fk.AttributeName])[0];
+                            string insertedValue = (key + "^" + value).Split('^')[index];
+                            if (!_storedDataManager.ContainsValue(dbName, refTable.MongoID, indexRef, insertedValue))
+                            {
+                                throw new DataResourceException("Error with foreign keys!");
+                            }
+                        }
+                    }
 
                     foreach (var iFile in table.IndexFiles)
                     {
@@ -451,6 +467,10 @@ namespace GerGO.Manager
                 _logger.Error($"Failed to insert: {ex.Message}");
                 throw new DataResourceException(ex.Message);
             }
+            catch (Exception)
+            {
+                throw new DataResourceException("");
+            }
         }
         public void Delete(string dbName, string tableName, string key)
         {
@@ -465,6 +485,22 @@ namespace GerGO.Manager
             {
                 lock (_locks[dbName])
                 {
+                    string row = key + "^" + _storedDataManager.GetValue(dbName, tableMongoId, key);
+                    // foreign key check
+                    List<Table> tables = _metaDataManager.GetTables(dbName).ToList().Select(t => _metaDataManager.GetTable(dbName, t)).ToList();
+                    foreach (var t in tables)
+                    {
+                        List<ForeignKey> fKeys = t.ForeignKeys.FindAll(fk => fk.RefTableName.Equals(tableName));
+
+                        foreach (var fk in fKeys)
+                        {
+                            string colValue = row.Split('^')[_metaDataManager.GetColumnPostions(dbName, tableName, [fk.RefAttributeName])[0]];
+                            int index = _metaDataManager.GetColumnPostions(dbName, t.Name, [fk.AttributeName])[0];
+                            if (_storedDataManager.ContainsValue(dbName, t.MongoID, index, colValue))
+                                throw new DataResourceException("Value referrenced by foreign key!");
+                        }
+                    }
+
                     _storedDataManager.Delete(dbName, tableMongoId, key);
                     foreach (var indexFile in table.IndexFiles)
                     {

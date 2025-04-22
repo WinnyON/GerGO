@@ -140,7 +140,8 @@ namespace GerGO.DataAcces.StoredData
             }
         }
 
-        public bool IsValidRow(string dbName, Table table, List<string> columnNames, ref string key, ref string value, ref int innerSeed)
+        public bool IsValidRow(string dbName, Table table, List<string> columnNames, List<int> columnPositions,
+            ref string key, ref string value, ref int innerSeed)
         {
             string[] insertedRow = value.Split('^');
             string row = "";
@@ -217,10 +218,8 @@ namespace GerGO.DataAcces.StoredData
                 // unique check
                 if (column.Unique)
                 {
-                    //List<string> values;
-
-                    //if (values.Contains(insertedRow[i]))
-                    //    return false;
+                    if (GetAllRows(dbName, table.MongoID).Select(row => row.Split('^')[columnPositions[index]]).ToList().Contains(insertedRow[index]))
+                        return false;
                 }
 
                 // check condition
@@ -352,6 +351,22 @@ namespace GerGO.DataAcces.StoredData
                     }
                 }
             }
+        }
+
+        public bool ContainsValue(string dbName, string tableID, int index, string value)
+        {
+            return GetAllRows(dbName, tableID).Select(row => row.Split('^')[index]).Contains(value);
+        }
+
+        public string GetValue(string dbName, string mongoID, string key)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+            ObjectId objId = ObjectId.Parse(mongoID);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+
+            var document = collection.Find(filter).FirstOrDefault();
+
+            return document[key].AsString;
         }
     }
 }
