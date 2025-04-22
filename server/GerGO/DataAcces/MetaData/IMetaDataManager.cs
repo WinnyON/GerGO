@@ -8,6 +8,8 @@ namespace GerGO.DataAcces.MetaData
         public bool ExitsTable(string dbName, string tableName);
         public bool ExistsIndex(string dbName, string tableName, string indexName);
         public bool ExistsColumn(string dbName, string tableName, string columnName);
+        public bool ExistsForeignKey(string dbName, string tableName, string foreignKey);
+        public bool HasFkConstraint(string dbName, string tableName, string columnName);
         public void AddDatabase(DataBase database);
         public void DropDatabase(DataBase database);
         public void AddTable(string dbName, string tableId, Table table);
@@ -36,5 +38,7 @@ namespace GerGO.DataAcces.MetaData
         public void UpdateInnerSeed(string dbName, string tableName, int value);
         public List<int> GetColumnPostions(string dbName, string tableName, List<string> columnNames);
         public int GetNrPkeys(string dbName, string tableName);
+        public void DropColumn(string dbName, string tableName, Column column);
+        public void DropForeignKey(string dbName, string tableName, ForeignKey foreignKey);
     }
 }

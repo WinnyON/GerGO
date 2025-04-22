@@ -21,10 +21,6 @@ namespace GerGO.DataAcces.MetaData
 
         public void AddColumn(string dbName, string tableName, Column column)
         {
-            Column? col = _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.FirstOrDefault(c => c.Name.Equals(column.Name));
-            if (col != null)
-                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.Remove(col);
-
             _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.Add(column);
 
             try
@@ -191,6 +187,24 @@ namespace GerGO.DataAcces.MetaData
             Table? table = db.Tables.First(t => t.Name.Equals(tableName));
 
             if (table.Columns.Any(c => c.Name.Equals(columnName)))
+            {
+                return true;
+            }
+
+            return false;
+        }
+        public bool ExistsForeignKey(string dbName, string tableName, string foreignKey)
+        {
+            if (!ExitsDb(dbName))
+                return false;
+
+            if (!ExitsTable(dbName, tableName))
+                return false;
+
+            DataBase? db = _dataBases.First(db => db.Name.Equals(dbName));
+            Table? table = db.Tables.First(t => t.Name.Equals(tableName));
+
+            if (table.ForeignKeys.Any(fk => fk.Name.Equals(foreignKey)))
             {
                 return true;
             }
@@ -433,6 +447,53 @@ namespace GerGO.DataAcces.MetaData
         public int GetNrPkeys(string dbName, string tableName)
         {
             return _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.Count(c => c.PrimaryKey);
+        }
+
+        public void DropColumn(string dbName, string tableName, Column column)
+        {
+            if (column.PrimaryKey && GetNrPkeys(dbName, tableName) - 1 == 0)
+            {
+                _logger.Error("Table cannot have 0 primary keys at removing a column!");
+                throw new DataResourceException("Table cannot have 0 primary keys at removing a column!");
+            }
+
+            _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.Remove(column);
+            try
+            {
+                _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
+            }
+            catch (FileHandlerException ex)
+            {
+                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.Add(column);
+                _logger.Error($"Failed to write db data: {ex.Message}");
+                throw new DataResourceException("Failed to drop column!");
+            }
+        }
+        public void DropForeignKey(string dbName, string tableName, ForeignKey foreignKey)
+        {
+            _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).ForeignKeys.Remove(foreignKey);
+            try
+            {
+                _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
+            }
+            catch (FileHandlerException ex)
+            {
+                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).ForeignKeys.Add(foreignKey);
+                _logger.Error($"Failed to write db data: {ex.Message}");
+                throw new DataResourceException("Failed to drop foreign key!");
+            }
+        }
+
+        public bool HasFkConstraint(string dbName, string tableName, string columnName)
+        {
+            List<Table> tables = _dataBases.First(db => db.Name.Equals(dbName)).Tables.FindAll(t => t.ForeignKeys.Count > 0);
+            foreach (Table table in tables)
+            {
+                if (table.ForeignKeys.Any(fk => (fk.RefTableName.Equals(tableName) && fk.RefAttributeName.Equals(columnName)) || 
+                    (table.Name.Equals(tableName) && fk.AttributeName.Equals(columnName))))
+                    return true;
+            }
+            return false;
         }
     }
 }

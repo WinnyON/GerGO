@@ -10,7 +10,9 @@ namespace GerGO.Manager
         public void DropTable(string dbName, Table table);
         public void DropIndex(string dbName, string tableName, string indexName);
         public void AddColumn(string dbName, string tableName, Column column);
+        public void DropColumn(string dbName, string tableName, Column column);
         public void AddForeignKey(string dbName, string tableName, ForeignKey foreignKey);
+        public void DropForeignKey(string dbName, string tableName, ForeignKey foreignKey);
         public void AddIndexFile(string dbName, string tableName, string indexName, string columnName);
         // returns the list of the tables of a db
         public string[] GetTables(string dbName);

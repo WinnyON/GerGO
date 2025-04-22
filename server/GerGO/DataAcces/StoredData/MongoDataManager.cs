@@ -1,6 +1,7 @@
 ﻿using GerGO.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using System.Xml.Linq;
 
 namespace GerGO.DataAcces.StoredData
 {
@@ -43,7 +44,7 @@ namespace GerGO.DataAcces.StoredData
                 throw new DataAccesException("Document was not updated.");
             }
         }
-        public void RemoveColumn(string dbName, string tableID, bool isPkKey, int index)
+        public void RemoveColumn(string dbName, string tableID, bool isPkKey, int index, int nrPKeys)
         {
             var collection = _coreDB.GetCollection<BsonDocument>(dbName);
             var filter = Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(tableID));
@@ -52,23 +53,63 @@ namespace GerGO.DataAcces.StoredData
             if (document.Elements.Count() == 1)
                 return;
 
-            if (!isPkKey)
+            List<string> keysToDelete = [];
+
+            var updateDef = new List<UpdateDefinition<BsonDocument>>();
+            foreach (var element in document.Elements)
             {
-                var updateDef = new List<UpdateDefinition<BsonDocument>>();
-                foreach (var element in document.Elements)
+                if (element.Name != "_id")
                 {
-                    if (element.Name != "_id")
+                    List<string> values = (element.Name + "^" + element.Value.AsString).Split('^').ToList();
+                    string key = "";
+                    string value;
+
+                    if (!isPkKey)
                     {
-                        List<string> values = element.Value.AsString.Split('^').ToList();
                         values.RemoveAt(index);
-                        string res = string.Join('^', values);
-                        updateDef.Add(Builders<BsonDocument>.Update.Set(element.Name, $"{res}"));
+                        for (int i = 0; i < nrPKeys; i++)
+                        {
+                            values.RemoveAt(0);
+                        }
+                        value = string.Join('^', values);
+                        updateDef.Add(Builders<BsonDocument>.Update.Set(element.Name, value));
+                    }
+                    else
+                    {
+                        keysToDelete.Add(element.Name);
+                        nrPKeys--;
+                        values.RemoveAt(index);
+                        List<string> keys = [];
+                        for (int i = 0; i < nrPKeys; i++)
+                        {
+                            keys.Add(values[0]);
+                            values.RemoveAt(0);
+                        }
+                        value = string.Join('^', values);
+                        key = string.Join('^', keys);
+                        updateDef.Add(Builders<BsonDocument>.Update.Set(key, value));
                     }
                 }
-                return;
             }
 
+            var combinedUpdate = Builders<BsonDocument>.Update.Combine(updateDef);
+            var result = collection.UpdateOne(filter, combinedUpdate);
 
+            if (result.ModifiedCount == 0)
+            {
+                throw new DataAccesException("Document was not updated.");
+            }
+
+            foreach (var key in keysToDelete)
+            {
+                var deletedRow = Builders<BsonDocument>.Update.Unset(key);
+                var resultDelete = collection.UpdateOne(filter, deletedRow);
+
+                if (resultDelete.ModifiedCount == 0)
+                {
+                    throw new DataAccesException("No matching key!");
+                }
+            }
         }
 
         public void Delete(string dbName, string tableID, string key)

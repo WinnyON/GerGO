@@ -21,7 +21,9 @@ namespace GerGO
         CREATE_INDEX,
         GET_ALL_ROWS,
         GET_INDEX,
-        DELETE_INDEX
+        DELETE_INDEX,
+        DROP_COLUMN,
+        DROP_FOREIGN_KEY
     }
     class RequestHandler
     {
@@ -51,7 +53,9 @@ namespace GerGO
                 new CreateIndexCommand(),
                 new GetAllRowsCommand(),
                 new GetIndexCommand(),
-                new DeleteIndexCommand()
+                new DeleteIndexCommand(),
+                new DropColumnCommand(),
+                new DropForeignKeyCommand()
             ];
         }
         public RequestHandler(TcpClient tcpClient)

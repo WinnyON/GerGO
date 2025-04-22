@@ -13,7 +13,7 @@ namespace GerGO.DataAcces.StoredData
         public void DeleteFromIndexFile(string dbName, string tableName, string mongoID, string pKey);
 
         public void AddColumn(string dbName, string tableID, string value);
-        public void RemoveColumn(string dbName, string tableID, bool isPkKey, int index);
+        public void RemoveColumn(string dbName, string tableID, bool isPkKey, int index, int nrPKeys);
         public void DropDatabase(string dbName);
         public void DropTable(string dbName, string mongoId);
         public List<string> GetAllRows(string dbName, string tableID);

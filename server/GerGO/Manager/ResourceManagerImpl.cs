@@ -42,6 +42,12 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
             }
 
+            if (_metaDataManager.ExistsColumn(dbName, tableName, column.Name))
+            {
+                _logger.Error($"Column {column.Name} already exists!");
+                throw new DataResourceException($"Column {column.Name} already exists!");
+            }
+
             if (column.PKIdentity.Seed != 0 && (column.NotNull || column.DefaultVal != string.Empty || column.Unique || column.Check != string.Empty))
             {
                 _logger.Error("Not valid column: pk with identity can have no other constraints!");
@@ -59,13 +65,6 @@ namespace GerGO.Manager
                 lock (_locks[dbName])
                 {
                     string mongoId = _metaDataManager.GetTableMongoId(dbName, tableName);
-                    if (_metaDataManager.ExistsColumn(dbName, tableName, column.Name))
-                    {
-                        int nrPkKeys = _metaDataManager.GetNrPkeys(dbName, tableName);
-                        int index = _metaDataManager.GetColumnPostions(dbName, tableName, new List<string> { column.Name })[0];
-                        _storedDataManager.RemoveColumn(dbName, mongoId, column.PrimaryKey, index - nrPkKeys);
-                    }
-
                     _metaDataManager.AddColumn(dbName, tableName, column);
                     string value = column.DefaultVal == string.Empty ? "null" : column.DefaultVal;
                     _storedDataManager.AddColumn(dbName, mongoId, value);
@@ -112,6 +111,12 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
             }
 
+            if (_metaDataManager.ExistsForeignKey(dbName, tableName, foreignKey.Name))
+            {
+                _logger.Error($"Foreign key {foreignKey.Name} already exists!");
+                throw new DataResourceException($"Foreign key {foreignKey.Name} already exists!");
+            }
+
             if (!_metaDataManager.ExistsColumn(dbName, tableName, foreignKey.AttributeName))
             {
                 _logger.Error($"Attribute {foreignKey.AttributeName} doesn't exist!");
@@ -135,6 +140,85 @@ namespace GerGO.Manager
                 lock (_locks[dbName])
                 {
                     _metaDataManager.AddForeignKey(dbName, tableName, foreignKey);
+                }
+            }
+            catch (DataAccesException ex)
+            {
+                _logger.Error(ex.Message);
+                throw new DataResourceException(ex.Message);
+            }
+        }
+
+        public void DropColumn(string dbName, string tableName, Column column)
+        {
+            Column col = _metaDataManager.GetColumn(dbName, tableName, column.Name);
+            if (!_metaDataManager.ExitsDb(dbName))
+            {
+                _logger.Error($"Database {dbName} doesn't exist!");
+                throw new DataResourceException($"Database {dbName} doesn't exist!");
+            }
+
+            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            {
+                _logger.Error($"Table {tableName} doesn't exist!");
+                throw new DataResourceException($"Table {tableName} doesn't exist!");
+            }
+
+            if (!_metaDataManager.ExistsColumn(dbName, tableName, column.Name))
+            {
+                _logger.Error($"Column {column.Name} doesn't exist!");
+                throw new DataResourceException($"Column {column.Name} doesn't exist!");
+            }
+
+            if (_metaDataManager.HasFkConstraint(dbName, tableName, column.Name))
+            {
+                _logger.Error($"Column {column.Name} has foreign key constraint!");
+                throw new DataResourceException($"Column {column.Name} has foreign key constraint!");
+            }
+
+            try
+            {
+                lock (_locks[dbName])
+                {
+                    string mongoId = _metaDataManager.GetTableMongoId(dbName, tableName);
+                    int index = _metaDataManager.GetColumnPostions(dbName, tableName, [col.Name])[0];
+                    int nrPKeys = _metaDataManager.GetNrPkeys(dbName, tableName);
+                    _metaDataManager.DropColumn(dbName, tableName, col);
+                    _storedDataManager.RemoveColumn(dbName, mongoId, col.PrimaryKey, index, nrPKeys);
+                }
+            }
+            catch (DataAccesException ex)
+            {
+                _logger.Error(ex.Message);
+                throw new DataResourceException(ex.Message);
+            }
+        }
+
+        public void DropForeignKey(string dbName, string tableName, ForeignKey foreignKey)
+        {
+            if (!_metaDataManager.ExitsDb(dbName))
+            {
+                _logger.Error($"Database {dbName} doesn't exist!");
+                throw new DataResourceException($"Database {dbName} doesn't exist!");
+            }
+
+            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            {
+                _logger.Error($"Table {tableName} doesn't exist!");
+                throw new DataResourceException($"Table {tableName} doesn't exist!");
+            }
+
+            if (!_metaDataManager.ExistsForeignKey(dbName, tableName, foreignKey.Name))
+            {
+                _logger.Error($"Foreign key {foreignKey.Name} doesn't exist!");
+                throw new DataResourceException($"Foreign key {foreignKey.Name} doesn't exist!");
+            }
+
+            try
+            {
+                lock (_locks[dbName])
+                {
+                    _metaDataManager.DropForeignKey(dbName, tableName, foreignKey);
                 }
             }
             catch (DataAccesException ex)
