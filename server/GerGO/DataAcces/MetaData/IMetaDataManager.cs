@@ -8,13 +8,16 @@ namespace GerGO.DataAcces.MetaData
         public bool ExitsTable(string dbName, string tableName);
         public bool ExistsIndex(string dbName, string tableName, string indexName);
         public bool ExistsColumn(string dbName, string tableName, string columnName);
+        public bool ExistsForeignKey(string dbName, string tableName, string foreignKey);
+        public bool HasFkConstraint(string dbName, string tableName, string columnName);
         public void AddDatabase(DataBase database);
         public void DropDatabase(DataBase database);
         public void AddTable(string dbName, string tableId, Table table);
         public void DropTable(string dbName, Table table);
         public void AddColumn(string dbName, string tableName, Column column);
         public void AddForeignKey(string dbName, string tableName, ForeignKey foreignKey);
-        public void AddIndex(string dbName, string tableName, string indexName, string columnName);
+        public void AddIndex(string dbName, string tableName, string indexName, string columnName, string mongoID);
+        public void DropIndex(string dbName, string tableName, IndexFile index);
         public string GetTableMongoId(string dbName, string tableName);
         public string GetNextKey(string dbName, string tableName);
         // returns the list of the tables of a db
@@ -27,5 +30,15 @@ namespace GerGO.DataAcces.MetaData
         public string[] GetColumns(string dbName, string tableName);
         public List<string[]> GetForeignKeys(string dbName, string tableName);
         public List<string> GetIndexData(string dbName, string tableName);
+
+        public Table GetTable(string dbName, string tableName);
+        public Column GetColumn(string dbName, string tableName, string columnName);
+        public IndexFile GetIndexFile(string dbName, string tableName, string indexFileName);
+
+        public void UpdateInnerSeed(string dbName, string tableName, int value);
+        public List<int> GetColumnPostions(string dbName, string tableName, List<string> columnNames);
+        public int GetNrPkeys(string dbName, string tableName);
+        public void DropColumn(string dbName, string tableName, Column column);
+        public void DropForeignKey(string dbName, string tableName, ForeignKey foreignKey);
     }
 }

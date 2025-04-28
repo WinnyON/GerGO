@@ -47,7 +47,18 @@ namespace GerGO.Functionalities.MetaData
                 if (arguments[11].Equals("--"))
                     column.Check = string.Empty;
                 else
-                    column.Check = arguments[11];
+                {
+                    string ops = "<>=";
+                    string op = "";
+                    string val = "";
+                    for (int i = 0; i < arguments[11].Length; i++)
+                    {
+                        if (ops.Contains(arguments[11][i]))
+                            op = op + arguments[11][i];
+                        else val = val+ arguments[11][i];
+                    }
+                    column.Check = op + "^" + val;
+                }
 
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
                 manager.AddColumn(dbName, tableName, column);
