@@ -38,7 +38,7 @@ namespace GerGO.Functionalities.Data
                 stream.Read(buffer, 0, buffer.Length);
                 foreach (string row in rows)
                 {
-                    TcpResponder.SendDataMessage(stream, row);
+                    TcpResponder.SendDataMessage(stream, "1^" + row);
                     buffer = new byte[10];
                     stream.Read(buffer, 0, buffer.Length);
                 }

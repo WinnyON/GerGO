@@ -216,6 +216,9 @@ namespace GerGO.DataAcces.StoredData
                     key = string.IsNullOrEmpty(key) ? tmp : (key + "^" + tmp);
                 }
 
+                if (!string.IsNullOrEmpty(column.DefaultVal) && (insertedRow[index].Equals("0") || insertedRow[index].Equals("null") || insertedRow[index].Equals(string.Empty)))
+                    insertedRow[index] = column.DefaultVal;
+
                 try
                 {
                     // type check
@@ -253,9 +256,6 @@ namespace GerGO.DataAcces.StoredData
                         return false;
                 }
 
-                if (!string.IsNullOrEmpty(column.DefaultVal) && (insertedRow[index].Equals("0") || insertedRow[index].Equals("null") || insertedRow[index].Equals(string.Empty)))
-                    insertedRow[index] = column.DefaultVal;
-
                 // unique check
                 if (column.Unique)
                 {
@@ -264,7 +264,7 @@ namespace GerGO.DataAcces.StoredData
                 }
 
                 // check condition
-                if (!column.Check.Equals("--"))
+                if (!column.Check.Equals("--") && !string.IsNullOrEmpty(column.Check))
                 {
                     string[] checkConst = column.Check.Split('^');
                     switch (checkConst[0])

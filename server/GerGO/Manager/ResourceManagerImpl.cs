@@ -151,7 +151,6 @@ namespace GerGO.Manager
 
         public void DropColumn(string dbName, string tableName, Column column)
         {
-            Column col = _metaDataManager.GetColumn(dbName, tableName, column.Name);
             if (!_metaDataManager.ExitsDb(dbName))
             {
                 _logger.Error($"Database {dbName} doesn't exist!");
@@ -167,8 +166,9 @@ namespace GerGO.Manager
             if (!_metaDataManager.ExistsColumn(dbName, tableName, column.Name))
             {
                 _logger.Error($"Column {column.Name} doesn't exist!");
-                throw new DataResourceException($"Column {column.Name} doesn't exist!");
+                throw new DataResourceException($"2^Column {column.Name} doesn't exist!");
             }
+            Column col = _metaDataManager.GetColumn(dbName, tableName, column.Name);
 
             if (_metaDataManager.HasFkConstraint(dbName, tableName, column.Name))
             {
@@ -289,7 +289,7 @@ namespace GerGO.Manager
             {
                 lock (_locks[dbName])
                 {
-                    _storedDataManager.DropIndexFile(dbName, index.MongoID);
+                    _storedDataManager.DropIndexFile($"{dbName}_{tableName}_indexfiles", index.MongoID);
                     _metaDataManager.DropIndex(dbName, tableName, index);
                 }
             }
@@ -558,7 +558,7 @@ namespace GerGO.Manager
         }
         public void Delete(string dbName, string tableName, string key)
         {
-            if (!_metaDataManager.ExitsDb(dbName) || !_metaDataManager.ExitsTable(dbName, tableName))
+            if (!_metaDataManager.ExitsDb(dbName) || !_metaDataManager.ExitsTable(dbName, tableName) || string.IsNullOrEmpty(key))
             {
                 throw new DataResourceException("Table doesn't exist");
             }

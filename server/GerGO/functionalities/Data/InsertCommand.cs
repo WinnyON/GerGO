@@ -32,13 +32,14 @@ namespace GerGO.Functionalities.Data
                 columnNames.Add(arguments[i]);
             }
 
+            TcpResponder.SendMessage(stream, "OK");
+
             int count = 0;
             string response;
             try
             {
                 do
                 {
-                    TcpResponder.SendMessage(stream, "OK");
                     byte[] buffer = new byte[1024];
                     stream.Read(buffer, 0, buffer.Length);
                     response = Encoding.UTF8.GetString(buffer);
@@ -53,8 +54,10 @@ namespace GerGO.Functionalities.Data
                     }
                     catch (DataResourceException)
                     {
+                        TcpResponder.SendDataMessage(stream, "1^Invalid data!");
                         continue;
                     }
+                    TcpResponder.SendMessage(stream, "OK");
 
                 } while (!response.Equals("0"));
 

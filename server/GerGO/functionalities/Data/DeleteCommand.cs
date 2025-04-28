@@ -51,7 +51,7 @@ namespace GerGO.Functionalities.Data
                 }
                 catch (DataResourceException)
                 {
-                    TcpResponder.SendMessage(stream, "OK");
+                    TcpResponder.SendDataMessage(stream, "1^You can't delete! NGGYU!");
                     continue;
                 }
             } while (!response.StartsWith('0'));

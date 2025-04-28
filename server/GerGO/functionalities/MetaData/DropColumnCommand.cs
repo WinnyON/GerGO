@@ -28,6 +28,12 @@ namespace GerGO.Functionalities.MetaData
             }
             catch (DataResourceException ex)
             {
+                if (ex.Message.StartsWith('2'))
+                {
+                    TcpResponder.SendDataMessage(stream, ex.Message);
+                    return;
+                }
+
                 _logger.Error($"Failed to drop column {arguments[3]}: {ex.Message}");
                 throw new CommandException($"Failed to drop column {arguments[3]}: {ex.Message}");
             }
