@@ -9,6 +9,7 @@ class DbTree(QTreeWidget):
 		self.editor_frame = editor_frame
 		self.current_table = None
 		self.current_db = None
+		self.current_index = None
 		self.setHeaderHidden(False)
 		self.setHeaderLabels(['Databases'])
 		self.header().setFont(h2_font)
@@ -37,12 +38,15 @@ class DbTree(QTreeWidget):
 		self.delete_action.triggered.connect(self.delete_action_handler)
 		self.create_index_action = QAction('Create Index')
 		self.create_index_action.triggered.connect(self.create_index_action_handler)
+		# self.delete_index_action = QAction('Delete Index')
+		# self.delete_index_action.triggered.connect(self.delete_index_action_handler)
 
 		self.edit_menu.addAction(self.create_db_action)
 		self.edit_menu.addAction(self.create_table_action)
 		self.edit_menu.addAction(self.create_constraint_action)
 		self.edit_menu.addAction(self.delete_action)
 		self.edit_menu.addAction(self.create_index_action)
+		# self.edit_menu.addAction(self.delete_index_action)
 
 		self.setContextMenuPolicy(Qt.CustomContextMenu)
 		self.customContextMenuRequested.connect(self.show_context_menu)
@@ -68,15 +72,25 @@ class DbTree(QTreeWidget):
 				self.current_db = item.parent().text(0)
 				self.create_constraint_action.setEnabled(True)
 				self.create_index_action.setEnabled(True)
+			elif self.get_item_level(item) == 3: # TODO: testing required
+				parent_item = item.parent()
+				if parent_item.text(0) == "Indexes":
+					self.current_index = item.text(0)
+				self.current_table = parent_item.parent().text(0)
+				self.current_db = parent_item.parent().parent().text(0)
+				self.delete_index_action.setEnabled(True)
 			else:
 				if self.get_item_level(item) == 0:
 					self.current_db = item.text(0)
 					self.current_table = None
+					self.current_index = None
 				self.create_constraint_action.setEnabled(False)
 				self.create_index_action.setEnabled(False)
+				self.delete_index_action.setEnabled(False)
 		else:
 			self.create_constraint_action.setEnabled(False)
 			self.create_index_action.setEnabled(False)
+			self.delete_index_action.setEnabled(False)
 			self.create_table_action.setEnabled(False)
 			self.delete_action.setEnabled(False)
 		self.edit_menu.exec_(self.viewport().mapToGlobal(position))	
@@ -106,7 +120,23 @@ class DbTree(QTreeWidget):
 			self.editor_frame.change_editor_to_create_fk(self.current_db, self.current_table)
 
 	def delete_action_handler(self):
-		if self.current_table:
+		if self.current_index:
+			code, msg = self.editor_frame.repository.delete_index(self.current_db, self.current_table, self.current_index)
+			if code == 0:
+				items = self.findItems(self.current_db, Qt.MatchExactly | Qt.MatchRecursive, 0)
+				for i in range(items[0].childCount()):
+					child_item = items[0].child(i)
+					if child_item.text(0) == self.current_table:
+						# items[0].takeChild(i)
+						for j in range(child_item.childCount()):
+							gchild_item = child_item.child(j)
+							if gchild_item.text(0) == "Indexes":
+								for k in range(gchild_item.childCount()):
+									index_item = gchild_item.child(k)
+									if index_item.text(0) == self.current_index:
+										gchild_item.takeChild(k)
+										return
+		elif self.current_table:
 			# delete current table
 			code = self.parent_widget.show_delete_state("table", self.current_db, self.current_table)
 			if code == 0:
@@ -128,6 +158,10 @@ class DbTree(QTreeWidget):
 	def create_index_action_handler(self):
 		if self.current_table:
 			self.editor_frame.change_editor_to_create_index(self.current_db, self.current_table)
+
+	# def delete_index_action_handler(self):
+	# 	if self.current_table and self.current_index:
+	# 		self.editor_frame.repository.delete_index(self.current_db, self.current_table, self.current_index)
 
 	def add_db(self, db_name):
 		db_item = QTreeWidgetItem([db_name])
