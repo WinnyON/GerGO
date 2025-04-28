@@ -66,17 +66,21 @@ class EditorFrame(QWidget):
 		if code == 1:
 			self.show_message("ERROR", "Error loading columns")
 			return
-		code, row_data = self.repository.get_table_rows(self.selected_db, self.selected_table)
+		headers = []
+		pks = []
+		types = []
+		for column in data:
+			headers.append(column["Name"])
+			types.append(column["Type"])
+			if column["Primary Key"]:
+				pks.append(column["Name"])
+		# TODO: add column names to the get_table_rows request
+		code, row_data = self.repository.get_table_rows(self.selected_db, self.selected_table, headers)
 		if code == 1:
 			self.show_message("ERROR", "Error loading rows")
 			return
-		headers = []
-		pks = []
-		for column in data:
-			headers.append(column["Name"])
-			if column["Primary Key"]:
-				pks.append(column["Name"])
-		self.edit_rows_widget.set_data(headers, row_data, pks) #TODO: get rows from server
+		self.edit_rows_widget.set_data(headers, types, row_data, pks)
+		# self.edit_rows_widget.set_data(headers, row_data, pks) #TODO: get rows from server
 		self.editor_type_layout.setCurrentIndex(0)
 		self.selected_editor_type = "rows"
 
@@ -159,21 +163,42 @@ class EditorFrame(QWidget):
 				self.show_message("SUCCESS", "Foreign key created successfully")
 
 		elif self.selected_editor_type == "columns":
-			data = self.edit_columns_widget.get_data()
-			# print(data)
-			code, msg = self.repository.add_columns(self.selected_db, self.selected_table, data)
-			# print(code)
-			if code == 0:
-				self.show_message("SUCCESS", "Columns edited successfully!")
-			else:
-				self.show_message("ERROR", "There was an error when editing the columns!\n" + msg)
-
-		elif self.selected_editor_type == "rows":
-			inserted_data = self.edit_rows_widget.get_modified_rows()
-			deleted_data = self.edit_rows_widget.get_deleted_rows()
+			# data = self.edit_columns_widget.get_data()
+			# code, msg = self.repository.add_columns(self.selected_db, self.selected_table, data)
+			# if code == 0:
+			# 	self.show_message("SUCCESS", "Columns edited successfully!")
+			# else:
+			# 	self.show_message("ERROR", "There was an error when editing the columns!\n" + msg)
+			#new
+			inserted_data = self.edit_columns_widget.get_modified_rows()
+			deleted_data = self.edit_columns_widget.get_deleted_rows()
 
 			if inserted_data:
-				code, msg = self.repository.insert_rows(self.selected_db, self.selected_table, inserted_data)
+				column_names = map(lambda x: x["Name"], inserted_data)
+				code, msg = self.repository.delete_columns(self.selected_db, self.selected_table, column_names)
+				if code == 1:
+					self.show_message("ERROR", "There was an error when deleting the columns!\n" + msg)
+					return
+				code, msg = self.repository.add_columns(self.selected_db, self.selected_table, inserted_data)
+				if code == 1:
+					self.show_message("ERROR", "There was an error when inserting the columns!\n" + msg)
+					return
+
+			if deleted_data:
+				code, msg = self.repository.delete_columns(self.selected_db, self.selected_table, deleted_data)
+				if code == 1:
+					self.show_message("ERROR", "There was an error when deleting the columns!\n" + msg)
+					return
+
+
+			# end
+		elif self.selected_editor_type == "rows":
+			column_names = self.edit_rows_widget.get_column_names()
+			inserted_data = self.edit_rows_widget.get_modified_rows()
+			deleted_data = self.edit_rows_widget.get_deleted_rows()
+			print(deleted_data)
+			if inserted_data:
+				code, msg = self.repository.insert_rows(self.selected_db, self.selected_table, inserted_data, column_names)
 				if code == 1:
 					self.show_message("ERROR", "There was an error when inserting the rows!\n" + msg)
 					return
@@ -182,7 +207,8 @@ class EditorFrame(QWidget):
 				if code == 1:
 					self.show_message("ERROR", "There was an error when deleting the rows!\n" + msg)
 					return
-			# self.show_message("SUCCESS", "Rows modified successfully!")
+			self.show_message("SUCCESS", "Rows modified successfully!")
+			#TODO: reload rows
 
 		elif self.selected_editor_type == "index":
 			name, columns = self.create_index_widget.get_data()

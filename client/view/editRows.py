@@ -27,11 +27,12 @@ class EditRows(QTableWidget):
 		self.itemChanged.connect(self.on_item_changed)
 
 		self.primary_keys = []
+		self.column_names = []
 		self.create_state = False
 
 
 	def select_row(self, row):
-		print(row)
+		# print(row)
 		self.clearSelection()
 		self.selectRow(row)
 
@@ -41,32 +42,37 @@ class EditRows(QTableWidget):
 			if row != -1:
 				row_data = []
 				for column in range(self.columnCount()):
-					if self.horizontalHeaderItem(column).text() in self.primary_keys:
+					if self.horizontalHeaderItem(column).text().split('(')[0] in self.primary_keys:
 						row_data.append(self.item(row, column).text())
 				self.deleted_rows.append(row_data)
 				self.removeRow(row)
+				print(self.deleted_rows)
+
 		else:
 			super().keyPressEvent(event)
 
-	def set_demo_data(self):
-		self.setRowCount(10)
-		self.setColumnCount(5)
-		self.setHorizontalHeaderLabels(["Column 1", "Column 2", "C3", "Col4", "COL5"])
+	# def set_demo_data(self):
+	# 	self.setRowCount(10)
+	# 	self.setColumnCount(5)
+	# 	self.setHorizontalHeaderLabels(["Column 1", "Column 2", "C3", "Col4", "COL5"])
+	#
+	# 	for row in range(self.rowCount()):
+	# 		for column in range(self.columnCount()):
+	# 			item = QTableWidgetItem(f"Row {row}, Column {column}")
+	# 			item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
+	# 			self.setItem(row, column, item)
 
-		for row in range(self.rowCount()):
-			for column in range(self.columnCount()):
-				item = QTableWidgetItem(f"Row {row}, Column {column}")
-				item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
-				self.setItem(row, column, item)
-
-	# def set_data(self, column_names, column_types, rows, pk):
-	def set_data(self, column_names, rows, pk):
+	def set_data(self, column_names, column_types, rows, pk):
+	# def set_data(self, column_names, rows, pk):
+		self.column_names = column_names
 		self.create_state = True
 		self.primary_keys = pk
 		self.setRowCount(len(rows))
 		self.setColumnCount(len(column_names))
-		# column_header_texts = [""]
-		self.setHorizontalHeaderLabels(column_names)
+		column_header_texts = []
+		for i in range(len(column_names)):
+			column_header_texts.append(column_names[i] + "(" + column_types[i] + ")")
+		self.setHorizontalHeaderLabels(column_header_texts)
 		# print(rows)
 		# print(column_names)
 		for row in range(self.rowCount()):
@@ -107,7 +113,7 @@ class EditRows(QTableWidget):
 		self.create_state = True
 		self.setRowCount(self.rowCount() + 1)
 		row = self.rowCount() - 1
-		print("HERE")
+		# print("HERE")
 		for column in range(self.columnCount()):
 			item = QTableWidgetItem("")
 			item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
@@ -125,3 +131,6 @@ class EditRows(QTableWidget):
 		for column in range(self.columnCount()):
 			row_data.append(self.item(row, column).text())
 		self.modified_rows[row] = row_data
+
+	def get_column_names(self):
+		return self.column_names

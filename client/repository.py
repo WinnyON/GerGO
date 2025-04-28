@@ -94,12 +94,29 @@ class Repository():
 		print(command)
 		return self.client.send_message(command)
 
+	# TODO: add column names to the request
 	def add_columns(self, db_name, table_name, columns):
 		try:
 			self.client.connect()
 			print(columns)
 			for column in columns:
 				code = self.add_column(db_name, table_name, column)
+				if code[0] == '1':
+					return 1, code.split('^')[1]
+			return 0, "OK"
+		except ConnectionError as ce:
+			return 1, ce.get_text()
+
+	def delete_column(self, db_name, table_name, column):
+		command = "17^" + db_name + "^" + table_name + "^" + column
+		return self.client.send_message(command)
+
+	def delete_columns(self, db_name, table_name, columns):
+		try:
+			self.client.connect()
+			print(columns)
+			for column in columns:
+				code = self.delete_column(db_name, table_name, column)
 				if code[0] == '1':
 					return 1, code.split('^')[1]
 			return 0, "OK"
@@ -266,19 +283,25 @@ class Repository():
 		except ConnectionError as ce:
 			return 1, ce.get_text()
 
-	def get_table_rows(self, db_name, table_name):
-		command = "14^" + db_name + "^" + table_name
+	# TODO: add column names to the get_table_rows request, if empty then all columns
+	# when do you need empty?
+	def get_table_rows(self, db_name, table_name, column_names):
+		column_string = self.build_row_command(column_names)
+		if column_string:
+			command = "14^" + db_name + "^" + table_name + "^"  + column_string
+		else:
+			command = "14^" + db_name + "^" + table_name
 		rows = []
 		try:
 			self.client.connect()
 			code = self.client.send_message(command)
 			if code[0] == '1':
 				return 1, code.split('^')[1]
-			code = self.client.send_message("1")
+			code = self.client.send_message("0")
 			while code[0] != '0':
 				row = code.split('^')[1:] # elso 0^ arra van hogy vege van
 				rows.append(row)
-				code = self.client.send_message("1")
+				code = self.client.send_message("0")
 			return 0, rows
 		except ConnectionError as ce:
 			return 1, ce.get_text()
@@ -317,6 +340,7 @@ class Repository():
 
 	def delete_rows(self, db_name, table_name, rows):
 		command = "12^" + db_name + "^" + table_name
+		print(rows)
 		try:
 			self.client.connect()
 			code = self.client.send_message(command)
@@ -325,6 +349,7 @@ class Repository():
 			for row in rows:
 				command = self.build_row_command(row)
 				code = self.client.send_message(command)
+				print(code)
 				if code[0] == '1':
 					return 1, code.split('^')[1]
 			self.client.send_message("0")
@@ -332,8 +357,9 @@ class Repository():
 		except ConnectionError as ce:
 			return 1, ce.get_text()
 
-	def insert_rows(self, db_name, table_name, rows):
-		command = "11^" + db_name + "^" + table_name
+	def insert_rows(self, db_name, table_name, rows, column_names):
+		column_string = self.build_row_command(column_names)
+		command = "11^" + db_name + "^" + table_name + "^" + column_string
 		try:
 			self.client.connect()
 			code = self.client.send_message(command)
@@ -344,7 +370,8 @@ class Repository():
 				code = self.client.send_message(command)
 				if code[0] == '1':
 					return 1, code.split('^')[1]
-			self.client.send_message("0")
+			code = self.client.send_message("0")
+			print(code)
 			return 0, "OK"
 		except ConnectionError as ce:
 			return 1, ce.get_text()
@@ -352,6 +379,20 @@ class Repository():
 	def create_index(self, db_name, table_name, name, columns):
 		name = name.replace('^', '')
 		command = "13^" + db_name + "^" + table_name + "^" + name + "^" + self.build_row_command(columns)
+		try:
+			self.client.connect()
+			code = self.client.send_message(command)
+			if code[0] == '1':
+				return 1, code.split('^')[1]
+			return 0, "OK"
+		except ConnectionError as ce:
+			return 1, ce.get_text()
+
+	#TODO: delete index
+	#done
+
+	def delete_index(self, db_name, table_name, index_name):
+		command = "16^" + db_name + "^" + table_name + "^" + index_name
 		try:
 			self.client.connect()
 			code = self.client.send_message(command)
