@@ -495,5 +495,10 @@ namespace GerGO.DataAcces.MetaData
             }
             return false;
         }
+
+        public List<string> GetPrimaryKeys(string dbName, string tableName)
+        {
+            return GetColumns(dbName, tableName).ToList().FindAll(c => GetColumn(dbName, tableName, c).PrimaryKey);
+        }
     }
 }

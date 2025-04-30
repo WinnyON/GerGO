@@ -248,12 +248,34 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Column {columnName} doesn't exist!");
             }
 
+            if (_metaDataManager.GetColumn(dbName, tableName, columnName).PrimaryKey)
+            {
+                _logger.Error("You can't create an index for a primary key!");
+                throw new DataResourceException("You can't create an index for a primary key!");
+            }
+
+            if (_metaDataManager.ExistsIndex(dbName, tableName, indexName))
+            {
+                _logger.Error($"Index {indexName} alredy exists!");
+                throw new DataResourceException($"Index {indexName} alredy exists!");
+            }
+
             try
             {
                 lock (_locks[dbName])
                 {
                     string mongoID = _storedDataManager.AddIndexFile(dbName, tableName);
                     _metaDataManager.AddIndex(dbName, tableName, indexName, columnName, mongoID);
+
+                    var colList = _metaDataManager.GetPrimaryKeys(dbName, tableName);
+                    colList.Insert(0, columnName);
+                    GetAllRows(dbName, tableName, colList).ForEach(row =>
+                    {
+                        List<string> values = row.Split('^').ToList();
+                        string indexVal = values[0];
+                        values.RemoveAt(0);
+                        _storedDataManager.InsertToIndexFile(dbName, tableName, mongoID, string.Join('^', values), indexVal);
+                    });
                 }
             }
             catch (DataAccesException ex)

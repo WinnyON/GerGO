@@ -368,11 +368,13 @@ namespace GerGO.DataAcces.StoredData
 
         public void DeleteFromIndexFile(string dbName, string tableName, string mongoID, string pKey)
         {
-            var collection = _coreDB.GetCollection<BsonDocument>($"{dbName}_{tableName}_indexfiles");
+            string indexDocName = $"{dbName}_{tableName}_indexfiles";
+            var collection = _coreDB.GetCollection<BsonDocument>(indexDocName);
             ObjectId objId = ObjectId.Parse(mongoID);
             var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
             var document = collection.Find(filter).FirstOrDefault();
 
+            List<string> keysToDelete = [];
             foreach (var item in document.Elements)
             {
                 if (!item.Name.Equals("_id"))
@@ -382,6 +384,11 @@ namespace GerGO.DataAcces.StoredData
                     if (values.Contains(pKey))
                     {
                         values.Remove(pKey);
+                        if (values.Count == 0)
+                        {
+                            keysToDelete.Add(item.Name);
+                            continue;
+                        }
                         string tmp = string.Join('#', values);
                         var insertedRow = Builders<BsonDocument>.Update.Set(item.Name, $"{tmp}");
                         var result = collection.UpdateOne(filter, insertedRow);
@@ -392,6 +399,8 @@ namespace GerGO.DataAcces.StoredData
                     }
                 }
             }
+
+            keysToDelete.ForEach(key => Delete(indexDocName, mongoID, key));
         }
 
         public bool ContainsValue(string dbName, string tableID, int index, string value)
