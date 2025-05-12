@@ -60,6 +60,7 @@ class EditColumns(QTableWidget):
 					container.setLayout(container_layout)
 
 					checkbox = QCheckBox()
+					checkbox.stateChanged.connect(lambda: self.on_check_state_changed(checkbox))
 					checkbox.setChecked(col[header_labels[column]])
 					checkbox.setMinimumSize(10,20)
 					container_layout.addWidget(checkbox)
@@ -172,6 +173,7 @@ class EditColumns(QTableWidget):
 				container.setLayout(container_layout)
 
 				checkbox = QCheckBox()
+				checkbox.stateChanged.connect(lambda: self.on_check_state_changed(checkbox))
 				checkbox.setMinimumSize(10,20)
 				container_layout.addWidget(checkbox)
 				
@@ -195,6 +197,23 @@ class EditColumns(QTableWidget):
 		removed = self.deleted_rows
 		self.deleted_rows = []
 		return removed
+
+	def on_check_state_changed(self, checkbox):
+		if self.create_state:
+			return
+		index = self.indexAt(checkbox.parent().pos())
+		row = index.row()
+		print("Row:", row)
+		column_data = {}
+		for column in range(self.columnCount()):
+			if column < 5:
+				self.item(row, column).setText(self.item(row, column).text().replace('^', ''))
+				column_data[self.horizontalHeaderItem(column).text()] = self.item(row, column).text()
+			else:
+				column_data[self.horizontalHeaderItem(column).text()] = self.cellWidget(row, column).findChild(
+					QCheckBox).isChecked()
+		print(column_data)
+		self.modified_rows[row] = column_data
 
 	def on_item_changed(self, item):
 		if self.create_state:

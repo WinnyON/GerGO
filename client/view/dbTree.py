@@ -78,7 +78,7 @@ class DbTree(QTreeWidget):
 					self.current_index = item.text(0)
 				self.current_table = parent_item.parent().text(0)
 				self.current_db = parent_item.parent().parent().text(0)
-				self.delete_index_action.setEnabled(True)
+				# self.delete_index_action.setEnabled(True)
 			else:
 				if self.get_item_level(item) == 0:
 					self.current_db = item.text(0)
@@ -86,11 +86,11 @@ class DbTree(QTreeWidget):
 					self.current_index = None
 				self.create_constraint_action.setEnabled(False)
 				self.create_index_action.setEnabled(False)
-				self.delete_index_action.setEnabled(False)
+				# self.delete_index_action.setEnabled(False)
 		else:
 			self.create_constraint_action.setEnabled(False)
 			self.create_index_action.setEnabled(False)
-			self.delete_index_action.setEnabled(False)
+			# self.delete_index_action.setEnabled(False)
 			self.create_table_action.setEnabled(False)
 			self.delete_action.setEnabled(False)
 		self.edit_menu.exec_(self.viewport().mapToGlobal(position))	
@@ -274,7 +274,7 @@ class DbTree(QTreeWidget):
 	# 	self.addTopLevelItem(rootItem2)
 	# 	self.addTopLevelItem(rootItem3)
 	# 	childItem1 = QTreeWidgetItem(['Child Item 1'])
-	# 	childItem2 = QTreeWidgetItem(['Child Item 2'])
+	# 	childItem2 = QTreeWidgetItem(['Child Item 2'])3
 	# 	childItem3 = QTreeWidgetItem(['abc'])
 	# 	rootItem1.addChild(childItem1)
 	# 	rootItem1.addChild(childItem2)

@@ -401,3 +401,57 @@ class Repository():
 			return 0, "OK"
 		except ConnectionError as ce:
 			return 1, ce.get_text()
+
+
+	def select_rows(self, db_name, table_name, columns, join_tables, conditions):
+		select_all = False
+		try:
+			command = "19^" + db_name + "^" + table_name
+			self.client.connect()
+			code = self.client.send_message(command)
+			if code[0] == '1':
+				return 1, code.split('^')[1]
+			for table in join_tables:
+				command = "20^" + table["table"] + "^" + table["col1"] + "^" + table["col2"]
+				code = self.client.send_message(command)
+				if code[0] == '1':
+					return 1, code.split('^')[1]
+			for table in conditions:
+				command = "21^" + table_name + "^" + table["col1"] + "^" + table["op"] + "^" + table["col2"]
+				# command = "21^" + table["col1"] + "^" + table["op"] + "^" + table["col2"]
+				code = self.client.send_message(command)
+				if code[0] == '1':
+					return 1, code.split('^')[1]
+			for column in columns:
+				if column == "*":
+					select_all = True
+					command = "25^*"
+					code = self.client.send_message(command)
+					if code[0] == '1':
+						return 1, code.split('^')[1]
+					break
+				# command = "25^" + column["table"] + "^" + column["name"] # TODO: itt majd fog kelleni egy ellenorzes hogy melyik oszlop melyik tablabol van
+				command = "25^" + table_name + "^" + column
+				code = self.client.send_message(command)
+				if code[0] == '1':
+					return 1, code.split('^')[1]
+			command = "0^OK"
+			code = self.client.send_message(command)
+			if code[0] == '1':
+				return 1, code.split('^')[1]
+			args = code.split('^')
+			row_count = int(args[1])
+			if select_all:
+				column_names = args[2:]
+			else:
+				# column_names = [column["table"] + "." + column["name"] for column in columns] #TODO: fix table-column later
+				column_names = [table_name + "." + column for column in columns]
+			rows = []
+			code = self.client.send_message("0")
+			while code[0] != '0':
+				row = code.split('^')[1:]  # elso 0^ arra van hogy vege van
+				rows.append(row)
+				code = self.client.send_message("0")
+			return 0, (row_count, column_names, rows)
+		except ConnectionError as ce:
+			return 1, ce.get_text()
