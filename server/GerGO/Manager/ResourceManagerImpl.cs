@@ -700,6 +700,7 @@ namespace GerGO.Manager
         {
             rows = rows.FindAll(row =>
             {
+                bool ok = true;
                 foreach (var where in selectData.WhereClauses)
                 {
                     Column col = _metaDataManager.GetColumn(selectData.DbName, selectData.TableName, where[2]);
@@ -709,20 +710,30 @@ namespace GerGO.Manager
                     {
                         case "=":
                         case "==":
-                            return Validator.IsEqual(rowData[pos], where[4], col.Type);
+                            if (!Validator.IsEqual(rowData[pos], where[4], col.Type))
+                                ok = false;
+                            break;
                         case ">":
-                            return Validator.IsGreater(rowData[pos], where[4], col.Type);
+                            if (!Validator.IsGreater(rowData[pos], where[4], col.Type))
+                                ok = false;
+                            break;
                         case ">=":
-                            return Validator.IsGreaterOrEqual(rowData[pos], where[4], col.Type);
+                            if (!Validator.IsGreaterOrEqual(rowData[pos], where[4], col.Type))
+                                ok = false;
+                            break;
                         case "<":
-                            return Validator.IsLess(rowData[pos], where[4], col.Type);
+                            if (!Validator.IsLess(rowData[pos], where[4], col.Type))
+                                ok = false;
+                            break;
                         case "<=":
-                            return Validator.IsLessOrEqual(rowData[pos], where[4], col.Type);
+                            if (!Validator.IsLessOrEqual(rowData[pos], where[4], col.Type))
+                                ok = false;
+                            break;
                         default:
-                            return false;
+                            break;
                     }
                 }
-                return true;
+                return ok;
             });
         }
 
