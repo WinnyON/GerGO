@@ -6,6 +6,9 @@ from editColumns import EditColumns
 from constraintEditor import ConstraintEditor
 from editForeignKeys import EditForeignKeys
 from createIndex import CreateIndex
+from view.QueryResults import QueryResults
+from view.queryEditor import QueryEditor
+
 
 class EditorFrame(QWidget):
 	def __init__(self, repository, main_editor_page):
@@ -26,28 +29,38 @@ class EditorFrame(QWidget):
 		self.rows_button.clicked.connect(self.change_editor_to_rows)
 		self.foreign_key_button = QPushButton('Foreign keys')
 		self.foreign_key_button.clicked.connect(self.change_editor_to_edit_fk)
+		self.query_button = QPushButton('Create Query')
+		self.query_button.clicked.connect(self.change_editor_to_query)
 		self.apply_button = QPushButton('Apply changes')
 		self.apply_button.clicked.connect(self.apply_changes_handler)
 		self.add_entry_button = QPushButton('Add Entry')
 		self.add_entry_button.clicked.connect(self.add_column_handler)
+
+
 
 		self.edit_rows_widget = EditRows()
 		self.edit_columns_widget = EditColumns()
 		self.edit_constraints_widget = ConstraintEditor()
 		self.edit_foreign_keys_widget = EditForeignKeys()
 		self.create_index_widget = CreateIndex()
+		self.query_widget = QueryEditor()
+		self.query_results_widget = QueryResults()
 
 		self.header_layout.addWidget(self.columns_button)
 		self.header_layout.addWidget(self.rows_button)
 		self.header_layout.addWidget(self.foreign_key_button)
+		self.header_layout.addWidget(self.query_button)
 		self.header_layout.addWidget(self.add_entry_button)
 		self.header_layout.addWidget(self.apply_button)
+
 
 		self.editor_type_layout.addWidget(self.edit_rows_widget)
 		self.editor_type_layout.addWidget(self.edit_columns_widget)
 		self.editor_type_layout.addWidget(self.edit_constraints_widget)
 		self.editor_type_layout.addWidget(self.edit_foreign_keys_widget)
 		self.editor_type_layout.addWidget(self.create_index_widget)
+		self.editor_type_layout.addWidget(self.query_widget)
+		self.editor_type_layout.addWidget(self.query_results_widget)
 
 		self.editor_type_layout.setCurrentIndex(1)
 
@@ -141,6 +154,15 @@ class EditorFrame(QWidget):
 		else:
 			self.show_message("ERROR", "Error loading foreign keys")
 
+	def change_editor_to_query(self):
+		code, data = self.repository.get_tables(self.selected_db)
+		if code == 0:
+			self.query_widget.set_table_names(data)
+			self.editor_type_layout.setCurrentIndex(5)
+			self.selected_editor_type = "query"
+		else:
+			self.show_message("ERROR", "Error loading tables")
+
 	#TODO: set this when new table and db is created
 	def set_selected_db(self, db):
 		self.selected_db = db
@@ -219,6 +241,20 @@ class EditorFrame(QWidget):
 			self.show_message("SUCCESS", "Index created successfully!")
 			self.main_editor_page.add_index_to_tree(self.selected_db, self.selected_table, {"name": name, "columns": columns})
 
+		elif self.selected_editor_type == "query":
+			code, data = self.query_widget.parse_command()
+			if code == -1:
+				self.show_message("ERROR", "Error parsing command: " + data)
+				return
+			print(data)
+			code, data = self.repository.select_rows(self.selected_db, data[0], data[1], data[2], data[3])
+			if code == 1:
+				self.show_message("ERROR", "Error while selecting rows!\n" + data)
+				return
+			self.query_results_widget.set_data(data[1], data[2])
+			self.editor_type_layout.setCurrentIndex(6)
+			self.selected_editor_type = "query_results"
+			print(data)
 
 		# elif self.selected_editor_type == "edit_fk":
 			# data = self.repository.get_table_foreign_keys(self.selected_db, self.selected_table)
