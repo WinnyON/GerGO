@@ -153,6 +153,7 @@ namespace GerGO.DataAcces.StoredData
             var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
 
             var table = collection.Find(filter).First();
+            
             var result = new List<string>();
 
             foreach (var item in table)

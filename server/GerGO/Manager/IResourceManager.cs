@@ -26,6 +26,8 @@ namespace GerGO.Manager
         public List<string> GetIndexes(string dbName, string tableName);
         public void Insert(string dbName, string tableName, List<string> columnNames, string value);
         public void Delete(string dbName, string tableName, string key);
-        public List<string>GetAllRows(string dbName, string tableName, List<string> columnNames);
+        public List<string> GetAllRows(string dbName, string tableName, List<string> columnNames);
+
+        public List<string> Select(SelectData selectData, ref string columnNames);
     }
 }
