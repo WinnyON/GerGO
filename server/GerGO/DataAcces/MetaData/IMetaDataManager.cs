@@ -28,6 +28,7 @@ namespace GerGO.DataAcces.MetaData
         public List<string[]> GetTableData(string dbName, string tableName);
         // return the column names
         public string[] GetColumns(string dbName, string tableName);
+        List<string> GetPrimaryKeys(string dbName, string tableName);
         public List<string[]> GetForeignKeys(string dbName, string tableName);
         public List<string> GetIndexData(string dbName, string tableName);
 

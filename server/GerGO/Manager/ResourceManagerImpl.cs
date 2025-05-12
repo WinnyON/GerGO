@@ -3,6 +3,8 @@ using GerGO.DataAcces.MetaData;
 using GerGO.DataAcces.StoredData;
 using GerGO.Models;
 using GerGO.Utils;
+using System;
+using System.Xml.Linq;
 
 namespace GerGO.Manager
 {
@@ -248,12 +250,34 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Column {columnName} doesn't exist!");
             }
 
+            if (_metaDataManager.GetColumn(dbName, tableName, columnName).PrimaryKey)
+            {
+                _logger.Error("You can't create an index for a primary key!");
+                throw new DataResourceException("You can't create an index for a primary key!");
+            }
+
+            if (_metaDataManager.ExistsIndex(dbName, tableName, indexName))
+            {
+                _logger.Error($"Index {indexName} alredy exists!");
+                throw new DataResourceException($"Index {indexName} alredy exists!");
+            }
+
             try
             {
                 lock (_locks[dbName])
                 {
                     string mongoID = _storedDataManager.AddIndexFile(dbName, tableName);
                     _metaDataManager.AddIndex(dbName, tableName, indexName, columnName, mongoID);
+
+                    var colList = _metaDataManager.GetPrimaryKeys(dbName, tableName);
+                    colList.Insert(0, columnName);
+                    GetAllRows(dbName, tableName, colList).ForEach(row =>
+                    {
+                        List<string> values = row.Split('^').ToList();
+                        string indexVal = values[0];
+                        values.RemoveAt(0);
+                        _storedDataManager.InsertToIndexFile(dbName, tableName, mongoID, string.Join('^', values), indexVal);
+                    });
                 }
             }
             catch (DataAccesException ex)
@@ -643,6 +667,172 @@ namespace GerGO.Manager
             }).ToList();
 
             return resultSet;
+        }
+
+        public List<string> Select(SelectData selectData, ref string columnNames)
+        {
+            if (!IsValidSelectData(ref selectData, ref columnNames))
+            {
+                throw new DataResourceException("Not valid select data!");
+            }
+
+            List<string> rows = [];
+            try
+            {
+                lock (_locks[selectData.DbName])
+                {
+                    rows = JoinTables(selectData);
+                }
+
+                ExecuteWhereCluases(selectData, ref rows);
+                ExecuteProjection(selectData, ref rows);
+            }
+            catch (DataAccesException ex)
+            {
+                _logger.Error($"Error at select: {ex.Message}");
+                throw new DataResourceException($"Error at select: {ex.Message}");
+            }
+
+            return rows;
+        }
+
+        private void ExecuteWhereCluases(SelectData selectData, ref List<string> rows)
+        {
+            rows = rows.FindAll(row =>
+            {
+                bool ok = true;
+                foreach (var where in selectData.WhereClauses)
+                {
+                    Column col = _metaDataManager.GetColumn(selectData.DbName, selectData.TableName, where[2]);
+                    string[] rowData = row.Split('^');
+                    int pos = _metaDataManager.GetColumnPostions(selectData.DbName, selectData.TableName, [where[2]])[0];
+                    switch (where[3])
+                    {
+                        case "=":
+                        case "==":
+                            if (!Validator.IsEqual(rowData[pos], where[4], col.Type))
+                                ok = false;
+                            break;
+                        case ">":
+                            if (!Validator.IsGreater(rowData[pos], where[4], col.Type))
+                                ok = false;
+                            break;
+                        case ">=":
+                            if (!Validator.IsGreaterOrEqual(rowData[pos], where[4], col.Type))
+                                ok = false;
+                            break;
+                        case "<":
+                            if (!Validator.IsLess(rowData[pos], where[4], col.Type))
+                                ok = false;
+                            break;
+                        case "<=":
+                            if (!Validator.IsLessOrEqual(rowData[pos], where[4], col.Type))
+                                ok = false;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                return ok;
+            });
+        }
+
+        private void ExecuteProjection(SelectData selectData, ref List<string> rows)
+        {
+            List<string> columnNames = selectData.Columns.Select(col => col[2]).ToList();
+            List<int> positions = _metaDataManager.GetColumnPostions(selectData.DbName, selectData.TableName, columnNames);
+            rows = rows.Select(r =>
+            {
+                string[] values = r.Split('^');
+                string tmp = values[positions[0]];
+                for (int i = 1; i < positions.Count; i++)
+                {
+                    tmp = tmp + "^" + values[positions[i]];
+                }
+                return tmp;
+            }).ToList();
+        }
+
+        private List<string> JoinTables(SelectData selectData)
+        {
+            return _storedDataManager.GetAllRows(selectData.DbName, _metaDataManager.GetTableMongoId(selectData.DbName, selectData.TableName));
+        }
+
+        private bool IsValidSelectData(ref SelectData selectData, ref string columnNames)
+        {
+            if (!_metaDataManager.ExitsDb(selectData.DbName) || !_metaDataManager.ExitsTable(selectData.DbName, selectData.TableName))
+                return false;
+
+            string tableName = selectData.TableName;
+            columnNames = string.Empty;
+            if (selectData.Columns.Count == 1 && selectData.Columns[0][1] == "*")
+            {
+                var colNames = _metaDataManager.GetColumns(selectData.DbName, selectData.TableName);
+                selectData.Columns.Clear();
+                selectData.Columns = colNames.Select(col => new string[] { "25", tableName, col }).ToList();
+                string tmp = string.Empty;
+                selectData.Columns.ForEach(col => tmp = $"{tmp}^{tableName}.{col[2]}");
+                columnNames = tmp.Substring(1, tmp.Length - 1);
+            }
+            else
+            {
+                foreach (var col in selectData.Columns)
+                {
+                    if (col.Length != 3)
+                        return false;
+                    if (!_metaDataManager.ExitsTable(selectData.DbName, col[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, col[1], col[2]))
+                        return false;
+                }
+            }
+
+            foreach (var jTable in selectData.JoinTables)
+            {
+                if (jTable.Length != 5)
+                    return false;
+                if (!_metaDataManager.ExitsTable(selectData.DbName, jTable[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, jTable[1], jTable[2]))
+                    return false;
+                if (!_metaDataManager.ExitsTable(selectData.DbName, jTable[3]) || !_metaDataManager.ExistsColumn(selectData.DbName, jTable[4], jTable[2]))
+                    return false;
+            }
+
+            List<string> operators = ["<", ">", "=", "<=", ">=", "<>"];
+            foreach (var where in selectData.WhereClauses)
+            {
+                if (where.Length != 5)
+                    return false;
+                if (!_metaDataManager.ExitsTable(selectData.DbName, where[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, where[1], where[2]))
+                    return false;
+                if (!operators.Contains(where[3]))
+                    return false;
+            }
+
+            foreach (var groupBy in  selectData.GroupByClauses)
+            {
+                if (groupBy.Length != 3)
+                    return false;
+                if (!_metaDataManager.ExitsTable(selectData.DbName, groupBy[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, groupBy[1], groupBy[2]))
+                    return false;
+            }
+
+            foreach (var having in selectData.HavingClauses)
+            {
+                if (having.Length != 5)
+                    return false;
+                if (!_metaDataManager.ExitsTable(selectData.DbName, having[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, having[1], having[2]))
+                    return false;
+                if (!operators.Contains(having[3]))
+                    return false;
+            }
+
+            foreach (var orderBy in  selectData.OrderByCluases)
+            {
+                if (orderBy.Length != 3)
+                    return false;
+                if (!_metaDataManager.ExitsTable(selectData.DbName, orderBy[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, orderBy[1], orderBy[2]))
+                    return false;
+            }
+
+            return true;
         }
     }
 }

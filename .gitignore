@@ -4,3 +4,6 @@ client/.idea/
 server/*/bin/
 server/*/obj/
 server/*/.vs/
+server/*/clubs.txt
+server/*/players.txt
+server/**/TestInserter.cs

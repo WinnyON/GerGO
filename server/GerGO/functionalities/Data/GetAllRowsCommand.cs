@@ -32,8 +32,8 @@ namespace GerGO.Functionalities.Data
 
             try
             {
-                TcpResponder.SendMessage(stream, "OK");
                 List<string> rows = resourceManager.GetAllRows(dbName, tableName, columnNames);
+                TcpResponder.SendMessage(stream, rows.Count.ToString());
                 byte[] buffer = new byte[10];
                 stream.Read(buffer, 0, buffer.Length);
                 foreach (string row in rows)
