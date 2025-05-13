@@ -41,5 +41,6 @@ namespace GerGO.DataAcces.MetaData
         public int GetNrPkeys(string dbName, string tableName);
         public void DropColumn(string dbName, string tableName, Column column);
         public void DropForeignKey(string dbName, string tableName, ForeignKey foreignKey);
+        public string HasIndexOnIt(string dbName, string tableName, string columnName);
     }
 }

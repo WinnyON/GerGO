@@ -29,5 +29,6 @@ namespace GerGO.Manager
         public List<string> GetAllRows(string dbName, string tableName, List<string> columnNames);
 
         public List<string> Select(SelectData selectData, ref string columnNames);
+        public void DeleteWhere(string dbName, string tableName, List<string[]> wheres);
     }
 }

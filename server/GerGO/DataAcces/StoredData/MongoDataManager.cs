@@ -1,4 +1,5 @@
 ﻿using GerGO.Models;
+using GerGO.Utils;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Xml.Linq;
@@ -418,6 +419,73 @@ namespace GerGO.DataAcces.StoredData
             var document = collection.Find(filter).FirstOrDefault();
 
             return document[key].AsString;
+        }
+
+        public List<string> GetValues(string dbName, string mongoID, List<string> keys)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+            ObjectId objId = ObjectId.Parse(mongoID);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+
+            var document = collection.Find(filter).FirstOrDefault();
+
+            List<string> res = [];
+
+            keys.ForEach(key => res.Add($"{key}^{document[key].AsString}"));
+
+            return res;
+        }
+
+        public List<string> GetValuesWhere(string dbName, string mongoId, string type, string op, string val)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+            ObjectId objId = ObjectId.Parse(mongoId);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+
+            var document = collection.Find(filter).FirstOrDefault();
+
+            List<string> result = [];
+            val = Validator.TrimApostrpohes(val);
+            switch (op)
+            {
+                case "=":
+                case "==":
+                    if (document.Contains(val))
+                        result = document[val].AsString.Split('#').ToList();
+                    break;
+                case ">":
+                    foreach (var item in document)
+                    {
+                        if (item.Name != "_id" && Validator.IsGreater(item.Name, val, type))
+                            result.AddRange(item.Value.AsString.Split("#"));
+                    }
+                    break;
+                case ">=":
+                    foreach (var item in document)
+                    {
+                        if (item.Name != "_id" && Validator.IsGreaterOrEqual(item.Name, val, type))
+                            result.AddRange(item.Value.AsString.Split("#"));
+                    }
+                    break;
+                case "<":
+                    foreach (var item in document)
+                    {
+                        if (item.Name != "_id" && Validator.IsLess(item.Name, val, type))
+                            result.AddRange(item.Value.AsString.Split("#"));
+                    }
+                    break;
+                case "<=":
+                    foreach (var item in document)
+                    {
+                        if (item.Name != "_id" && Validator.IsLessOrEqual(item.Name, val, type))
+                            result.AddRange(item.Value.AsString.Split("#"));
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            return result;
         }
     }
 }

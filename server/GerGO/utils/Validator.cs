@@ -2,6 +2,14 @@
 {
     class Validator
     {
+        public static string TrimApostrpohes(string val)
+        {
+            if (val.StartsWith('\''))
+            {
+                return val.Substring(1, val.Length - 2);
+            }
+            return val;
+        }
         public static bool IsEqual(string val1, string val2, string type)
         {
             switch (type)
@@ -15,14 +23,8 @@
                     float f2 = float.Parse(val2);
                     return f1 == f2;
                 case "string":
-                    if (val1.StartsWith('\''))
-                    {
-                        val1 = val1.Substring(1, val1.Length - 2);
-                    }
-                    if (val2.StartsWith('\''))
-                    {
-                        val2 = val2.Substring(1, val2.Length - 2);
-                    }
+                    val1 = TrimApostrpohes(val1);
+                    val2 = TrimApostrpohes(val2);
                     return val1.Equals(val2);
                 case "date":
                     DateOnly d1 = DateOnly.Parse(val1);
