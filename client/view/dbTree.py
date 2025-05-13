@@ -99,7 +99,8 @@ class DbTree(QTreeWidget):
 		item = self.currentItem()
 		if item and self.get_item_level(item) == 1:
 			self.parent_widget.show_selected_state(item.parent().text(0), item.text(0))
-			self.editor_frame.change_editor_to_rows()
+			# self.editor_frame.change_editor_to_rows()
+			self.editor_frame.change_editor_to_columns()
 		elif item and self.get_item_level(item) == 0:
 			self.parent_widget.show_unselected_state()
 

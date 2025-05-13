@@ -35,7 +35,6 @@ class Client():
             raise ConnectionError("Connection error when sending message to server " + str(error))
 
     def send_message(self, message):
-        print(message)
         try:
             self.client_socket.send(message.encode())
             print("SENT MESSAGE: ", message)

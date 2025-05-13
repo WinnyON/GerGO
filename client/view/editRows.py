@@ -51,17 +51,6 @@ class EditRows(QTableWidget):
 		else:
 			super().keyPressEvent(event)
 
-	# def set_demo_data(self):
-	# 	self.setRowCount(10)
-	# 	self.setColumnCount(5)
-	# 	self.setHorizontalHeaderLabels(["Column 1", "Column 2", "C3", "Col4", "COL5"])
-	#
-	# 	for row in range(self.rowCount()):
-	# 		for column in range(self.columnCount()):
-	# 			item = QTableWidgetItem(f"Row {row}, Column {column}")
-	# 			item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
-	# 			self.setItem(row, column, item)
-
 	def set_data(self, column_names, column_types, rows, pk):
 	# def set_data(self, column_names, rows, pk):
 		self.column_names = column_names
