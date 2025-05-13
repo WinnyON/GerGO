@@ -500,5 +500,13 @@ namespace GerGO.DataAcces.MetaData
         {
             return GetColumns(dbName, tableName).ToList().FindAll(c => GetColumn(dbName, tableName, c).PrimaryKey);
         }
+
+        public string HasIndexOnIt(string dbName, string tableName, string columnName)
+        {
+            IndexFile? ind = _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.FirstOrDefault(ind => ind.Attributes.Contains(columnName));
+            if (ind == null)
+                return null;
+            return ind.Name;
+        }
     }
 }

@@ -698,10 +698,37 @@ namespace GerGO.Manager
 
         private void ExecuteWhereCluases(SelectData selectData, ref List<string> rows)
         {
+            List<string[]> indexedWheres = [];
+            List<IndexFile> indexes = [];
+            List<string[]> notIndexedWheres = [];
+            foreach (var where in selectData.WhereClauses)
+            {
+                string? indName = _metaDataManager.HasIndexOnIt(selectData.DbName, selectData.TableName, where[2]);
+                if (indName != null)
+                {
+                    indexedWheres.Add(where);
+                    indexes.Add(_metaDataManager.GetIndexFile(selectData.DbName, selectData.TableName, indName));
+                }
+                else
+                {
+                    notIndexedWheres.Add(where);
+                }
+            }
+
+            for (int i = 0; i < indexes.Count; i++)
+            {
+                var table = _metaDataManager.GetTable(selectData.DbName, indexedWheres[i][1]);
+                var column = _metaDataManager.GetColumn(selectData.DbName, indexedWheres[i][1], indexedWheres[i][2]);
+                List<string> keys = _storedDataManager.GetValuesWhere($"{selectData.DbName}_{selectData.TableName}_indexfiles", indexes[i].MongoID, column.Type,
+                    indexedWheres[i][3], indexedWheres[i][4]);
+                List<string> values = _storedDataManager.GetValues(selectData.DbName, table.MongoID, keys);
+                rows = rows.Intersect(values).ToList();
+            }
+
             rows = rows.FindAll(row =>
             {
                 bool ok = true;
-                foreach (var where in selectData.WhereClauses)
+                foreach (var where in notIndexedWheres)
                 {
                     Column col = _metaDataManager.GetColumn(selectData.DbName, selectData.TableName, where[2]);
                     string[] rowData = row.Split('^');
@@ -833,6 +860,128 @@ namespace GerGO.Manager
             }
 
             return true;
+        }
+
+        public void DeleteWhere(string dbName, string tableName, List<string[]> wheres)
+        {
+            if (!_metaDataManager.ExitsDb(dbName) || !_metaDataManager.ExitsTable(dbName, tableName))
+            {
+                throw new DataResourceException("Not valid delete data!");
+            }
+
+            List<string> operators = ["<", ">", "=", "<=", ">=", "<>"];
+            foreach (var where in wheres)
+            {
+                if (!_metaDataManager.ExistsColumn(dbName, tableName, where[0]) || !operators.Contains(where[1]))
+                {
+                    throw new DataResourceException("Not valid delete data!");
+                }
+            }
+
+            List<string[]> indexedWheres = [];
+            List<IndexFile> indexes = [];
+            List<string[]> notIndexedWheres = [];
+            foreach (var where in wheres)
+            {
+                string? indName = _metaDataManager.HasIndexOnIt(dbName, tableName, where[0]);
+                if (indName != null)
+                {
+                    indexedWheres.Add(where);
+                    indexes.Add(_metaDataManager.GetIndexFile(dbName, tableName, indName));
+                }
+                else
+                {
+                    notIndexedWheres.Add(where);
+                }
+            }
+
+            List<string> rows = _storedDataManager.GetAllRows(dbName, _metaDataManager.GetTableMongoId(dbName, tableName));
+
+            for (int i = 0; i < indexes.Count; i++)
+            {
+                var table = _metaDataManager.GetTable(dbName, tableName);
+                var column = _metaDataManager.GetColumn(dbName, tableName, indexedWheres[i][0]);
+                List<string> keys = _storedDataManager.GetValuesWhere($"{dbName}_{tableName}_indexfiles", indexes[i].MongoID, column.Type,
+                    indexedWheres[i][1], indexedWheres[i][2]);
+                List<string> values = _storedDataManager.GetValues(dbName, table.MongoID, keys);
+                rows = rows.Intersect(values).ToList();
+            }
+
+            List<string> keysToDelete= rows.FindAll(row =>
+            {
+                bool ok = true;
+                foreach (var where in notIndexedWheres)
+                {
+                    Column col = _metaDataManager.GetColumn(dbName, tableName, where[0]);
+                    string[] rowData = row.Split('^');
+                    int pos = _metaDataManager.GetColumnPostions(dbName, tableName, [where[0]])[0];
+                    switch (where[1])
+                    {
+                        case "=":
+                        case "==":
+                            if (!Validator.IsEqual(rowData[pos], where[2], col.Type))
+                                ok = false;
+                            break;
+                        case ">":
+                            if (!Validator.IsGreater(rowData[pos], where[2], col.Type))
+                                ok = false;
+                            break;
+                        case ">=":
+                            if (!Validator.IsGreaterOrEqual(rowData[pos], where[2], col.Type))
+                                ok = false;
+                            break;
+                        case "<":
+                            if (!Validator.IsLess(rowData[pos], where[2], col.Type))
+                                ok = false;
+                            break;
+                        case "<=":
+                            if (!Validator.IsLessOrEqual(rowData[pos], where[2], col.Type))
+                                ok = false;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                return ok;
+            }).Select(row => row.Split('^')[0]).ToList();
+
+            keysToDelete.ForEach(key =>
+            {
+                string tableMongoId = _metaDataManager.GetTableMongoId(dbName, tableName);
+                Table table = _metaDataManager.GetTable(dbName, tableName);
+                try
+                {
+                    lock (_locks[dbName])
+                    {
+                        string row = key + "^" + _storedDataManager.GetValue(dbName, tableMongoId, key);
+                        // foreign key check
+                        List<Table> tables = _metaDataManager.GetTables(dbName).ToList().Select(t => _metaDataManager.GetTable(dbName, t)).ToList();
+                        foreach (var t in tables)
+                        {
+                            List<ForeignKey> fKeys = t.ForeignKeys.FindAll(fk => fk.RefTableName.Equals(tableName));
+
+                            foreach (var fk in fKeys)
+                            {
+                                string colValue = row.Split('^')[_metaDataManager.GetColumnPostions(dbName, tableName, [fk.RefAttributeName])[0]];
+                                int index = _metaDataManager.GetColumnPostions(dbName, t.Name, [fk.AttributeName])[0];
+                                if (_storedDataManager.ContainsValue(dbName, t.MongoID, index, colValue))
+                                    throw new DataResourceException("Value referrenced by foreign key!");
+                            }
+                        }
+
+                        _storedDataManager.Delete(dbName, tableMongoId, key);
+                        foreach (var indexFile in table.IndexFiles)
+                        {
+                            _storedDataManager.DeleteFromIndexFile(dbName, tableName, indexFile.MongoID, key);
+                        }
+                    }
+                }
+                catch (DataAccesException ex)
+                {
+                    _logger.Error($"Failed to delete: {ex.Message}");
+                    throw new DataResourceException(ex.Message);
+                }
+            });
         }
     }
 }
