@@ -371,7 +371,7 @@ class Repository():
 				if code[0] == '1':
 					return 1, code.split('^')[1]
 			code = self.client.send_message("0")
-			print(code)
+			# print(code)
 			return 0, "OK"
 		except ConnectionError as ce:
 			return 1, ce.get_text()
@@ -453,5 +453,25 @@ class Repository():
 				rows.append(row)
 				code = self.client.send_message("0")
 			return 0, (row_count, column_names, rows)
+		except ConnectionError as ce:
+			return 1, ce.get_text()
+
+	def delete_where_rows(self, db_name, table_name, conditions):
+		try:
+			command = "20^" + db_name + "^" + table_name
+			self.client.connect()
+			code = self.client.send_message(command)
+			if code[0] == '1':
+				return 1, code.split('^')[1]
+			for table in conditions:
+				command = table["col1"] + "^" + table["op"] + "^" + table["col2"]
+				code = self.client.send_message(command)
+				if code[0] == '1':
+					return 1, code.split('^')[1]
+			command = "0^OK"
+			code = self.client.send_message(command)
+			if code[0] == '1':
+				return 1, code.split('^')[1]
+			return 0, "OK"
 		except ConnectionError as ce:
 			return 1, ce.get_text()

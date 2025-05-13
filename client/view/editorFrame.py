@@ -6,7 +6,7 @@ from editColumns import EditColumns
 from constraintEditor import ConstraintEditor
 from editForeignKeys import EditForeignKeys
 from createIndex import CreateIndex
-from view.QueryResults import QueryResults
+from view.queryResults import QueryResults
 from view.queryEditor import QueryEditor
 
 
@@ -245,6 +245,21 @@ class EditorFrame(QWidget):
 			code, data = self.query_widget.parse_command()
 			if code == -1:
 				self.show_message("ERROR", "Error parsing command: " + data)
+				return
+			if code == 1:
+				code, data = self.repository.insert_rows(self.selected_db, data[0], data[2], data[1])
+				if code == -1:
+					self.show_message("ERROR", "Error inserting rows: " + data)
+					return
+				self.show_message("SUCCESS", "Rows inserted successfully!")
+				return
+			if code == 2:
+				print(data)
+				code, data = self.repository.delete_where_rows(self.selected_db, data[0], data[1])
+				if code == 1:
+					self.show_message("ERROR", "Error deleting rows: " + data)
+					return
+				self.show_message("SUCCESS", "Rows deleted successfully!")
 				return
 			print(data)
 			code, data = self.repository.select_rows(self.selected_db, data[0], data[1], data[2], data[3])
