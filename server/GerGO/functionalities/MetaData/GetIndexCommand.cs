@@ -20,15 +20,12 @@ namespace GerGO.Functionalities.MetaData
 
                 TcpResponder.SendMessage(stream, "OK");
                 List<string> indexData = resourceManager.GetIndexes(dbName, tableName);
-                byte[] buffer = new byte[10];
-                stream.Read(buffer, 0, buffer.Length);
+                _ = TcpResponder.ReadValue(stream);
 
                 foreach (var index in indexData)
                 {
-                    buffer = Encoding.UTF8.GetBytes(index);
-                    stream.Write(buffer, 0, buffer.Length);
-                    buffer = new byte[10];
-                    stream.Read(buffer, 0, buffer.Length);
+                    TcpResponder.SendDataMessage(stream, index);
+                    _ = TcpResponder.ReadValue(stream);
                 }
                 TcpResponder.SendMessage(stream, "OK");
             }

@@ -23,10 +23,7 @@ namespace GerGO.Functionalities.Data
                 do
                 {
                     TcpResponder.SendMessage(stream, "OK");
-                    byte[] inputBuffer = new byte[300];
-                    stream.Read(inputBuffer, 0, inputBuffer.Length);
-                    inputString = Encoding.UTF8.GetString(inputBuffer);
-                    inputString = inputString.Replace("\0", "");
+                    inputString = TcpResponder.ReadValue(stream);
                     string[] data = inputString.Split('^');
                     int cmdType = int.Parse(data[0]);
                     switch (cmdType)
@@ -69,12 +66,12 @@ namespace GerGO.Functionalities.Data
                 {
                     TcpResponder.SendMessage(stream, $"{result.Count}^{colNames}");
                 }
-                stream.Read(buffer, 0, buffer.Length);
+                _ = TcpResponder.ReadValue(stream);
 
                 foreach (var row in result)
                 {
                     TcpResponder.SendDataMessage(stream, $"1^{row}");
-                    stream.Read(buffer, 0, buffer.Length);
+                    _ = TcpResponder.ReadValue(stream);
                 }
                 TcpResponder.SendMessage(stream, "OK");
             }

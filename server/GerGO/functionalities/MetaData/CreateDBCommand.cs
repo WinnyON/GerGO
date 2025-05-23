@@ -19,6 +19,8 @@ namespace GerGO.Functionalities.MetaData
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
 
                 manager.AddDataBase(db);
+
+                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (IndexOutOfRangeException)
             {
@@ -29,11 +31,6 @@ namespace GerGO.Functionalities.MetaData
             {
                 _logger.Error($"Failed to create DB {arguments[1]}: {ex.Message}");
                 throw new CommandException($"Failed to create DB {arguments[1]}: {ex.Message}");
-            }
-
-            try
-            {
-                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (CommunicationException ex)
             {

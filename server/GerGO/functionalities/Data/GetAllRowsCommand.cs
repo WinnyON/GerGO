@@ -34,13 +34,11 @@ namespace GerGO.Functionalities.Data
             {
                 List<string> rows = resourceManager.GetAllRows(dbName, tableName, columnNames);
                 TcpResponder.SendMessage(stream, rows.Count.ToString());
-                byte[] buffer = new byte[10];
-                stream.Read(buffer, 0, buffer.Length);
+                _ = TcpResponder.ReadValue(stream);
                 foreach (string row in rows)
                 {
                     TcpResponder.SendDataMessage(stream, "1^" + row);
-                    buffer = new byte[10];
-                    stream.Read(buffer, 0, buffer.Length);
+                    _ = TcpResponder.ReadValue(stream);
                 }
                 TcpResponder.SendMessage(stream, "OK");
             }

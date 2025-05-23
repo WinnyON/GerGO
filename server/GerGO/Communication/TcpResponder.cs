@@ -4,9 +4,25 @@ using System.Text;
 
 namespace GerGO.Communication
 {
-    class TcpResponder : IResponder
+    class TcpResponder : ICommunicator
     {
         private static readonly ILogger _logger = LoggerFactory.GetLogger();
+
+        public static string ReadValue(NetworkStream stream)
+        {
+            byte[] buffer = new byte[1024];
+            try
+            {
+                stream.Read(buffer, 0, buffer.Length);
+                string request = Encoding.UTF8.GetString(buffer, 0, buffer.Length);
+                return request.Replace("\0", "");
+            }
+            catch (IOException)
+            {
+                _logger.Error("Failed to read request: IOException on the network stream!");
+                throw new CommunicationException("IOException on the network stream!");
+            }
+        }
 
         public static void SendDataMessage(NetworkStream stream, string dataMessage)
         {

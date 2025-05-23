@@ -20,6 +20,8 @@ namespace GerGO.Functionalities.MetaData
 
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
                 manager.DropForeignKey(dbName, tableName, fKey);
+
+                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (IndexOutOfRangeException)
             {
@@ -30,11 +32,6 @@ namespace GerGO.Functionalities.MetaData
             {
                 _logger.Error($"Failed to drop foreign key {arguments[3]}: {ex.Message}");
                 throw new CommandException($"Failed to drop foreign key {arguments[3]}: {ex.Message}");
-            }
-
-            try
-            {
-                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (CommunicationException ex)
             {

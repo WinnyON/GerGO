@@ -23,24 +23,16 @@ namespace GerGO.Functionalities.Data
                 _logger.Error("Not enough arguments for deleting data!");
                 throw new CommandException("Not enough arguments for deleting data!");
             }
-            catch (IOException)
-            {
-                _logger.Error("Failed to send response!");
-                throw new CommandException("Failed to send response!");
-            }
 
             TcpResponder.SendMessage(stream, "OK");
 
-            string response;
+            string key;
             int count = 0;
             do
             {
-                byte[] buffer = new byte[1024];
-                stream.Read(buffer, 0, buffer.Length);
-                response = Encoding.UTF8.GetString(buffer);
-                if (response.StartsWith('0'))
+                key = TcpResponder.ReadValue(stream);
+                if (key.StartsWith('0'))
                     break;
-                string key = response.Replace("\0", string.Empty);
 
                 IResourceManager _manager = ResourceManagerFactory.GetInstance();
                 try
@@ -54,13 +46,17 @@ namespace GerGO.Functionalities.Data
                     TcpResponder.SendDataMessage(stream, "1^You can't delete! NGGYU!");
                     continue;
                 }
-            } while (!response.StartsWith('0'));
+                catch (CommunicationException)
+                {
+                    continue;
+                }
+            } while (!key.StartsWith('0'));
 
             try
             {
                 TcpResponder.SendMessage(stream, $"{count}");
             }
-            catch (CommandException ex)
+            catch (CommunicationException ex)
             {
                 _logger.Error($"Failed to send message: {ex.Message}");
             }

@@ -19,17 +19,15 @@ namespace GerGO.Functionalities.MetaData
                 string tableName = arguments[2].ToLower();
 
                 TcpResponder.SendMessage(stream, "OK");
-                
-                byte[] okMesBuffer = new byte[4];
-                stream.Read(okMesBuffer, 0, okMesBuffer.Length);
+
+                _ = TcpResponder.ReadValue(stream);
 
                 columnList = manager.GetTableData(dbName, tableName);
 
                 foreach (var columnData in columnList)
                 {
                     TcpResponder.SendDataMessage(stream, string.Join('^', columnData));
-                    byte[] buffer = new byte[10];
-                    stream.Read(buffer, 0, buffer.Length);
+                    _ = TcpResponder.ReadValue(stream);
                 }
                 TcpResponder.SendMessage(stream, "OK");
             }

@@ -20,6 +20,8 @@ namespace GerGO.Functionalities.MetaData
 
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
                 manager.DropColumn(dbName, tableName, col);
+
+                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (IndexOutOfRangeException)
             {
@@ -36,11 +38,6 @@ namespace GerGO.Functionalities.MetaData
 
                 _logger.Error($"Failed to drop column {arguments[3]}: {ex.Message}");
                 throw new CommandException($"Failed to drop column {arguments[3]}: {ex.Message}");
-            }
-
-            try
-            {
-                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (CommunicationException ex)
             {

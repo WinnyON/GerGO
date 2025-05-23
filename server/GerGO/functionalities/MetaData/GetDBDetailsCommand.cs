@@ -20,8 +20,7 @@ namespace GerGO.Functionalities.MetaData
                 foreach (var dbData in dbList)
                 {
                     TcpResponder.SendDataMessage(stream, string.Join('^', dbData));
-                    byte[] buffer = new byte[10];
-                    stream.Read(buffer, 0, buffer.Length);
+                    _ = TcpResponder.ReadValue(stream);
                 }
                 TcpResponder.SendMessage(stream, "OK");
             }

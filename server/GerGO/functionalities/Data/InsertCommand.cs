@@ -40,10 +40,7 @@ namespace GerGO.Functionalities.Data
             {
                 do
                 {
-                    byte[] buffer = new byte[1024];
-                    stream.Read(buffer, 0, buffer.Length);
-                    response = Encoding.UTF8.GetString(buffer);
-                    response = response.Replace("\0", string.Empty);
+                    response = TcpResponder.ReadValue(stream);
 
                     if (response.Equals("0"))
                         break; 
@@ -63,15 +60,10 @@ namespace GerGO.Functionalities.Data
 
                 TcpResponder.SendMessage(stream, $"{count}");
             }
-            catch (IOException)
-            {
-                _logger.Error("Failed to read data while inserting!");
-                throw new CommandException("Failed to read data while inserting!");
-            }
             catch (CommunicationException ex)
             {
-                _logger.Error($"Failed to send data: {ex.Message}");
-                throw new CommandException($"Failed to send data: {ex.Message}");
+                _logger.Error($"Error with communication: {ex.Message}");
+                throw new CommandException($"Error with communication: {ex.Message}");
             }
         }
     }

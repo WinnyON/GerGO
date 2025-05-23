@@ -75,10 +75,7 @@ namespace GerGO
             {
                 try
                 {
-                    byte[] buffer = new byte[1024];
-                    stream.Read(buffer, 0, buffer.Length);
-
-                    string request = Encoding.UTF8.GetString(buffer);
+                    string request = TcpResponder.ReadValue(stream);
                     
                     if (string.IsNullOrEmpty(request))
                     {
@@ -87,10 +84,6 @@ namespace GerGO
                     }
 
                     commandArgs = request.Split("^");
-                    for (int i = 0; i < commandArgs.Length; i++)
-                    {
-                        commandArgs[i] = commandArgs[i].Replace("\0", "");
-                    }
 
                     if (commandArgs.Length == 0 || string.IsNullOrEmpty(commandArgs[0]))
                     {
@@ -100,38 +93,31 @@ namespace GerGO
                         return;
                     }
 
-                    try
-                    {
-                        RequestType type = (RequestType)int.Parse(commandArgs[0]);
+                    RequestType type = (RequestType)int.Parse(commandArgs[0]);
 
-                        s_commands[(int)type].Execute(stream, commandArgs);
+                    s_commands[(int)type].Execute(stream, commandArgs);
 
-                        _logger.Info($"Thread {Thread.CurrentThread.ManagedThreadId} - Finished command succesfully: {type.ToString()} - {_tcpClient.Client.RemoteEndPoint}");
-                    }
-                    catch (FormatException)
-                    {
-                        _logger.Error("Badly formatted request: not numeric request code!");
-                        TcpResponder.SendErrorMessage(stream, "Badly formatted request: not numeric request code!");
-                    }
-                    catch (ArgumentOutOfRangeException)
-                    {
-                        _logger.Error("Badly formatted request: not valid request code!");
-                        TcpResponder.SendErrorMessage(stream, "Badly formatted request: not valid request code!");
-                    }
-                    catch (CommandException ex)
-                    {
-                        _logger.Error($"Got command exception: {ex.Message}");
-                        TcpResponder.SendErrorMessage(stream, ex.Message);
-                    }
+                    _logger.Info($"Thread {Thread.CurrentThread.ManagedThreadId} - Finished command succesfully: {type.ToString()} - {_tcpClient.Client.RemoteEndPoint}");
+                    
                 }
-                catch (IOException)
+                catch (FormatException)
                 {
-                    _logger.Warning($"Thread {Thread.CurrentThread.ManagedThreadId} - Connection {_tcpClient.Client.RemoteEndPoint} timed out!");
-                    break;
+                    _logger.Error("Badly formatted request: not numeric request code!");
+                    TcpResponder.SendErrorMessage(stream, "Badly formatted request: not numeric request code!");
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    _logger.Error("Badly formatted request: not valid request code!");
+                    TcpResponder.SendErrorMessage(stream, "Badly formatted request: not valid request code!");
+                }
+                catch (CommandException ex)
+                {
+                    _logger.Error($"Got command exception: {ex.Message}");
+                    TcpResponder.SendErrorMessage(stream, ex.Message);
                 }
                 catch (CommunicationException)
                 {
-                    _logger.Error($"Thread {Thread.CurrentThread.ManagedThreadId} - got communication exception,  Connection {_tcpClient.Client.RemoteEndPoint} timed out!");
+                    _logger.Warning($"Thread {Thread.CurrentThread.ManagedThreadId} - got communication exception,  Connection {_tcpClient.Client.RemoteEndPoint} timed out!");
                     break;
                 }
             }

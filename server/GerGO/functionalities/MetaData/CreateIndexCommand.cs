@@ -20,6 +20,8 @@ namespace GerGO.Functionalities.MetaData
 
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
                 manager.AddIndexFile(dbName, tableNname, indexName, columnName);
+
+                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (IndexOutOfRangeException)
             {
@@ -30,11 +32,6 @@ namespace GerGO.Functionalities.MetaData
             {
                 _logger.Error($"Failed to add index: {ex.Message}");
                 throw new CommandException($"Failed to add index: {ex.Message}");
-            }
-
-            try
-            {
-                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (CommunicationException ex)
             {

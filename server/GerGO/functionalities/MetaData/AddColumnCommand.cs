@@ -62,6 +62,8 @@ namespace GerGO.Functionalities.MetaData
 
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
                 manager.AddColumn(dbName, tableName, column);
+
+                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (IndexOutOfRangeException)
             {
@@ -72,11 +74,6 @@ namespace GerGO.Functionalities.MetaData
             {
                 _logger.Error($"Failed to add column: {ex.Message}");
                 throw new CommandException($"Failed to add column: {ex.Message}");
-            }
-
-            try
-            {
-                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (CommunicationException ex)
             {

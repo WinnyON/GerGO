@@ -3,8 +3,6 @@ using GerGO.DataAcces.MetaData;
 using GerGO.DataAcces.StoredData;
 using GerGO.Models;
 using GerGO.Utils;
-using System;
-using System.Xml.Linq;
 
 namespace GerGO.Manager
 {

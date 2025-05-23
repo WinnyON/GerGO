@@ -18,6 +18,8 @@ namespace GerGO.Functionalities.MetaData
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
 
                 manager.DropDataBase(db);
+
+                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (IndexOutOfRangeException)
             {
@@ -28,11 +30,6 @@ namespace GerGO.Functionalities.MetaData
             {
                 _logger.Error($"Failed to drop DB {arguments[1]}: {ex.Message}");
                 throw new CommandException($"Failed to drop DB {arguments[1]}: {ex.Message}");
-            }
-
-            try
-            {
-                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (CommunicationException ex)
             {
