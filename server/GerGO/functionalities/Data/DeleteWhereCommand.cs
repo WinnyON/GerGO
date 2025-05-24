@@ -2,7 +2,6 @@
 using GerGO.Manager;
 using GerGO.Utils;
 using System.Net.Sockets;
-using System.Text;
 
 namespace GerGO.Functionalities.Data
 {

@@ -15,14 +15,21 @@ namespace GerGO.DataAcces.MetaData
 
         public XmlMetaDataManager()
         {
-            _dbDataSourceFile = "Catalog.xml";
+            _dbDataSourceFile = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\Catalog.xml"));
             _dataBases = _fileHandler.ReadDataBaseData(_dbDataSourceFile);
         }
 
-        public void AddColumn(string dbName, string tableName, Column column)
+        public void AddColumn(string dbName, string tableName, Column column, PrimaryKey? pKey, bool isUnique)
         {
             _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.Add(column);
-
+            if (pKey != null)
+            {
+                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).PrimaryKeys.Add(pKey);
+            }
+            if (isUnique)
+            {
+                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).UniqueKeys.Add(column.Name);
+            }
             try
             {
                 _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
@@ -30,6 +37,14 @@ namespace GerGO.DataAcces.MetaData
             catch (FileHandlerException ex)
             {
                 _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.Remove(column);
+                if (pKey != null)
+                {
+                    _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).PrimaryKeys.Remove(pKey);
+                }
+                if (isUnique)
+                {
+                    _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).UniqueKeys.Remove(column.Name);
+                }
                 _logger.Error($"Failed to write db data: {ex.Message}");
                 throw new DataAccesException("Failed to add column!");
             }
@@ -72,13 +87,13 @@ namespace GerGO.DataAcces.MetaData
 
         public void AddIndex(string dbName, string tableName, string indexName, string columnName, string mongoID)
         {
-            if (GetColumn(dbName, tableName, columnName).PrimaryKey)
+            if (GetTable(dbName, tableName).PrimaryKeys.Any(pk => pk.Name.Equals(columnName)))
             {
                 _logger.Error("Primary key is already an index!");
                 throw new DataAccesException("Primary key is already an index!");
             }
 
-            IndexFile? indFile = _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.FirstOrDefault(ind => ind.Name.Equals(indexName));
+            IndexFile? indFile = GetTable(dbName, tableName).IndexFiles.FirstOrDefault(ind => ind.Name.Equals(indexName));
             if (indFile != null)
             {
                 _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.First(ind => ind.Name.Equals(indexName)).Attributes.Add(columnName);
@@ -177,14 +192,14 @@ namespace GerGO.DataAcces.MetaData
 
         public bool ExistsColumn(string dbName, string tableName, string columnName)
         {
-            if (!ExitsDb(dbName))
+            if (!ExistsDb(dbName))
                 return false;
 
-            if (!ExitsTable(dbName, tableName))
+            if (!ExistsTable(dbName, tableName))
                 return false;
 
-            DataBase? db = _dataBases.First(db => db.Name.Equals(dbName));
-            Table? table = db.Tables.First(t => t.Name.Equals(tableName));
+            DataBase db = _dataBases.First(db => db.Name.Equals(dbName));
+            Table table = db.Tables.First(t => t.Name.Equals(tableName));
 
             if (table.Columns.Any(c => c.Name.Equals(columnName)))
             {
@@ -195,14 +210,14 @@ namespace GerGO.DataAcces.MetaData
         }
         public bool ExistsForeignKey(string dbName, string tableName, string foreignKey)
         {
-            if (!ExitsDb(dbName))
+            if (!ExistsDb(dbName))
                 return false;
 
-            if (!ExitsTable(dbName, tableName))
+            if (!ExistsTable(dbName, tableName))
                 return false;
 
-            DataBase? db = _dataBases.First(db => db.Name.Equals(dbName));
-            Table? table = db.Tables.First(t => t.Name.Equals(tableName));
+            DataBase db = _dataBases.First(db => db.Name.Equals(dbName));
+            Table table = db.Tables.First(t => t.Name.Equals(tableName));
 
             if (table.ForeignKeys.Any(fk => fk.Name.Equals(foreignKey)))
             {
@@ -214,14 +229,14 @@ namespace GerGO.DataAcces.MetaData
 
         public bool ExistsIndex(string dbName, string tableName, string indexName)
         {
-            if (!ExitsDb(dbName))
+            if (!ExistsDb(dbName))
                 return false;
 
-            if (!ExitsTable(dbName, tableName))
+            if (!ExistsTable(dbName, tableName))
                 return false;
 
-            DataBase? db = _dataBases.First(db => db.Name.Equals(dbName));
-            Table? table = db.Tables.First(t => t.Name.Equals(tableName));
+            DataBase db = _dataBases.First(db => db.Name.Equals(dbName));
+            Table table = db.Tables.First(t => t.Name.Equals(tableName));
 
             if (table.IndexFiles.Any(iFile => iFile.Name.Equals(indexName)))
             {
@@ -231,7 +246,7 @@ namespace GerGO.DataAcces.MetaData
             return false;
         }
 
-        public bool ExitsDb(string dbName)
+        public bool ExistsDb(string dbName)
         {
             if (_dataBases.Any((t) => (t.Name.Equals(dbName))))
             {
@@ -240,12 +255,12 @@ namespace GerGO.DataAcces.MetaData
             return false;
         }
 
-        public bool ExitsTable(string dbName, string tableName)
+        public bool ExistsTable(string dbName, string tableName)
         {
-            if (!ExitsDb(dbName))
+            if (!ExistsDb(dbName))
                 return false;
 
-            DataBase? db = _dataBases.First(db => db.Name.Equals(dbName));
+            DataBase db = _dataBases.First(db => db.Name.Equals(dbName));
             if (db.Tables.Any(t => t.Name.Equals(tableName)))
             {
                 return true;
@@ -259,18 +274,15 @@ namespace GerGO.DataAcces.MetaData
 
             string[] columns = new string[table.Columns.Count];
             int index = 0;
-            foreach (var column in  table.Columns)
+            foreach (var pk in table.PrimaryKeys)
             {
-                if (column.PrimaryKey)
-                {
-                    columns[index] = column.Name;
-                    index++;
-                }
+                columns[index] = pk.Name;
+                index++;
             }
 
             foreach (var column in table.Columns)
             {
-                if (!column.PrimaryKey)
+                if (!table.PrimaryKeys.Any(pk => pk.Name.Equals(column.Name)))
                 {
                     columns[index] = column.Name;
                     index++;
@@ -316,7 +328,7 @@ namespace GerGO.DataAcces.MetaData
         {
             List<string> result = [];
 
-            List<IndexFile> indexList = _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles;
+            List<IndexFile> indexList = GetTable(dbName, tableName).IndexFiles;
 
             foreach (var index in indexList)
             {
@@ -331,32 +343,6 @@ namespace GerGO.DataAcces.MetaData
             return result;
         }
 
-        public string GetNextKey(string dbName, string tableName)
-        {
-            List<Column> columns = _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns;
-
-            int nrKeys = 0;
-            List<Identity> identityList = [];
-            foreach (var column in columns)
-            {
-                if (column.PrimaryKey)
-                {
-                    nrKeys++;
-                    identityList.Add(column.PKIdentity);
-                }
-            }
-
-            if (nrKeys == 0 || nrKeys > 1)
-            {
-                return string.Empty;
-            }
-
-            _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.First(c => c.PrimaryKey).PKIdentity.Seed += identityList[0].Step;
-            _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
-
-            return $"{identityList[0].Seed + identityList[0].Step}";
-        }
-
         // return the columns with constraints
         public List<string[]> GetTableData(string dbName, string tableName)
         {
@@ -365,16 +351,18 @@ namespace GerGO.DataAcces.MetaData
             List<string[]> columnList = new List<string[]>();
             foreach (var col in table.Columns)
             {
+                PrimaryKey? pKey = table.PrimaryKeys.FirstOrDefault(pk => pk.Name.Equals(col.Name), new PrimaryKey());
+                bool isUnique = table.UniqueKeys.Contains(col.Name);
                 string[] columnData =
                 [
                     col.Name,
                     col.Type,
-                    col.PrimaryKey ? "1" : "--",
+                    string.IsNullOrEmpty(pKey.Name) ? "--" : "1",
                     col.NotNull ? "1" : "--",
                     col.DefaultVal,
-                    col.PKIdentity.Seed.ToString(),
-                    col.PKIdentity.Step.ToString(),
-                    col.Unique ? "1" : "--",
+                    pKey.PKIdentity.Seed.ToString(),
+                    pKey.PKIdentity.Step.ToString(),
+                    isUnique ? "1" : "--",
                     col.Check,
                 ];
                 columnList.Add(columnData);
@@ -419,7 +407,7 @@ namespace GerGO.DataAcces.MetaData
 
         public void UpdateInnerSeed(string dbName, string tableName, int value)
         {
-            _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.First(c => c.PKIdentity.Seed != 0).PKIdentity.InnerSeed = value;
+            _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).PrimaryKeys.First(pK => pK.PKIdentity.Seed != 0).PKIdentity.InnerSeed = value;
             
             try
             {
@@ -446,18 +434,29 @@ namespace GerGO.DataAcces.MetaData
         }
         public int GetNrPkeys(string dbName, string tableName)
         {
-            return _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.Count(c => c.PrimaryKey);
+            return GetTable(dbName, tableName).PrimaryKeys.Count;
         }
 
         public void DropColumn(string dbName, string tableName, Column column)
         {
-            if (column.PrimaryKey && GetNrPkeys(dbName, tableName) - 1 == 0)
+            Table table = GetTable(dbName, tableName);
+            PrimaryKey? pKey = table.PrimaryKeys.FirstOrDefault(pK => pK.Name.Equals(column.Name));
+            if (pKey != null && table.PrimaryKeys.Count - 1 == 0)
             {
                 _logger.Error("Table cannot have 0 primary keys at removing a column!");
                 throw new DataResourceException("Table cannot have 0 primary keys at removing a column!");
             }
 
             _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.Remove(column);
+            if (pKey != null)
+            {
+                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).PrimaryKeys.Remove(pKey);
+            }
+            if (table.UniqueKeys.Contains(column.Name))
+            {
+                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).UniqueKeys.Remove(column.Name);
+            }
+
             try
             {
                 _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
@@ -465,6 +464,14 @@ namespace GerGO.DataAcces.MetaData
             catch (FileHandlerException ex)
             {
                 _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.Add(column);
+                if (pKey != null)
+                {
+                    _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).PrimaryKeys.Add(pKey);
+                }
+                if (table.UniqueKeys.Contains(column.Name))
+                {
+                    _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).UniqueKeys.Add(column.Name);
+                }
                 _logger.Error($"Failed to write db data: {ex.Message}");
                 throw new DataResourceException("Failed to drop column!");
             }
@@ -498,7 +505,7 @@ namespace GerGO.DataAcces.MetaData
 
         public List<string> GetPrimaryKeys(string dbName, string tableName)
         {
-            return GetColumns(dbName, tableName).ToList().FindAll(c => GetColumn(dbName, tableName, c).PrimaryKey);
+            return GetTable(dbName, tableName).PrimaryKeys.Select(pK => pK.Name).ToList();
         }
 
         public string HasIndexOnIt(string dbName, string tableName, string columnName)

@@ -28,15 +28,15 @@ namespace GerGO.Manager
         }
 
         // DATA DEFINITION
-        public void AddColumn(string dbName, string tableName, Column column)
+        public void AddColumn(string dbName, string tableName, Column column, PrimaryKey? pKey, bool isUnique)
         {
-            if (!_metaDataManager.ExitsDb(dbName))
+            if (!_metaDataManager.ExistsDb(dbName))
             {
                 _logger.Error($"Database {dbName} doesn't exist!");
                 throw new DataResourceException($"Database {dbName} doesn't exist!");
             }
 
-            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            if (!_metaDataManager.ExistsTable(dbName, tableName))
             {
                 _logger.Error($"Table {tableName} doesn't exist!");
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
@@ -48,7 +48,7 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Column {column.Name} already exists!");
             }
 
-            if (column.PKIdentity.Seed != 0 && (column.NotNull || column.DefaultVal != string.Empty || column.Unique || column.Check != string.Empty))
+            if (pKey != null && pKey.PKIdentity.Seed != 0 && (column.NotNull || column.DefaultVal != string.Empty || isUnique || column.Check != string.Empty))
             {
                 _logger.Error("Not valid column: pk with identity can have no other constraints!");
                 throw new DataResourceException("Not valid column: pk with identity can have no other constraints!");
@@ -65,7 +65,7 @@ namespace GerGO.Manager
                 lock (_locks[dbName])
                 {
                     string mongoId = _metaDataManager.GetTableMongoId(dbName, tableName);
-                    _metaDataManager.AddColumn(dbName, tableName, column);
+                    _metaDataManager.AddColumn(dbName, tableName, column, pKey, isUnique);
                     string value = column.DefaultVal == string.Empty ? "null" : column.DefaultVal;
                     _storedDataManager.AddColumn(dbName, mongoId, value);
                 }
@@ -79,7 +79,7 @@ namespace GerGO.Manager
 
         public void AddDataBase(DataBase dataBase)
         {
-            if (_metaDataManager.ExitsDb(dataBase.Name))
+            if (_metaDataManager.ExistsDb(dataBase.Name))
             {
                 _logger.Error($"Database {dataBase.Name} already exists!");
                 throw new DataResourceException($"Database {dataBase.Name} already exists!");
@@ -99,13 +99,13 @@ namespace GerGO.Manager
 
         public void AddForeignKey(string dbName, string tableName, ForeignKey foreignKey)
         {
-            if (!_metaDataManager.ExitsDb(dbName))
+            if (!_metaDataManager.ExistsDb(dbName))
             {
                 _logger.Error($"Database {dbName} doesn't exist!");
                 throw new DataResourceException($"Database {dbName} doesn't exist!");
             }
 
-            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            if (!_metaDataManager.ExistsTable(dbName, tableName))
             {
                 _logger.Error($"Table {tableName} doesn't exist!");
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
@@ -123,7 +123,7 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Attribute {foreignKey.AttributeName} doesn't exist!");
             }
 
-            if (!_metaDataManager.ExitsTable(dbName, foreignKey.RefTableName))
+            if (!_metaDataManager.ExistsTable(dbName, foreignKey.RefTableName))
             {
                 _logger.Error($"Referenced table {foreignKey.RefTableName} doesn't exist!");
                 throw new DataResourceException($"Referenced table {foreignKey.RefTableName} doesn't exist!");
@@ -151,13 +151,13 @@ namespace GerGO.Manager
 
         public void DropColumn(string dbName, string tableName, Column column)
         {
-            if (!_metaDataManager.ExitsDb(dbName))
+            if (!_metaDataManager.ExistsDb(dbName))
             {
                 _logger.Error($"Database {dbName} doesn't exist!");
                 throw new DataResourceException($"Database {dbName} doesn't exist!");
             }
 
-            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            if (!_metaDataManager.ExistsTable(dbName, tableName))
             {
                 _logger.Error($"Table {tableName} doesn't exist!");
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
@@ -184,7 +184,8 @@ namespace GerGO.Manager
                     int index = _metaDataManager.GetColumnPostions(dbName, tableName, [col.Name])[0];
                     int nrPKeys = _metaDataManager.GetNrPkeys(dbName, tableName);
                     _metaDataManager.DropColumn(dbName, tableName, col);
-                    _storedDataManager.RemoveColumn(dbName, mongoId, col.PrimaryKey, index, nrPKeys);
+                    bool isPKey = _metaDataManager.GetTable(dbName, tableName).PrimaryKeys.Any(pK => pK.Name.Equals(col.Name));
+                    _storedDataManager.RemoveColumn(dbName, mongoId, isPKey, index, nrPKeys);
                 }
             }
             catch (DataAccesException ex)
@@ -196,13 +197,13 @@ namespace GerGO.Manager
 
         public void DropForeignKey(string dbName, string tableName, ForeignKey foreignKey)
         {
-            if (!_metaDataManager.ExitsDb(dbName))
+            if (!_metaDataManager.ExistsDb(dbName))
             {
                 _logger.Error($"Database {dbName} doesn't exist!");
                 throw new DataResourceException($"Database {dbName} doesn't exist!");
             }
 
-            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            if (!_metaDataManager.ExistsTable(dbName, tableName))
             {
                 _logger.Error($"Table {tableName} doesn't exist!");
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
@@ -230,13 +231,13 @@ namespace GerGO.Manager
 
         public void AddIndexFile(string dbName, string tableName, string indexName, string columnName)
         {
-            if (!_metaDataManager.ExitsDb(dbName))
+            if (!_metaDataManager.ExistsDb(dbName))
             {
                 _logger.Error($"Database {dbName} doesn't exist!");
                 throw new DataResourceException($"Database {dbName} doesn't exist!");
             }
 
-            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            if (!_metaDataManager.ExistsTable(dbName, tableName))
             {
                 _logger.Error($"Table {tableName} doesn't exist!");
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
@@ -248,7 +249,7 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Column {columnName} doesn't exist!");
             }
 
-            if (_metaDataManager.GetColumn(dbName, tableName, columnName).PrimaryKey)
+            if (_metaDataManager.GetPrimaryKeys(dbName, tableName).Contains(columnName))
             {
                 _logger.Error("You can't create an index for a primary key!");
                 throw new DataResourceException("You can't create an index for a primary key!");
@@ -267,9 +268,9 @@ namespace GerGO.Manager
                     string mongoID = _storedDataManager.AddIndexFile(dbName, tableName);
                     _metaDataManager.AddIndex(dbName, tableName, indexName, columnName, mongoID);
 
-                    var colList = _metaDataManager.GetPrimaryKeys(dbName, tableName);
-                    colList.Insert(0, columnName);
-                    GetAllRows(dbName, tableName, colList).ForEach(row =>
+                    var pKList = _metaDataManager.GetPrimaryKeys(dbName, tableName);
+                    pKList.Insert(0, columnName);
+                    GetAllRows(dbName, tableName, pKList).ForEach(row =>
                     {
                         List<string> values = row.Split('^').ToList();
                         string indexVal = values[0];
@@ -287,13 +288,13 @@ namespace GerGO.Manager
 
         public void DropIndex(string dbName, string tableName, string indexName)
         {
-            if (!_metaDataManager.ExitsDb(dbName))
+            if (!_metaDataManager.ExistsDb(dbName))
             {
                 _logger.Error($"Database {dbName} doesn't exist!");
                 throw new DataResourceException($"Database {dbName} doesn't exist!");
             }
 
-            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            if (!_metaDataManager.ExistsTable(dbName, tableName))
             {
                 _logger.Error($"Table {tableName} doesn't exist!");
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
@@ -323,13 +324,13 @@ namespace GerGO.Manager
         }
         public void AddTable(string dbName, Table table)
         {
-            if (!_metaDataManager.ExitsDb(dbName))
+            if (!_metaDataManager.ExistsDb(dbName))
             {
                 _logger.Error($"Database {dbName} doesn't exist!");
                 throw new DataResourceException($"Database {dbName} doesn't exist!");
             }
 
-            if (_metaDataManager.ExitsTable(dbName, table.Name))
+            if (_metaDataManager.ExistsTable(dbName, table.Name))
             {
                 _logger.Error($"Table {table.Name} already exists!");
                 throw new DataResourceException($"Table {table.Name} already exists!");
@@ -352,7 +353,7 @@ namespace GerGO.Manager
 
         public void DropDataBase(DataBase dataBase)
         {
-            if (!_metaDataManager.ExitsDb(dataBase.Name))
+            if (!_metaDataManager.ExistsDb(dataBase.Name))
             {
                 _logger.Error($"Database {dataBase.Name} doesn't exist!");
                 throw new DataResourceException($"Database {dataBase.Name} doesn't exist!");
@@ -376,13 +377,13 @@ namespace GerGO.Manager
 
         public void DropTable(string dbName, Table table)
         {
-            if (!_metaDataManager.ExitsDb(dbName))
+            if (!_metaDataManager.ExistsDb(dbName))
             {
                 _logger.Error($"Database {dbName} doesn't exist!");
                 throw new DataResourceException($"Database {dbName} doesn't exist!");
             }
 
-            if (!_metaDataManager.ExitsTable(dbName, table.Name))
+            if (!_metaDataManager.ExistsTable(dbName, table.Name))
             {
                 _logger.Error($"Table {table.Name} doesn't exist!");
                 throw new DataResourceException($"Table {table.Name} doesn't exist!");
@@ -392,6 +393,7 @@ namespace GerGO.Manager
             {
                 lock (_locks[dbName])
                 {
+                    _storedDataManager.DropAllIndexes($"{dbName}_{table.Name}_indexfiles");
                     _storedDataManager.DropTable(dbName, _metaDataManager.GetTableMongoId(dbName, table.Name));
                     _metaDataManager.DropTable(dbName, table);
                 }
@@ -405,13 +407,13 @@ namespace GerGO.Manager
 
         public string[] GetColumns(string dbName, string tableName)
         {
-            if (!_metaDataManager.ExitsDb(dbName))
+            if (!_metaDataManager.ExistsDb(dbName))
             {
                 _logger.Error($"Database {dbName} doesn't exist!");
                 throw new DataResourceException($"Database {dbName} doesn't exist!");
             }
 
-            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            if (!_metaDataManager.ExistsTable(dbName, tableName))
             {
                 _logger.Error($"Table {tableName} doesn't exist!");
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
@@ -432,13 +434,13 @@ namespace GerGO.Manager
 
         public List<string[]> GetForeignKeys(string dbName, string tableName)
         {
-            if (!_metaDataManager.ExitsDb(dbName))
+            if (!_metaDataManager.ExistsDb(dbName))
             {
                 _logger.Error($"Database {dbName} doesn't exist!");
                 throw new DataResourceException($"Database {dbName} doesn't exist!");
             }
 
-            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            if (!_metaDataManager.ExistsTable(dbName, tableName))
             {
                 _logger.Error($"Table {tableName} doesn't exist!");
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
@@ -454,13 +456,13 @@ namespace GerGO.Manager
 
         public List<string[]> GetTableData(string dbName, string tableName)
         {
-            if (!_metaDataManager.ExitsDb(dbName))
+            if (!_metaDataManager.ExistsDb(dbName))
             {
                 _logger.Error($"Database {dbName} doesn't exist!");
                 throw new DataResourceException($"Database {dbName} doesn't exist!");
             }
 
-            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            if (!_metaDataManager.ExistsTable(dbName, tableName))
             {
                 _logger.Error($"Table {tableName} doesn't exist!");
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
@@ -476,7 +478,7 @@ namespace GerGO.Manager
 
         public string[] GetTables(string dbName)
         {
-            if (!_metaDataManager.ExitsDb(dbName))
+            if (!_metaDataManager.ExistsDb(dbName))
             {
                 _logger.Error($"Database {dbName} doesn't exist!");
                 throw new DataResourceException($"Database {dbName} doesn't exist!");
@@ -492,13 +494,13 @@ namespace GerGO.Manager
 
         public List<string> GetIndexes(string dbName, string tableName)
         {
-            if (!_metaDataManager.ExitsDb(dbName))
+            if (!_metaDataManager.ExistsDb(dbName))
             {
                 _logger.Error($"Database {dbName} doesn't exist!");
                 throw new DataResourceException($"Database {dbName} doesn't exist!");
             }
 
-            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            if (!_metaDataManager.ExistsTable(dbName, tableName))
             {
                 _logger.Error($"Table {tableName} doesn't exist!");
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
@@ -516,7 +518,7 @@ namespace GerGO.Manager
 
         public void Insert(string dbName, string tableName, List<string> columnNames, string value)
         {
-            if (!_metaDataManager.ExitsDb(dbName) || !_metaDataManager.ExitsTable(dbName, tableName))
+            if (!_metaDataManager.ExistsDb(dbName) || !_metaDataManager.ExistsTable(dbName, tableName))
             {
                 throw new DataResourceException("Table doesn't exist");
             }
@@ -580,7 +582,7 @@ namespace GerGO.Manager
         }
         public void Delete(string dbName, string tableName, string key)
         {
-            if (!_metaDataManager.ExitsDb(dbName) || !_metaDataManager.ExitsTable(dbName, tableName) || string.IsNullOrEmpty(key))
+            if (!_metaDataManager.ExistsDb(dbName) || !_metaDataManager.ExistsTable(dbName, tableName) || string.IsNullOrEmpty(key))
             {
                 throw new DataResourceException("Table doesn't exist");
             }
@@ -625,10 +627,10 @@ namespace GerGO.Manager
 
         public List<string> GetAllRows(string dbName, string tableName, List<string> columnNames)
         {
-            if (!_metaDataManager.ExitsDb(dbName))
+            if (!_metaDataManager.ExistsDb(dbName))
                 throw new DataResourceException("Db doesn't exists!");
 
-            if (!_metaDataManager.ExitsTable(dbName, tableName))
+            if (!_metaDataManager.ExistsTable(dbName, tableName))
                 throw new DataResourceException("Table doesn't exists!");
 
             foreach (var col in columnNames)
@@ -785,7 +787,7 @@ namespace GerGO.Manager
 
         private bool IsValidSelectData(ref SelectData selectData, ref string columnNames)
         {
-            if (!_metaDataManager.ExitsDb(selectData.DbName) || !_metaDataManager.ExitsTable(selectData.DbName, selectData.TableName))
+            if (!_metaDataManager.ExistsDb(selectData.DbName) || !_metaDataManager.ExistsTable(selectData.DbName, selectData.TableName))
                 return false;
 
             string tableName = selectData.TableName;
@@ -805,7 +807,7 @@ namespace GerGO.Manager
                 {
                     if (col.Length != 3)
                         return false;
-                    if (!_metaDataManager.ExitsTable(selectData.DbName, col[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, col[1], col[2]))
+                    if (!_metaDataManager.ExistsTable(selectData.DbName, col[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, col[1], col[2]))
                         return false;
                 }
             }
@@ -814,9 +816,9 @@ namespace GerGO.Manager
             {
                 if (jTable.Length != 5)
                     return false;
-                if (!_metaDataManager.ExitsTable(selectData.DbName, jTable[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, jTable[1], jTable[2]))
+                if (!_metaDataManager.ExistsTable(selectData.DbName, jTable[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, jTable[1], jTable[2]))
                     return false;
-                if (!_metaDataManager.ExitsTable(selectData.DbName, jTable[3]) || !_metaDataManager.ExistsColumn(selectData.DbName, jTable[4], jTable[2]))
+                if (!_metaDataManager.ExistsTable(selectData.DbName, jTable[3]) || !_metaDataManager.ExistsColumn(selectData.DbName, jTable[4], jTable[2]))
                     return false;
             }
 
@@ -825,7 +827,7 @@ namespace GerGO.Manager
             {
                 if (where.Length != 5)
                     return false;
-                if (!_metaDataManager.ExitsTable(selectData.DbName, where[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, where[1], where[2]))
+                if (!_metaDataManager.ExistsTable(selectData.DbName, where[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, where[1], where[2]))
                     return false;
                 if (!operators.Contains(where[3]))
                     return false;
@@ -835,7 +837,7 @@ namespace GerGO.Manager
             {
                 if (groupBy.Length != 3)
                     return false;
-                if (!_metaDataManager.ExitsTable(selectData.DbName, groupBy[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, groupBy[1], groupBy[2]))
+                if (!_metaDataManager.ExistsTable(selectData.DbName, groupBy[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, groupBy[1], groupBy[2]))
                     return false;
             }
 
@@ -843,7 +845,7 @@ namespace GerGO.Manager
             {
                 if (having.Length != 5)
                     return false;
-                if (!_metaDataManager.ExitsTable(selectData.DbName, having[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, having[1], having[2]))
+                if (!_metaDataManager.ExistsTable(selectData.DbName, having[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, having[1], having[2]))
                     return false;
                 if (!operators.Contains(having[3]))
                     return false;
@@ -853,7 +855,7 @@ namespace GerGO.Manager
             {
                 if (orderBy.Length != 3)
                     return false;
-                if (!_metaDataManager.ExitsTable(selectData.DbName, orderBy[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, orderBy[1], orderBy[2]))
+                if (!_metaDataManager.ExistsTable(selectData.DbName, orderBy[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, orderBy[1], orderBy[2]))
                     return false;
             }
 
@@ -862,7 +864,7 @@ namespace GerGO.Manager
 
         public void DeleteWhere(string dbName, string tableName, List<string[]> wheres)
         {
-            if (!_metaDataManager.ExitsDb(dbName) || !_metaDataManager.ExitsTable(dbName, tableName))
+            if (!_metaDataManager.ExistsDb(dbName) || !_metaDataManager.ExistsTable(dbName, tableName))
             {
                 throw new DataResourceException("Not valid delete data!");
             }

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-16"?>
+<DataBaseXmlWrapper xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Databases>
+    <DataBase Name="bolt">
+      <Tables>
+        <Table TableName="markak" MongoID="68319ae7077a482ec9ffbfb4">
+          <ForeignKeys />
+          <IndexFiles />
+          <Structure>
+            <Column FieldName="markaid" Type="int" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="markanev" Type="string" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+          </Structure>
+          <UniqueKeys />
+          <PrimaryKeys>
+            <PKAttribute Name="markaid">
+              <Identity Seed="1" Step="1" InnerSeed="12" />
+            </PKAttribute>
+          </PrimaryKeys>
+        </Table>
+        <Table TableName="autok" MongoID="68319c92c43ef1b7708f68cf">
+          <ForeignKeys>
+            <ForeignKey Name="fk_autok_markak">
+              <AttributeName>markaid</AttributeName>
+              <RefTableName>markak</RefTableName>
+              <RefAttributeName>markaid</RefAttributeName>
+            </ForeignKey>
+          </ForeignKeys>
+          <IndexFiles />
+          <Structure>
+            <Column FieldName="autoid" Type="int" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="ar" Type="float" NotNull="false">
+              <DefaultVal>10</DefaultVal>
+              <Check />
+            </Column>
+            <Column FieldName="markaid" Type="int" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+          </Structure>
+          <UniqueKeys />
+          <PrimaryKeys>
+            <PKAttribute Name="autoid">
+              <Identity Seed="1" Step="1" InnerSeed="2" />
+            </PKAttribute>
+          </PrimaryKeys>
+        </Table>
+      </Tables>
+    </DataBase>
+  </Databases>
+</DataBaseXmlWrapper>

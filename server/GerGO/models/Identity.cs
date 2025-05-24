@@ -8,7 +8,7 @@ namespace GerGO.Models
         public int Seed { get; set; }
         [XmlAttribute("Step")]
         public int Step { get; set; }
-        [XmlAttribute]
+        [XmlAttribute("InnerSeed")]
         public int InnerSeed { get; set; }
 
         public Identity()

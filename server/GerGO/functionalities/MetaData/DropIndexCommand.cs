@@ -6,7 +6,7 @@ using System.Net.Sockets;
 
 namespace GerGO.Functionalities.MetaData
 {
-    class DeleteIndexCommand : ICommand
+    class DropIndexCommand : ICommand
     {
         private readonly ILogger _logger = LoggerFactory.GetLogger();
         public void Execute(NetworkStream stream, string[] arguments)

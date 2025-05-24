@@ -192,7 +192,8 @@ namespace GerGO.DataAcces.StoredData
 
             foreach (var column in table.Columns)
             {
-                if (!columnNames.Contains(column.Name) && !column.PrimaryKey)
+                PrimaryKey? pKey = table.PrimaryKeys.FirstOrDefault(pk => pk.Name.Equals(column.Name), null);
+                if (!columnNames.Contains(column.Name) && pKey == null)
                 {
                     row = string.IsNullOrEmpty(row) ? "null" : row + "^null";
                     continue;
@@ -200,18 +201,18 @@ namespace GerGO.DataAcces.StoredData
 
                 int index = columnNames.IndexOf(column.Name);
 
-                if (column.PrimaryKey)
+                if (pKey != null)
                 {
                     string tmp = "";
                     if (index != -1)
                     {
                         tmp = insertedRow[index];
                     }
-                    if (column.PKIdentity.Step > 0)
+                    if (pKey.PKIdentity.Step > 0)
                     {
-                        tmp = (column.PKIdentity.InnerSeed + column.PKIdentity.Step).ToString();
-                        column.PKIdentity.InnerSeed += column.PKIdentity.Step;
-                        innerSeed = column.PKIdentity.InnerSeed;
+                        tmp = (pKey.PKIdentity.InnerSeed + pKey.PKIdentity.Step).ToString();
+                        pKey.PKIdentity.InnerSeed += pKey.PKIdentity.Step;
+                        innerSeed = pKey.PKIdentity.InnerSeed;
                         key = string.IsNullOrEmpty(key) ? tmp : (key + "^" + tmp);
                         continue;
                     }
@@ -259,7 +260,7 @@ namespace GerGO.DataAcces.StoredData
                 }
 
                 // unique check
-                if (column.Unique)
+                if (table.UniqueKeys.Contains(column.Name))
                 {
                     if (GetAllRows(dbName, table.MongoID).Select(row => row.Split('^')[columnPositions[index]]).ToList().Contains(insertedRow[index]))
                         return false;
@@ -292,7 +293,7 @@ namespace GerGO.DataAcces.StoredData
                     }
                 }
 
-                if (!column.PrimaryKey)
+                if (pKey == null)
                     row = string.IsNullOrEmpty(row) ? insertedRow[index] : row + "^" + insertedRow[index];
             }
 
@@ -337,6 +338,11 @@ namespace GerGO.DataAcces.StoredData
             {
                 throw new DataAccesException("No document found to delete.");
             }
+        }
+
+        public void DropAllIndexes(string colName)
+        {
+            _coreDB.DropCollection(colName);
         }
 
         public void InsertToIndexFile(string dbName, string tableName, string mongoID, string pKey, string value)

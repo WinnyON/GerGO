@@ -4,8 +4,8 @@ namespace GerGO.DataAcces.MetaData
 {
     interface IMetaDataManager
     {
-        public bool ExitsDb(string dbName);
-        public bool ExitsTable(string dbName, string tableName);
+        public bool ExistsDb(string dbName);
+        public bool ExistsTable(string dbName, string tableName);
         public bool ExistsIndex(string dbName, string tableName, string indexName);
         public bool ExistsColumn(string dbName, string tableName, string columnName);
         public bool ExistsForeignKey(string dbName, string tableName, string foreignKey);
@@ -14,12 +14,11 @@ namespace GerGO.DataAcces.MetaData
         public void DropDatabase(DataBase database);
         public void AddTable(string dbName, string tableId, Table table);
         public void DropTable(string dbName, Table table);
-        public void AddColumn(string dbName, string tableName, Column column);
+        public void AddColumn(string dbName, string tableName, Column column, PrimaryKey? pKey, bool isUnique);
         public void AddForeignKey(string dbName, string tableName, ForeignKey foreignKey);
         public void AddIndex(string dbName, string tableName, string indexName, string columnName, string mongoID);
         public void DropIndex(string dbName, string tableName, IndexFile index);
         public string GetTableMongoId(string dbName, string tableName);
-        public string GetNextKey(string dbName, string tableName);
         // returns the list of the tables of a db
         public string[] GetTables(string dbName);
         // return all table of all db

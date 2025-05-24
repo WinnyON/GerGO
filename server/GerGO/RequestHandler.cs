@@ -55,7 +55,7 @@ namespace GerGO
                 new CreateIndexCommand(),
                 new GetAllRowsCommand(),
                 new GetIndexCommand(),
-                new DeleteIndexCommand(),
+                new DropIndexCommand(),
                 new DropColumnCommand(),
                 new DropForeignKeyCommand(),
                 new SelectCommand(),

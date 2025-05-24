@@ -19,6 +19,7 @@ namespace GerGO.DataAcces.StoredData
         public List<string> GetAllRows(string dbName, string tableID);
         public string AddIndexFile(string dbName, string tableName);
         public void DropIndexFile(string colName, string mongoID);
+        public void DropAllIndexes(string colName);
         public bool ContainsValue(string dbName, string tableID,  int index, string value);
         public string GetValue(string dbName, string mongoID, string key);
         public List<string> GetValues(string dbName, string mongoID, List<string> keys);
