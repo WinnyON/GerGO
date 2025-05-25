@@ -757,92 +757,84 @@ namespace GerGO.Manager
                 throw new DataResourceException("Not valid select data!");
             }
 
-            List<string> rows = [];
             try
             {
-                lock (_locks[selectData.DbName])
-                {
-                    rows = JoinTables(selectData);
-                }
+                List<string> rows = [];
 
-                ExecuteWhereCluases(selectData, ref rows);
-                ExecuteProjection(selectData, ref rows);
+                // execute where caluses only on base table
+                List<string[]> whereClauses = selectData.WhereClauses.FindAll(clause => clause[1].Equals(selectData.TableName));
+                //List<string> pKeys = Selection(selectData.DbName, _metaDataManager.GetTable(selectData.DbName, selectData.TableName), whereClauses);
+                rows = Selection(selectData.DbName, _metaDataManager.GetTable(selectData.DbName, selectData.TableName), whereClauses);
+
+                return rows;
             }
             catch (DataAccesException ex)
             {
-                _logger.Error($"Error at select: {ex.Message}");
-                throw new DataResourceException($"Error at select: {ex.Message}");
+                _logger.Error($"Failed to execute query: {ex.Message}");
+                throw new DataResourceException($"Failed to execute query: {ex.Message}");
             }
-
-            return rows;
         }
 
-        private void ExecuteWhereCluases(SelectData selectData, ref List<string> rows)
+        private List<string> Selection(string dbName, Table table, List<string[]> whereClauses)
         {
-            List<string[]> indexedWheres = [];
-            List<IndexFile> indexes = [];
-            List<string[]> notIndexedWheres = [];
-            foreach (var where in selectData.WhereClauses)
+            if (whereClauses == null || whereClauses.Count == 0)
+                return _storedDataManager.GetPrimaryKeys(dbName, table.MongoID);
+            
+            List<string> pKeys = [];
+            List<string[]> clausesToCheck = [];
+            foreach (var whereClause in whereClauses)
             {
-                string? indName = _metaDataManager.HasIndexOnIt(selectData.DbName, selectData.TableName, where[2]);
-                if (indName != null)
+                UniqueKey? uKey = table.UniqueKeys.FirstOrDefault(uKey => uKey.Column.Equals(whereClause[2]), null);
+                if (uKey != null)
                 {
-                    indexedWheres.Add(where);
-                    indexes.Add(_metaDataManager.GetIndexFile(selectData.DbName, selectData.TableName, indName));
+                    List<string> resPKeys = _storedDataManager.GetPrimaryKeysWhere($"{dbName}_{table.Name}_uniquekeys", uKey.MongoID, 0,
+                    _metaDataManager.GetColumn(dbName, table.Name, whereClause[2]).Type, whereClause[3], whereClause[4]);
+                    if (pKeys.Count == 0)
+                        pKeys = resPKeys;
+                    else
+                        pKeys = pKeys.Intersect(resPKeys).ToList();
+
+                    continue;
                 }
+
+                IndexFile? iFile = table.IndexFiles.FirstOrDefault(iFile => iFile.Attributes.Contains(whereClause[2]), null);
+                if (iFile != null)
+                {
+                    List<string> resPKeys = _storedDataManager.GetPrimaryKeysWhere($"{dbName}_{table.Name}_indexfiles", iFile.MongoID, iFile.Attributes.IndexOf(whereClause[2]),
+                    _metaDataManager.GetColumn(dbName, table.Name, whereClause[2]).Type, whereClause[3], whereClause[4]);
+                    if (pKeys.Count == 0)
+                        pKeys = resPKeys;
+                    else
+                        pKeys = pKeys.Intersect(resPKeys).ToList();
+                    continue;
+                }
+
+                ForeignKey? fKey = table.ForeignKeys.FirstOrDefault(fKey => fKey.AttributeName.Equals(whereClause[2]), null);
+                if (fKey != null)
+                {
+                    List<string> resPKeys = _storedDataManager.GetPrimaryKeysWhere($"{dbName}_{table.Name}_foreignkeys", fKey.MongoID, 0,
+                    _metaDataManager.GetColumn(dbName, table.Name, whereClause[2]).Type, whereClause[3], whereClause[4]);
+                    if (pKeys.Count == 0)
+                        pKeys = resPKeys;
+                    else
+                        pKeys = pKeys.Intersect(resPKeys).ToList();
+                    continue;
+                }
+
+                clausesToCheck.Add(whereClause);
+            }
+
+            foreach (var clause in clausesToCheck)
+            {
+                List<string> resPKeys = _storedDataManager.GetPrimaryKeysWhereAllRow(dbName, table.MongoID, _metaDataManager.GetColumnPostions(dbName, table.Name, [clause[2]])[0],
+                    _metaDataManager.GetColumn(dbName, table.Name, clause[2]).Type, clause[3], clause[4]);
+                if (pKeys.Count == 0)
+                    pKeys = resPKeys;
                 else
-                {
-                    notIndexedWheres.Add(where);
-                }
+                    pKeys = pKeys.Intersect(resPKeys).ToList();
             }
 
-            for (int i = 0; i < indexes.Count; i++)
-            {
-                var table = _metaDataManager.GetTable(selectData.DbName, indexedWheres[i][1]);
-                var column = _metaDataManager.GetColumn(selectData.DbName, indexedWheres[i][1], indexedWheres[i][2]);
-                List<string> keys = _storedDataManager.GetValuesWhere($"{selectData.DbName}_{selectData.TableName}_indexfiles", indexes[i].MongoID, column.Type,
-                    indexedWheres[i][3], indexedWheres[i][4]);
-                List<string> values = _storedDataManager.GetValues(selectData.DbName, table.MongoID, keys);
-                rows = rows.Intersect(values).ToList();
-            }
-
-            rows = rows.FindAll(row =>
-            {
-                bool ok = true;
-                foreach (var where in notIndexedWheres)
-                {
-                    Column col = _metaDataManager.GetColumn(selectData.DbName, selectData.TableName, where[2]);
-                    string[] rowData = row.Split('^');
-                    int pos = _metaDataManager.GetColumnPostions(selectData.DbName, selectData.TableName, [where[2]])[0];
-                    switch (where[3])
-                    {
-                        case "=":
-                        case "==":
-                            if (!Validator.IsEqual(rowData[pos], where[4], col.Type))
-                                ok = false;
-                            break;
-                        case ">":
-                            if (!Validator.IsGreater(rowData[pos], where[4], col.Type))
-                                ok = false;
-                            break;
-                        case ">=":
-                            if (!Validator.IsGreaterOrEqual(rowData[pos], where[4], col.Type))
-                                ok = false;
-                            break;
-                        case "<":
-                            if (!Validator.IsLess(rowData[pos], where[4], col.Type))
-                                ok = false;
-                            break;
-                        case "<=":
-                            if (!Validator.IsLessOrEqual(rowData[pos], where[4], col.Type))
-                                ok = false;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                return ok;
-            });
+            return pKeys;
         }
 
         private void ExecuteProjection(SelectData selectData, ref List<string> rows)
@@ -982,7 +974,7 @@ namespace GerGO.Manager
             {
                 var table = _metaDataManager.GetTable(dbName, tableName);
                 var column = _metaDataManager.GetColumn(dbName, tableName, indexedWheres[i][0]);
-                List<string> keys = _storedDataManager.GetValuesWhere($"{dbName}_{tableName}_indexfiles", indexes[i].MongoID, column.Type,
+                List<string> keys = _storedDataManager.GetPrimaryKeysWhere($"{dbName}_{tableName}_indexfiles", indexes[i].MongoID, 0, column.Type,
                     indexedWheres[i][1], indexedWheres[i][2]);
                 List<string> values = _storedDataManager.GetValues(dbName, table.MongoID, keys);
                 rows = rows.Intersect(values).ToList();

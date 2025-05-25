@@ -530,7 +530,7 @@ namespace GerGO.DataAcces.StoredData
             return res;
         }
 
-        public List<string> GetValuesWhere(string dbName, string mongoId, string type, string op, string val)
+        public List<string> GetPrimaryKeysWhere(string dbName, string mongoId, int colIndex, string type, string op, string val)
         {
             var collection = _coreDB.GetCollection<BsonDocument>(dbName);
             ObjectId objId = ObjectId.Parse(mongoId);
@@ -544,34 +544,34 @@ namespace GerGO.DataAcces.StoredData
             {
                 case "=":
                 case "==":
-                    if (document.Contains(val))
+                    if (document.Names.Any(name => name.Split('^')[colIndex] == val))
                         result = document[val].AsString.Split('#').ToList();
                     break;
                 case ">":
                     foreach (var item in document)
                     {
-                        if (item.Name != "_id" && Validator.IsGreater(item.Name, val, type))
+                        if (item.Name != "_id" && Validator.IsGreater(item.Name.Split('^')[colIndex], val, type))
                             result.AddRange(item.Value.AsString.Split("#"));
                     }
                     break;
                 case ">=":
                     foreach (var item in document)
                     {
-                        if (item.Name != "_id" && Validator.IsGreaterOrEqual(item.Name, val, type))
+                        if (item.Name != "_id" && Validator.IsGreaterOrEqual(item.Name.Split('^')[colIndex], val, type))
                             result.AddRange(item.Value.AsString.Split("#"));
                     }
                     break;
                 case "<":
                     foreach (var item in document)
                     {
-                        if (item.Name != "_id" && Validator.IsLess(item.Name, val, type))
+                        if (item.Name != "_id" && Validator.IsLess(item.Name.Split('^')[colIndex], val, type))
                             result.AddRange(item.Value.AsString.Split("#"));
                     }
                     break;
                 case "<=":
                     foreach (var item in document)
                     {
-                        if (item.Name != "_id" && Validator.IsLessOrEqual(item.Name, val, type))
+                        if (item.Name != "_id" && Validator.IsLessOrEqual(item.Name.Split('^')[colIndex], val, type))
                             result.AddRange(item.Value.AsString.Split("#"));
                     }
                     break;
@@ -580,6 +580,70 @@ namespace GerGO.DataAcces.StoredData
             }
 
             return result;
+        }
+
+        public List<string> GetPrimaryKeysWhereAllRow(string dbName, string mongoId, int colIndex, string type, string op, string val)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+            ObjectId objId = ObjectId.Parse(mongoId);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+
+            var document = collection.Find(filter).FirstOrDefault();
+
+            List<string> result = [];
+            val = Validator.TrimApostrpohes(val);
+            foreach (var item in document.Elements)
+            {
+                if (item.Name.Equals("_id"))
+                    continue;
+
+                string row = $"{item.Name}^{item.Value}";
+                switch (op)
+                {
+                    case "=":
+                    case "==":
+                        if (row.Split('^')[colIndex] == val)
+                            result.Add(item.Name);
+                        break;
+                    case ">":
+                        if (Validator.IsGreater(row.Split('^')[colIndex], val, type))
+                            result.Add(item.Name);
+                        break;
+                    case ">=":
+                        if (Validator.IsGreaterOrEqual(row.Split('^')[colIndex], val, type))
+                            result.Add(item.Name);
+                        break;
+                    case "<":
+                        if (Validator.IsLess(row.Split('^')[colIndex], val, type))
+                            result.Add(item.Name);
+                        break;
+                    case "<=":
+                        if (Validator.IsLessOrEqual(row.Split('^')[colIndex], val, type))
+                            result.Add(item.Name);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            return result;
+        }
+
+        public List<string> GetPrimaryKeys(string dbName, string mongoID)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+            ObjectId objId = ObjectId.Parse(mongoID);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+
+            var document = collection.Find(filter).FirstOrDefault();
+
+            if (document == null)
+                throw new DataAccesException("No matching document!");
+
+            List<string> pKeys = document.Names.ToList();
+            pKeys.Remove("_id");
+
+            return pKeys;
         }
     }
 }

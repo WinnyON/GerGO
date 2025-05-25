@@ -2,7 +2,6 @@
 using GerGO.Manager;
 using GerGO.Models;
 using GerGO.Utils;
-using SharpCompress.Common;
 using System.Net.Sockets;
 using System.Text;
 
@@ -57,7 +56,6 @@ namespace GerGO.Functionalities.Data
                 string colNames = string.Empty;
                 List<string> result = resourceManager.Select(selectData, ref colNames);
 
-                byte[] buffer = new byte[50];
                 if (string.IsNullOrEmpty(colNames))
                 {
                     TcpResponder.SendMessage(stream, $"{result.Count}");
@@ -68,9 +66,18 @@ namespace GerGO.Functionalities.Data
                 }
                 _ = TcpResponder.ReadValue(stream);
 
-                foreach (var row in result)
+                int i = 0;
+                while (i < result.Count)
                 {
-                    TcpResponder.SendDataMessage(stream, $"1^{row}");
+                    int batched = 0;
+                    List<string> data = [];
+                    while (i < result.Count && batched < 50)
+                    {
+                        data.Add($"1^{result[i]}");
+                        batched++;
+                        i++;
+                    }
+                    TcpResponder.SendBatchedMessage(stream, data);
                     _ = TcpResponder.ReadValue(stream);
                 }
                 TcpResponder.SendMessage(stream, "OK");

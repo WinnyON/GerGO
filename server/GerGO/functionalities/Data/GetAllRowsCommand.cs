@@ -35,9 +35,19 @@ namespace GerGO.Functionalities.Data
                 List<string> rows = resourceManager.GetAllRows(dbName, tableName, columnNames);
                 TcpResponder.SendMessage(stream, rows.Count.ToString());
                 _ = TcpResponder.ReadValue(stream);
-                foreach (string row in rows)
+
+                int i = 0;
+                while (i < rows.Count)
                 {
-                    TcpResponder.SendDataMessage(stream, "1^" + row);
+                    int batched = 0;
+                    List<string> data = [];
+                    while (i < rows.Count && batched < 50)
+                    {
+                        data.Add($"1^{rows[i]}");
+                        batched++;
+                        i++;
+                    }
+                    TcpResponder.SendBatchedMessage(stream, data);
                     _ = TcpResponder.ReadValue(stream);
                 }
                 TcpResponder.SendMessage(stream, "OK");
