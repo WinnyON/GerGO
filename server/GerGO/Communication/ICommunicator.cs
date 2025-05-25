@@ -9,5 +9,7 @@ namespace GerGO.Communication
         static abstract void SendDataMessage(NetworkStream stream, string dataMessage);
 
         static abstract string ReadValue(NetworkStream stream);
+        static abstract void SendBatchedMessage(NetworkStream stream, List<string> messages);
+        static abstract List<string> ReadValueBatched(NetworkStream stream);
     }
 }

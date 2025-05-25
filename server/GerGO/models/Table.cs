@@ -22,7 +22,7 @@ namespace GerGO.Models
         public List<Column> Columns { get; set; }
         [XmlArray("UniqueKeys")]
         [XmlArrayItem("UniqueKey")]
-        public List<string> UniqueKeys { get; set; }
+        public List<UniqueKey> UniqueKeys { get; set; }
         [XmlArray("PrimaryKeys")]
         [XmlArrayItem("PKAttribute")]
         public List<PrimaryKey> PrimaryKeys { get; set; }
@@ -33,7 +33,7 @@ namespace GerGO.Models
             MongoID = string.Empty;
             ForeignKeys = new List<ForeignKey>();
             Columns = new List<Column>();
-            UniqueKeys = new List<string>();
+            UniqueKeys = new List<UniqueKey>();
             IndexFiles = new List<IndexFile>();
             PrimaryKeys = new List<PrimaryKey>();
         }
@@ -44,7 +44,7 @@ namespace GerGO.Models
             MongoID = string.Empty;
             ForeignKeys = new List<ForeignKey>();
             Columns = new List<Column>();
-            UniqueKeys = new List<string>();
+            UniqueKeys = new List<UniqueKey>();
             IndexFiles = new List<IndexFile>();
             PrimaryKeys = new List<PrimaryKey>();
         }

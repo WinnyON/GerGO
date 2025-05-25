@@ -35,28 +35,20 @@ namespace GerGO.Functionalities.Data
             TcpResponder.SendMessage(stream, "OK");
 
             int count = 0;
-            string response;
+            List<string> rows;
             try
             {
                 do
                 {
-                    response = TcpResponder.ReadValue(stream);
+                    rows = TcpResponder.ReadValueBatched(stream);
 
-                    if (response.Equals("0"))
+                    if (rows.Count == 1 && rows[0].Equals("0"))
                         break; 
-                    try
-                    {
-                        resourceManager.Insert(dbName, tableName, columnNames, response);
-                        count++;
-                    }
-                    catch (DataResourceException)
-                    {
-                        TcpResponder.SendDataMessage(stream, "1^Invalid data!");
-                        continue;
-                    }
+                    
+                    count += resourceManager.Insert(dbName, tableName, columnNames, rows);
                     TcpResponder.SendMessage(stream, "OK");
 
-                } while (!response.Equals("0"));
+                } while (!(rows.Count == 1 && rows[0].Equals("0")));
 
                 TcpResponder.SendMessage(stream, $"{count}");
             }
@@ -64,6 +56,11 @@ namespace GerGO.Functionalities.Data
             {
                 _logger.Error($"Error with communication: {ex.Message}");
                 throw new CommandException($"Error with communication: {ex.Message}");
+            }
+            catch (DataResourceException)
+            {
+                _logger.Error("Error at inserting!");
+                TcpResponder.SendDataMessage(stream, "1^Invalid data!");
             }
         }
     }

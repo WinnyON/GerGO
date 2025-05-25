@@ -26,20 +26,19 @@ namespace GerGO.Functionalities.Data
 
             TcpResponder.SendMessage(stream, "OK");
 
-            string key;
             int count = 0;
+            List<string> keys;
+            IResourceManager _manager = ResourceManagerFactory.GetInstance();
             do
             {
-                key = TcpResponder.ReadValue(stream);
-                if (key.StartsWith('0'))
+                keys = TcpResponder.ReadValueBatched(stream);
+                if (keys.Count == 1 && keys[0].StartsWith('0'))
                     break;
 
-                IResourceManager _manager = ResourceManagerFactory.GetInstance();
                 try
                 {
-                    _manager.Delete(dbName, tableName, key);
+                    count += _manager.Delete(dbName, tableName, keys);
                     TcpResponder.SendMessage(stream, "OK");
-                    count++;
                 }
                 catch (DataResourceException)
                 {
@@ -50,7 +49,7 @@ namespace GerGO.Functionalities.Data
                 {
                     continue;
                 }
-            } while (!key.StartsWith('0'));
+            } while (!(keys.Count == 1 && keys[0].StartsWith('0')));
 
             try
             {

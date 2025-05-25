@@ -1,5 +1,4 @@
 ﻿using GerGO.DataAcces.MetaData.FileHandler;
-using GerGO.Manager;
 using GerGO.Models;
 using GerGO.Utils;
 
@@ -19,16 +18,16 @@ namespace GerGO.DataAcces.MetaData
             _dataBases = _fileHandler.ReadDataBaseData(_dbDataSourceFile);
         }
 
-        public void AddColumn(string dbName, string tableName, Column column, PrimaryKey? pKey, bool isUnique)
+        public void AddColumn(string dbName, string tableName, Column column, PrimaryKey? pKey, UniqueKey? uKey)
         {
             _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.Add(column);
             if (pKey != null)
             {
                 _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).PrimaryKeys.Add(pKey);
             }
-            if (isUnique)
+            if (uKey != null)
             {
-                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).UniqueKeys.Add(column.Name);
+                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).UniqueKeys.Add(uKey);
             }
             try
             {
@@ -41,9 +40,9 @@ namespace GerGO.DataAcces.MetaData
                 {
                     _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).PrimaryKeys.Remove(pKey);
                 }
-                if (isUnique)
+                if (uKey != null)
                 {
-                    _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).UniqueKeys.Remove(column.Name);
+                    _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).UniqueKeys.Remove(uKey);
                 }
                 _logger.Error($"Failed to write db data: {ex.Message}");
                 throw new DataAccesException("Failed to add column!");
@@ -67,10 +66,6 @@ namespace GerGO.DataAcces.MetaData
 
         public void AddForeignKey(string dbName, string tableName, ForeignKey foreignKey)
         {
-            ForeignKey? fk = _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).ForeignKeys.FirstOrDefault(fKey => fKey.Name.Equals(foreignKey.Name));
-            if (fk != null)
-                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).ForeignKeys.Remove(fk);
-
             _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).ForeignKeys.Add(foreignKey);
 
             try
@@ -85,46 +80,16 @@ namespace GerGO.DataAcces.MetaData
             }
         }
 
-        public void AddIndex(string dbName, string tableName, string indexName, string columnName, string mongoID)
+        public void AddIndex(string dbName, string tableName, IndexFile iFile)
         {
-            if (GetTable(dbName, tableName).PrimaryKeys.Any(pk => pk.Name.Equals(columnName)))
-            {
-                _logger.Error("Primary key is already an index!");
-                throw new DataAccesException("Primary key is already an index!");
-            }
-
-            IndexFile? indFile = GetTable(dbName, tableName).IndexFiles.FirstOrDefault(ind => ind.Name.Equals(indexName));
-            if (indFile != null)
-            {
-                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.First(ind => ind.Name.Equals(indexName)).Attributes.Add(columnName);
-
-                try
-                {
-                    _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
-                    return;
-                }
-                catch (FileHandlerException ex)
-                {
-                    _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.First(ind => ind.Name.Equals(indexName)).Attributes.Remove(columnName);
-                    _logger.Error($"Failed to write db data: {ex.Message}");
-                    throw new DataAccesException("Failed to add index!");
-                }
-            }
-
-            indFile = new IndexFile();
-            indFile.Name = indexName;
-            indFile.Attributes.Add(columnName);
-            indFile.MongoID = mongoID;
-            _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.Add(indFile);
-
+            _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.Add(iFile);
             try
             {
                 _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
-                return;
             }
             catch (FileHandlerException ex)
             {
-                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.Remove(indFile);
+                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.Remove(iFile);
                 _logger.Error($"Failed to write db data: {ex.Message}");
                 throw new DataAccesException("Failed to add index!");
             }
@@ -141,7 +106,7 @@ namespace GerGO.DataAcces.MetaData
             {
                 _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.Add(index);
                 _logger.Error($"Failed to write db data: {ex.Message}");
-                throw new DataResourceException("Failed to drop table!");
+                throw new DataAccesException("Failed to drop table!");
             }
         }
         public void AddTable(string dbName, string tableId, Table table)
@@ -156,7 +121,7 @@ namespace GerGO.DataAcces.MetaData
             {
                 _dataBases.First(db => db.Name.Equals(dbName)).Tables.Remove(table);
                 _logger.Error($"Failed to write db data: {ex.Message}");
-                throw new DataResourceException("Failed to create table!");
+                throw new DataAccesException("Failed to create table!");
             }
         }
 
@@ -186,7 +151,7 @@ namespace GerGO.DataAcces.MetaData
             {
                 _dataBases.First(db => db.Name.Equals(dbName)).Tables.Add(table);
                 _logger.Error($"Failed to write db data: {ex.Message}");
-                throw new DataResourceException("Failed to drop table!");
+                throw new DataAccesException("Failed to drop table!");
             }
         }
 
@@ -352,7 +317,7 @@ namespace GerGO.DataAcces.MetaData
             foreach (var col in table.Columns)
             {
                 PrimaryKey? pKey = table.PrimaryKeys.FirstOrDefault(pk => pk.Name.Equals(col.Name), new PrimaryKey());
-                bool isUnique = table.UniqueKeys.Contains(col.Name);
+                bool isUnique = table.UniqueKeys.Any(uKey => uKey.Column.Equals(col.Name));
                 string[] columnData =
                 [
                     col.Name,
@@ -405,21 +370,125 @@ namespace GerGO.DataAcces.MetaData
             return _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).IndexFiles.First(iFile => iFile.Name.Equals(indexFileName));
         }
 
-        public void UpdateInnerSeed(string dbName, string tableName, int value)
+        public ForeignKey GetForeignKey(string dbName, string tableName, string fkName)
         {
-            _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).PrimaryKeys.First(pK => pK.PKIdentity.Seed != 0).PKIdentity.InnerSeed = value;
-            
-            try
-            {
-                _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
-            }
-            catch (FileHandlerException ex)
-            {
-                _logger.Error($"Failed to write db data: {ex.Message}");
-                throw new DataResourceException("Failed to update inner seed for identity!");
-            }
+            return _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).ForeignKeys.First(fk => fk.Name.Equals(fkName));
         }
 
+        public string GetPrimaryKey(string dbName, Table table, string row, List<string> columnNames)
+        {
+            if (table.PrimaryKeys.Count == 0)
+                throw new DataAccesException("");
+
+            if (table.PrimaryKeys.Count == 1 && table.PrimaryKeys[0].PKIdentity.Seed != 0)
+            {
+                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(table.Name)).PrimaryKeys[0].PKIdentity.InnerSeed +=
+                    table.PrimaryKeys[0].PKIdentity.Step;
+
+                try
+                {
+                    _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
+
+                    return table.PrimaryKeys[0].PKIdentity.InnerSeed.ToString();
+                }
+                catch (FileHandlerException ex)
+                {
+                    _logger.Error($"Failed to write db data: {ex.Message}");
+                    throw new DataAccesException("Failed to update inner seed for identity!");
+                }
+            }
+
+            string key = columnNames[columnNames.IndexOf(table.PrimaryKeys[0].Name)];
+            for (int i = 1; i < table.PrimaryKeys.Count; i++)
+            {
+                key = key + "^" + columnNames[columnNames.IndexOf(table.PrimaryKeys[i].Name)];
+            }
+            return key;
+        }
+
+        public string GetValuePart(Table table, string row, List<string> columnNames)
+        {
+            List<string> values = [];
+            foreach (var column in table.Columns)
+            {
+                if (table.PrimaryKeys.Any(pk => pk.Name.Equals(column.Name)))
+                    continue;
+
+                List<string> insertedRow = row.Split('^').ToList();
+                string colValue = insertedRow[columnNames.IndexOf(column.Name)];
+                if (!string.IsNullOrEmpty(column.DefaultVal) && (colValue.Equals("0") || colValue.Equals("null") || colValue.Equals(string.Empty)))
+                {
+                    values.Add(column.DefaultVal);
+                    continue;
+                }
+
+                if (column.NotNull)
+                {
+                    if (colValue.Equals("0") || colValue.Equals("null") || colValue.Equals(string.Empty))
+                        throw new DataAccesException("");
+                }
+
+                try
+                {
+                    // type check
+                    switch (column.Type)
+                    {
+                        case "int":
+                            _ = int.Parse(colValue);
+                            break;
+                        case "float":
+                            _ = float.Parse(colValue);
+                            break;
+                        case "bit":
+                            _ = bool.Parse(colValue);
+                            break;
+                        case "date":
+                            _ = DateTime.Parse(colValue);
+                            break;
+                        case "datetime":
+                            _ = TimeSpan.Parse(colValue);
+                            break;
+                        case "string":
+                            break;
+                        default:
+                            throw new DataAccesException("");
+                    }
+                }
+                catch (Exception)
+                {
+                    throw new DataAccesException("");
+                }
+
+                if (!column.Check.Equals("--") && !string.IsNullOrEmpty(column.Check))
+                {
+                    string[] checkConst = column.Check.Split('^');
+                    switch (checkConst[0])
+                    {
+                        case "=":
+                        case "==":
+                            if (colValue != checkConst[1]) throw new DataAccesException("");
+                            break;
+                        case ">":
+                            if (Validator.IsLessOrEqual(colValue, checkConst[1], column.Type)) throw new DataAccesException("");
+                            break;
+                        case ">=":
+                            if (Validator.IsLess(colValue, checkConst[1], column.Type)) throw new DataAccesException("");
+                            break;
+                        case "<":
+                            if (Validator.IsGreaterOrEqual(colValue, checkConst[1], column.Type)) throw new DataAccesException("");
+                            break;
+                        case "<=":
+                            if (Validator.IsGreater(colValue, checkConst[1], column.Type)) throw new DataAccesException("");
+                            break;
+                        default:
+                            throw new DataAccesException("");
+                    }
+                }
+
+                values.Add(colValue);
+            }
+            return string.Join('^', values);
+        }
         public List<int> GetColumnPostions(string dbName, string tableName, List<string> columnNames)
         {
             List<int> result = [];
@@ -440,21 +509,17 @@ namespace GerGO.DataAcces.MetaData
         public void DropColumn(string dbName, string tableName, Column column)
         {
             Table table = GetTable(dbName, tableName);
-            PrimaryKey? pKey = table.PrimaryKeys.FirstOrDefault(pK => pK.Name.Equals(column.Name));
-            if (pKey != null && table.PrimaryKeys.Count - 1 == 0)
-            {
-                _logger.Error("Table cannot have 0 primary keys at removing a column!");
-                throw new DataResourceException("Table cannot have 0 primary keys at removing a column!");
-            }
+            PrimaryKey? pKey = table.PrimaryKeys.FirstOrDefault(pK => pK.Name.Equals(column.Name), null);
+            UniqueKey? uKey = table.UniqueKeys.FirstOrDefault(uK => uK.Column.Equals(column.Name), null);
 
             _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).Columns.Remove(column);
             if (pKey != null)
             {
                 _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).PrimaryKeys.Remove(pKey);
             }
-            if (table.UniqueKeys.Contains(column.Name))
+            if (uKey != null)
             {
-                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).UniqueKeys.Remove(column.Name);
+                _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).UniqueKeys.Remove(uKey);
             }
 
             try
@@ -468,12 +533,12 @@ namespace GerGO.DataAcces.MetaData
                 {
                     _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).PrimaryKeys.Add(pKey);
                 }
-                if (table.UniqueKeys.Contains(column.Name))
+                if (uKey != null)
                 {
-                    _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).UniqueKeys.Add(column.Name);
+                    _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).UniqueKeys.Add(uKey);
                 }
                 _logger.Error($"Failed to write db data: {ex.Message}");
-                throw new DataResourceException("Failed to drop column!");
+                throw new DataAccesException("Failed to drop column!");
             }
         }
         public void DropForeignKey(string dbName, string tableName, ForeignKey foreignKey)
@@ -487,7 +552,7 @@ namespace GerGO.DataAcces.MetaData
             {
                 _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(tableName)).ForeignKeys.Add(foreignKey);
                 _logger.Error($"Failed to write db data: {ex.Message}");
-                throw new DataResourceException("Failed to drop foreign key!");
+                throw new DataAccesException("Failed to drop foreign key!");
             }
         }
 
@@ -514,6 +579,18 @@ namespace GerGO.DataAcces.MetaData
             if (ind == null)
                 return null;
             return ind.Name;
+        }
+
+        public List<string> GetReferingForeignKeys(string dbName, string tableName)
+        {
+            List<string> result = [];
+
+            _dataBases.First(db => db.Name.Equals(dbName)).Tables.ForEach(t =>
+            {
+                t.ForeignKeys.FindAll(fk => fk.RefTableName.Equals(tableName)).ForEach(fk => result.Add($"{t.Name}^{fk.MongoID}"));
+            });
+
+            return result;
         }
     }
 }

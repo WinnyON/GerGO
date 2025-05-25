@@ -1,8 +1,6 @@
-﻿using GerGO.Models;
-using GerGO.Utils;
+﻿using GerGO.Utils;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using System.Xml.Linq;
 
 namespace GerGO.DataAcces.StoredData
 {
@@ -45,7 +43,7 @@ namespace GerGO.DataAcces.StoredData
                 throw new DataAccesException("Document was not updated.");
             }
         }
-        public void RemoveColumn(string dbName, string tableID, bool isPkKey, int index, int nrPKeys)
+        public void RemoveColumn(string dbName, string tableID, bool isPkKey, int index)
         {
             var collection = _coreDB.GetCollection<BsonDocument>(dbName);
             var filter = Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(tableID));
@@ -54,42 +52,42 @@ namespace GerGO.DataAcces.StoredData
             if (document.Elements.Count() == 1)
                 return;
 
-            List<string> keysToDelete = [];
-
             var updateDef = new List<UpdateDefinition<BsonDocument>>();
-            foreach (var element in document.Elements)
-            {
-                if (element.Name != "_id")
-                {
-                    List<string> values = (element.Name + "^" + element.Value.AsString).Split('^').ToList();
-                    string key = "";
-                    string value;
 
-                    if (!isPkKey)
-                    {
-                        values.RemoveAt(index);
-                        for (int i = 0; i < nrPKeys; i++)
-                        {
-                            values.RemoveAt(0);
-                        }
-                        value = string.Join('^', values);
-                        updateDef.Add(Builders<BsonDocument>.Update.Set(element.Name, value));
-                    }
-                    else
-                    {
-                        keysToDelete.Add(element.Name);
-                        nrPKeys--;
-                        values.RemoveAt(index);
-                        List<string> keys = [];
-                        for (int i = 0; i < nrPKeys; i++)
-                        {
-                            keys.Add(values[0]);
-                            values.RemoveAt(0);
-                        }
-                        value = string.Join('^', values);
-                        key = string.Join('^', keys);
-                        updateDef.Add(Builders<BsonDocument>.Update.Set(key, value));
-                    }
+            if (isPkKey)
+            {
+                var removeOldPKeysDef = new List<UpdateDefinition<BsonDocument>>();
+                foreach (var element in document.Elements)
+                {
+                    if (element.Name == "_id")
+                        continue;
+
+                    List<string> data = element.Name.Split('^').ToList();
+                    data.RemoveAt(index);
+                    string newName = string.Join('^', data);
+                    updateDef.Add(Builders<BsonDocument>.Update.Set(newName, element.Value));
+                    removeOldPKeysDef.Add(Builders<BsonDocument>.Update.Unset(element.Name));
+                }
+
+                var combinedDelUpdate = Builders<BsonDocument>.Update.Combine(removeOldPKeysDef);
+                var res = collection.UpdateOne(filter, combinedDelUpdate);
+
+                if (res.ModifiedCount == 0)
+                {
+                    throw new DataAccesException("Document was not updated.");
+                }
+            }
+            else
+            {
+                foreach (var element in document.Elements)
+                {
+                    if (element.Name == "_id")
+                        continue;
+
+                    List<string> data = element.Value.AsString.Split('^').ToList();
+                    data.RemoveAt(index);
+                    string newVal = string.Join('^', data);
+                    updateDef.Add(Builders<BsonDocument>.Update.Set(element.Name, newVal));
                 }
             }
 
@@ -100,16 +98,82 @@ namespace GerGO.DataAcces.StoredData
             {
                 throw new DataAccesException("Document was not updated.");
             }
+        }
 
-            foreach (var key in keysToDelete)
+        public void RemoveIndexAttribute(string colName, string mongoID, int index)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>(colName);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(mongoID));
+            var document = collection.Find(filter).FirstOrDefault();
+
+            if (document.Elements.Count() == 1)
+                return;
+
+            var updateDef = new List<UpdateDefinition<BsonDocument>>();
+            var removeOldPKeysDef = new List<UpdateDefinition<BsonDocument>>();
+
+            foreach (var element in document.Elements)
             {
-                var deletedRow = Builders<BsonDocument>.Update.Unset(key);
-                var resultDelete = collection.UpdateOne(filter, deletedRow);
+                if (element.Name == "_id")
+                    continue;
 
-                if (resultDelete.ModifiedCount == 0)
+                List<string> data = element.Name.Split('^').ToList();
+                data.RemoveAt(index);
+                string newName = string.Join('^', data);
+                updateDef.Add(Builders<BsonDocument>.Update.Set(newName, element.Value));
+                removeOldPKeysDef.Add(Builders<BsonDocument>.Update.Unset(element.Name));
+            }
+
+            var combinedDelUpdate = Builders<BsonDocument>.Update.Combine(removeOldPKeysDef);
+            var res = collection.UpdateOne(filter, combinedDelUpdate);
+
+            if (res.ModifiedCount == 0)
+            {
+                throw new DataAccesException("Index was not updated.");
+            }
+
+            var combinedUpdate = Builders<BsonDocument>.Update.Combine(updateDef);
+            var result = collection.UpdateOne(filter, combinedUpdate);
+
+            if (result.ModifiedCount == 0)
+            {
+                throw new DataAccesException("Index was not updated.");
+            }
+        }
+
+        public void UpdateIndexPKeyData(string colName, string mongoID, int index)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>(colName);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(mongoID));
+            var document = collection.Find(filter).FirstOrDefault();
+
+            if (document.Elements.Count() == 1)
+                return;
+
+            var updateDef = new List<UpdateDefinition<BsonDocument>>();
+
+            foreach (var element in document.Elements)
+            {
+                if (element.Name == "_id")
+                    continue;
+
+                List<string> data = element.Value.AsString.Split('#').ToList();
+                data = data.Select(pKey =>
                 {
-                    throw new DataAccesException("No matching key!");
-                }
+                    List<string> tmp = pKey.Split('^').ToList();
+                    tmp.RemoveAt(index);
+                    return string.Join('^', tmp);
+                }).ToList();
+                string newVal = string.Join('#', data);
+                updateDef.Add(Builders<BsonDocument>.Update.Set(element.Name, newVal));
+            }
+
+            var combinedUpdate = Builders<BsonDocument>.Update.Combine(updateDef);
+            var result = collection.UpdateOne(filter, combinedUpdate);
+
+            if (result.ModifiedCount == 0)
+            {
+                throw new DataAccesException("Index was not updated.");
             }
         }
 
@@ -183,128 +247,6 @@ namespace GerGO.DataAcces.StoredData
             }
         }
 
-        public bool IsValidRow(string dbName, Table table, List<string> columnNames, List<int> columnPositions,
-            ref string key, ref string value, ref int innerSeed)
-        {
-            string[] insertedRow = value.Split('^');
-            string row = "";
-            key = "";
-
-            foreach (var column in table.Columns)
-            {
-                PrimaryKey? pKey = table.PrimaryKeys.FirstOrDefault(pk => pk.Name.Equals(column.Name), null);
-                if (!columnNames.Contains(column.Name) && pKey == null)
-                {
-                    row = string.IsNullOrEmpty(row) ? "null" : row + "^null";
-                    continue;
-                }
-
-                int index = columnNames.IndexOf(column.Name);
-
-                if (pKey != null)
-                {
-                    string tmp = "";
-                    if (index != -1)
-                    {
-                        tmp = insertedRow[index];
-                    }
-                    if (pKey.PKIdentity.Step > 0)
-                    {
-                        tmp = (pKey.PKIdentity.InnerSeed + pKey.PKIdentity.Step).ToString();
-                        pKey.PKIdentity.InnerSeed += pKey.PKIdentity.Step;
-                        innerSeed = pKey.PKIdentity.InnerSeed;
-                        key = string.IsNullOrEmpty(key) ? tmp : (key + "^" + tmp);
-                        continue;
-                    }
-                    key = string.IsNullOrEmpty(key) ? tmp : (key + "^" + tmp);
-                }
-
-                if (!string.IsNullOrEmpty(column.DefaultVal) && (insertedRow[index].Equals("0") || insertedRow[index].Equals("null") || insertedRow[index].Equals(string.Empty)))
-                    insertedRow[index] = column.DefaultVal;
-
-                try
-                {
-                    // type check
-                    switch (column.Type)
-                    {
-                        case "int":
-                            _ = int.Parse(insertedRow[index]);
-                            break;
-                        case "float":
-                            _ = float.Parse(insertedRow[index]);
-                            break;
-                        case "bit":
-                            _ = bool.Parse(insertedRow[index]);
-                            break;
-                        case "date":
-                            _ = DateTime.Parse(insertedRow[index]);
-                            break;
-                        case "datetime":
-                            _ = TimeSpan.Parse(insertedRow[index]);
-                            break;
-                        case "string":
-                            break;
-                        default:
-                            return false;
-                    }
-                }
-                catch (Exception)
-                {
-                    return false;
-                }
-
-                if (column.NotNull)
-                {
-                    if (insertedRow[index].Equals("0") || insertedRow[index].Equals("null") || insertedRow[index].Equals(string.Empty))
-                        return false;
-                }
-
-                // unique check
-                if (table.UniqueKeys.Contains(column.Name))
-                {
-                    if (GetAllRows(dbName, table.MongoID).Select(row => row.Split('^')[columnPositions[index]]).ToList().Contains(insertedRow[index]))
-                        return false;
-                }
-
-                // check condition
-                if (!column.Check.Equals("--") && !string.IsNullOrEmpty(column.Check))
-                {
-                    string[] checkConst = column.Check.Split('^');
-                    switch (checkConst[0])
-                    {
-                        case "=":
-                        case "==":
-                            if (insertedRow[index] != checkConst[1]) return false;
-                            break;
-                        case ">":
-                            if (insertedRow[index].CompareTo(checkConst[1]) <= 0) return false;
-                            break;
-                        case ">=":
-                            if (insertedRow[index].CompareTo(checkConst[1]) < 0) return false;
-                            break;
-                        case "<":
-                            if (insertedRow[index].CompareTo(checkConst[1]) >= 0) return false;
-                            break;
-                        case "<=":
-                            if (insertedRow[index].CompareTo(checkConst[1]) > 0) return false;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-                if (pKey == null)
-                    row = string.IsNullOrEmpty(row) ? insertedRow[index] : row + "^" + insertedRow[index];
-            }
-
-            if (string.IsNullOrEmpty(key))
-                return false;
-
-            value = row;
-
-            return true;
-        }
-
         public string PrepareTable(string dbName, string tableName)
         {
             var collection = _coreDB.GetCollection<BsonDocument>(dbName);
@@ -314,6 +256,146 @@ namespace GerGO.DataAcces.StoredData
             string id = newTable["_id"].AsObjectId.ToString();
 
             return id;
+        }
+
+        public string AddUniqueFile(string dbName, string tableName)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>($"{dbName}_{tableName}_uniquekeys");
+            var newUniqueKey = new BsonDocument();
+            collection.InsertOne(newUniqueKey);
+
+            string id = newUniqueKey["_id"].AsObjectId.ToString();
+
+            return id;
+        }
+
+        public void InsertToUniqueFile(string dbName, string tableName, string mongoId, string pKey, string uKey)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>($"{dbName}_{tableName}_uniquekeys");
+            ObjectId objId = ObjectId.Parse(mongoId);
+            var filter = Builders<BsonDocument>.Filter.And(
+                Builders<BsonDocument>.Filter.Eq("_id", objId),
+                Builders<BsonDocument>.Filter.Exists(uKey));
+            var document = collection.Find(filter).FirstOrDefault();
+
+            if (document != null)
+            {
+                throw new DataAccesException("Unique value already exists!");
+            }
+
+            var filterToUpdate = Builders<BsonDocument>.Filter.Eq("_id", objId);
+            var updateStatement = Builders<BsonDocument>.Update.Set(uKey, pKey);
+
+            var res = collection.UpdateOne(filterToUpdate, updateStatement);
+            if (res.ModifiedCount == 0)
+            {
+                throw new DataAccesException("Failed to insert unique key data!");
+            }
+        }
+
+        public void DeleteFromUniqueFile(string dbName, string tableName, string mongoID, string uKey)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>($"{dbName}_{tableName}_uniquekeys");
+
+            ObjectId objId = ObjectId.Parse(mongoID);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+
+            var deletedRow = Builders<BsonDocument>.Update.Unset(uKey);
+            var result = collection.UpdateOne(filter, deletedRow);
+
+            if (result.ModifiedCount == 0)
+            {
+                throw new DataAccesException("No matching key!");
+            }
+        }
+
+        public string AddForeignKeyFile(string dbName, string tableName)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>($"{dbName}_{tableName}_foreignkeys");
+            var newForeignKey = new BsonDocument();
+            collection.InsertOne(newForeignKey);
+
+            string id = newForeignKey["_id"].AsObjectId.ToString();
+
+            return id;
+        }
+
+        public void InsertToForeignKeyFile(string dbName, string tableName, string mongoID, string pKey, string fKey)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>($"{dbName}_{tableName}_foreignkeys");
+            ObjectId objId = ObjectId.Parse(mongoID);
+            var filter = Builders<BsonDocument>.Filter.And(
+                Builders<BsonDocument>.Filter.Eq("_id", objId),
+                Builders<BsonDocument>.Filter.Exists(fKey));
+            var document = collection.Find(filter).FirstOrDefault();
+
+            var filterToUpdate = Builders<BsonDocument>.Filter.Eq("_id", objId);
+            UpdateDefinition<BsonDocument> updateStatement;
+            if (document != null)
+            {
+                updateStatement = Builders<BsonDocument>.Update.Set(fKey, $"{document[fKey]}#{pKey}");
+            }
+            else
+            {
+                updateStatement = Builders<BsonDocument>.Update.Set(fKey, pKey);
+            }
+
+            var res = collection.UpdateOne(filterToUpdate, updateStatement);
+            if (res.ModifiedCount == 0)
+            {
+                throw new DataAccesException("Failed to insert index data!");
+            }
+        }
+
+        public void DeleteFromForeignKeyFile(string dbName, string tableName, string mongoID, string pKey, string fKeyVal)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>($"{dbName}_{tableName}_foreignkeys");
+
+            ObjectId objId = ObjectId.Parse(mongoID);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+            var document = collection.Find(filter).FirstOrDefault();
+
+            if (document == null)
+            {
+                throw new DataAccesException("Failed to delete foreign key value!");
+            }
+
+            string value = document[fKeyVal].AsString;
+            List<string> values = value.Split('^').ToList();
+            values.Remove(pKey);
+
+            UpdateDefinition<BsonDocument> updateDef;
+            if (values.Count > 0)
+            {
+                updateDef = Builders<BsonDocument>.Update.Set(fKeyVal, string.Join('#', values));
+            }
+            else
+            {
+                updateDef = Builders<BsonDocument>.Update.Unset(fKeyVal);
+            }
+
+            var result = collection.UpdateOne(filter, updateDef);
+
+            if (result.ModifiedCount == 0)
+            {
+                throw new DataAccesException("No matching key!");
+            }
+        }
+
+        public bool ExistsKey(string dbName, string mongoID, string key)
+        {
+            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+            ObjectId objId = ObjectId.Parse(mongoID);
+            var filter = Builders<BsonDocument>.Filter.And(
+                Builders<BsonDocument>.Filter.Eq("_id", objId),
+                Builders<BsonDocument>.Filter.Exists(key));
+            var document = collection.Find(filter).FirstOrDefault();
+
+            if (document == null)
+            {
+                return false;
+            }
+            return true;
         }
 
         public string AddIndexFile(string dbName, string tableName)
@@ -340,34 +422,27 @@ namespace GerGO.DataAcces.StoredData
             }
         }
 
-        public void DropAllIndexes(string colName)
-        {
-            _coreDB.DropCollection(colName);
-        }
-
         public void InsertToIndexFile(string dbName, string tableName, string mongoID, string pKey, string value)
         {
             var collection = _coreDB.GetCollection<BsonDocument>($"{dbName}_{tableName}_indexfiles");
             ObjectId objId = ObjectId.Parse(mongoID);
-            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+            var filter = Builders<BsonDocument>.Filter.And(
+                Builders<BsonDocument>.Filter.Eq("_id", objId),
+                Builders<BsonDocument>.Filter.Exists(value));
             var document = collection.Find(filter).FirstOrDefault();
 
-            foreach (var item in document.Elements)
+            var filterToUpdate = Builders<BsonDocument>.Filter.Eq("_id", objId);
+            UpdateDefinition<BsonDocument> updateStatement;
+            if (document != null)
             {
-                if (item.Name == value)
-                {
-                    var insertedRow = Builders<BsonDocument>.Update.Set(value, $"{item.Value}#{pKey}");
-                    var result = collection.UpdateOne(filter, insertedRow);
-                    if (result.ModifiedCount == 0)
-                    {
-                        throw new DataAccesException("Failed to insert index data!");
-                    }
-                    return;
-                }
+                updateStatement = Builders<BsonDocument>.Update.Set(value, $"{document[value]}#{pKey}");
+            }
+            else
+            {
+                updateStatement = Builders<BsonDocument>.Update.Set(value, pKey);
             }
 
-            var insertedIndex = Builders<BsonDocument>.Update.Set(value, pKey);
-            var res = collection.UpdateOne(filter, insertedIndex);
+            var res = collection.UpdateOne(filterToUpdate, updateStatement);
             if (res.ModifiedCount == 0)
             {
                 throw new DataAccesException("Failed to insert index data!");
@@ -382,33 +457,46 @@ namespace GerGO.DataAcces.StoredData
             var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
             var document = collection.Find(filter).FirstOrDefault();
 
-            List<string> keysToDelete = [];
+            var updateDef = new List<UpdateDefinition<BsonDocument>>();
+            var removeOldPKeysDef = new List<UpdateDefinition<BsonDocument>>();
+
             foreach (var item in document.Elements)
             {
-                if (!item.Name.Equals("_id"))
+                if (item.Name == "_id")
+                    continue;
+
+                string row = item.Value.AsString;
+                List<string> values = row.Split('#').ToList();
+                if (values.Contains(pKey))
                 {
-                    string row = item.Value.AsString;
-                    List<string> values = row.Split('#').ToList();
-                    if (values.Contains(pKey))
+                    values.Remove(pKey);
+                    if (values.Count == 0)
                     {
-                        values.Remove(pKey);
-                        if (values.Count == 0)
-                        {
-                            keysToDelete.Add(item.Name);
-                            continue;
-                        }
-                        string tmp = string.Join('#', values);
-                        var insertedRow = Builders<BsonDocument>.Update.Set(item.Name, $"{tmp}");
-                        var result = collection.UpdateOne(filter, insertedRow);
-                        if (result.ModifiedCount == 0)
-                        {
-                            throw new DataAccesException("Failed to delete index data!");
-                        }
+                        removeOldPKeysDef.Add(Builders<BsonDocument>.Update.Unset(item.Name));
+                        continue;
                     }
+                    string tmp = string.Join('#', values);
+                    updateDef.Add(Builders<BsonDocument>.Update.Set(item.Name, tmp));
+                    
                 }
             }
 
-            keysToDelete.ForEach(key => Delete(indexDocName, mongoID, key));
+            var combinedDelUpdate = Builders<BsonDocument>.Update.Combine(removeOldPKeysDef);
+            var res = collection.UpdateOne(filter, combinedDelUpdate);
+
+            if (res.ModifiedCount == 0)
+            {
+                throw new DataAccesException("Index was not updated.");
+            }
+
+            var combinedUpdate = Builders<BsonDocument>.Update.Combine(updateDef);
+            var result = collection.UpdateOne(filter, combinedUpdate);
+
+            if (result.ModifiedCount == 0)
+            {
+                throw new DataAccesException("Index was not updated.");
+            }
+
         }
 
         public bool ContainsValue(string dbName, string tableID, int index, string value)

@@ -14,9 +14,9 @@ namespace GerGO.DataAcces.MetaData
         public void DropDatabase(DataBase database);
         public void AddTable(string dbName, string tableId, Table table);
         public void DropTable(string dbName, Table table);
-        public void AddColumn(string dbName, string tableName, Column column, PrimaryKey? pKey, bool isUnique);
+        public void AddColumn(string dbName, string tableName, Column column, PrimaryKey? pKey, UniqueKey? uKey);
         public void AddForeignKey(string dbName, string tableName, ForeignKey foreignKey);
-        public void AddIndex(string dbName, string tableName, string indexName, string columnName, string mongoID);
+        public void AddIndex(string dbName, string tableName, IndexFile iFile);
         public void DropIndex(string dbName, string tableName, IndexFile index);
         public string GetTableMongoId(string dbName, string tableName);
         // returns the list of the tables of a db
@@ -34,12 +34,18 @@ namespace GerGO.DataAcces.MetaData
         public Table GetTable(string dbName, string tableName);
         public Column GetColumn(string dbName, string tableName, string columnName);
         public IndexFile GetIndexFile(string dbName, string tableName, string indexFileName);
+        public ForeignKey GetForeignKey(string dbName, string tableName, string fkName);
 
-        public void UpdateInnerSeed(string dbName, string tableName, int value);
         public List<int> GetColumnPostions(string dbName, string tableName, List<string> columnNames);
         public int GetNrPkeys(string dbName, string tableName);
         public void DropColumn(string dbName, string tableName, Column column);
         public void DropForeignKey(string dbName, string tableName, ForeignKey foreignKey);
         public string HasIndexOnIt(string dbName, string tableName, string columnName);
+
+        
+
+        public string GetPrimaryKey(string dbName, Table table, string row, List<string> columnNames);
+        public string GetValuePart(Table table, string row, List<string> columnNames);
+        public List<string> GetReferingForeignKeys(string dbName, string tableName);
     }
 }

@@ -65,7 +65,12 @@ namespace GerGO.Manager
                 lock (_locks[dbName])
                 {
                     string mongoId = _metaDataManager.GetTableMongoId(dbName, tableName);
-                    _metaDataManager.AddColumn(dbName, tableName, column, pKey, isUnique);
+                    UniqueKey? uKey = isUnique ? new UniqueKey(column.Name, "") : null;
+                    if (uKey != null)
+                    {
+                        uKey.MongoID = _storedDataManager.AddUniqueFile(dbName, tableName);
+                    }
+                    _metaDataManager.AddColumn(dbName, tableName, column, pKey, uKey);
                     string value = column.DefaultVal == string.Empty ? "null" : column.DefaultVal;
                     _storedDataManager.AddColumn(dbName, mongoId, value);
                 }
@@ -139,6 +144,7 @@ namespace GerGO.Manager
             {
                 lock (_locks[dbName])
                 {
+                    foreignKey.MongoID = _storedDataManager.AddForeignKeyFile(dbName, tableName);
                     _metaDataManager.AddForeignKey(dbName, tableName, foreignKey);
                 }
             }
@@ -149,7 +155,7 @@ namespace GerGO.Manager
             }
         }
 
-        public void DropColumn(string dbName, string tableName, Column column)
+        public void DropColumn(string dbName, string tableName, string colName)
         {
             if (!_metaDataManager.ExistsDb(dbName))
             {
@@ -163,29 +169,68 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
             }
 
-            if (!_metaDataManager.ExistsColumn(dbName, tableName, column.Name))
+            if (!_metaDataManager.ExistsColumn(dbName, tableName, colName))
             {
-                _logger.Error($"Column {column.Name} doesn't exist!");
-                throw new DataResourceException($"2^Column {column.Name} doesn't exist!");
-            }
-            Column col = _metaDataManager.GetColumn(dbName, tableName, column.Name);
-
-            if (_metaDataManager.HasFkConstraint(dbName, tableName, column.Name))
-            {
-                _logger.Error($"Column {column.Name} has foreign key constraint!");
-                throw new DataResourceException($"Column {column.Name} has foreign key constraint!");
+                _logger.Error($"Column {colName} doesn't exist!");
+                throw new DataResourceException($"2^Column {colName} doesn't exist!");
             }
 
+            if (_metaDataManager.HasFkConstraint(dbName, tableName, colName))
+            {
+                _logger.Error($"Column {colName} has foreign key constraint!");
+                throw new DataResourceException($"Column {colName} has foreign key constraint!");
+            }
+
+            var pKeys = _metaDataManager.GetPrimaryKeys(dbName, tableName);
+            bool isPK = pKeys.Contains(colName);
+            if (isPK && pKeys.Count - 1 == 0)
+            {
+                _logger.Error("Table cannot have 0 primary keys when removing a column!");
+                throw new DataResourceException("Table cannot have 0 primary keys when removing a column!");
+            }
+
+            Table table = _metaDataManager.GetTable(dbName, tableName);
+            Column col = _metaDataManager.GetColumn(dbName, tableName, colName);
+            UniqueKey? uKey = table.UniqueKeys.FirstOrDefault(uk => uk.Column.Equals(colName), null);
+            List<IndexFile> iFiles = table.IndexFiles.FindAll(iFile => iFile.Attributes.Contains(colName));
             try
             {
                 lock (_locks[dbName])
                 {
-                    string mongoId = _metaDataManager.GetTableMongoId(dbName, tableName);
-                    int index = _metaDataManager.GetColumnPostions(dbName, tableName, [col.Name])[0];
-                    int nrPKeys = _metaDataManager.GetNrPkeys(dbName, tableName);
+                    if (uKey != null)
+                    {
+                        _storedDataManager.DropIndexFile($"{dbName}_{tableName}_uniquekeys", uKey.MongoID);
+                    }
+
+                    foreach (var iFile in iFiles)
+                    {
+                        if (iFile.Attributes.Count == 1)
+                        {
+                            _storedDataManager.DropIndexFile($"{dbName}_{tableName}_indexfiles", iFile.MongoID);
+                            _metaDataManager.DropIndex(dbName, tableName, iFile);
+                        }
+                        else
+                        {
+                            int pos = iFile.Attributes.IndexOf(colName);
+                            _storedDataManager.RemoveIndexAttribute($"{dbName}_{tableName}_indexfiles", iFile.MongoID, pos);
+
+                            if (isPK)
+                            {
+                                pos = pKeys.IndexOf(colName);
+                                _storedDataManager.UpdateIndexPKeyData(colName, iFile.MongoID, pos);
+                            }
+                        }
+                    }
+
+                    // actual stored data update
+                    int index = 0;
+                    if (isPK)
+                        index = pKeys.IndexOf(colName);
+                    else
+                        index = _metaDataManager.GetColumnPostions(dbName, tableName, [colName])[0] - pKeys.Count;
+
+                    _storedDataManager.RemoveColumn(dbName, table.MongoID, isPK, index);
                     _metaDataManager.DropColumn(dbName, tableName, col);
-                    bool isPKey = _metaDataManager.GetTable(dbName, tableName).PrimaryKeys.Any(pK => pK.Name.Equals(col.Name));
-                    _storedDataManager.RemoveColumn(dbName, mongoId, isPKey, index, nrPKeys);
                 }
             }
             catch (DataAccesException ex)
@@ -195,7 +240,7 @@ namespace GerGO.Manager
             }
         }
 
-        public void DropForeignKey(string dbName, string tableName, ForeignKey foreignKey)
+        public void DropForeignKey(string dbName, string tableName, string fkName)
         {
             if (!_metaDataManager.ExistsDb(dbName))
             {
@@ -209,17 +254,19 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
             }
 
-            if (!_metaDataManager.ExistsForeignKey(dbName, tableName, foreignKey.Name))
+            if (!_metaDataManager.ExistsForeignKey(dbName, tableName, fkName))
             {
-                _logger.Error($"Foreign key {foreignKey.Name} doesn't exist!");
-                throw new DataResourceException($"Foreign key {foreignKey.Name} doesn't exist!");
+                _logger.Error($"Foreign key {fkName} doesn't exist!");
+                throw new DataResourceException($"Foreign key {fkName} doesn't exist!");
             }
 
             try
             {
                 lock (_locks[dbName])
                 {
-                    _metaDataManager.DropForeignKey(dbName, tableName, foreignKey);
+                    ForeignKey fKey = _metaDataManager.GetForeignKey(dbName, tableName, fkName);
+                    _metaDataManager.DropForeignKey(dbName, tableName, fKey);
+                    _storedDataManager.DropIndexFile($"{dbName}_{tableName}_foreignkeys", fKey.MongoID);
                 }
             }
             catch (DataAccesException ex)
@@ -229,7 +276,7 @@ namespace GerGO.Manager
             }
         }
 
-        public void AddIndexFile(string dbName, string tableName, string indexName, string columnName)
+        public void AddIndexFile(string dbName, string tableName, IndexFile iFile)
         {
             if (!_metaDataManager.ExistsDb(dbName))
             {
@@ -243,39 +290,46 @@ namespace GerGO.Manager
                 throw new DataResourceException($"Table {tableName} doesn't exist!");
             }
 
-            if (!_metaDataManager.ExistsColumn(dbName, tableName, columnName))
+            foreach (var column in iFile.Attributes)
             {
-                _logger.Error($"Column {columnName} doesn't exist!");
-                throw new DataResourceException($"Column {columnName} doesn't exist!");
+                if (!_metaDataManager.ExistsColumn(dbName, tableName, column))
+                {
+                    _logger.Error($"Column {column} doesn't exist!");
+                    throw new DataResourceException($"Column {column} doesn't exist!");
+                }
             }
 
-            if (_metaDataManager.GetPrimaryKeys(dbName, tableName).Contains(columnName))
+            foreach (var column in iFile.Attributes)
             {
-                _logger.Error("You can't create an index for a primary key!");
-                throw new DataResourceException("You can't create an index for a primary key!");
+                if (_metaDataManager.GetPrimaryKeys(dbName, tableName).Contains(column))
+                {
+                    _logger.Error("You can't create an index for a primary key!");
+                    throw new DataResourceException("You can't create an index for a primary key!");
+                }
             }
 
-            if (_metaDataManager.ExistsIndex(dbName, tableName, indexName))
+            if (_metaDataManager.ExistsIndex(dbName, tableName, iFile.Name))
             {
-                _logger.Error($"Index {indexName} alredy exists!");
-                throw new DataResourceException($"Index {indexName} alredy exists!");
+                _logger.Error($"Index {iFile.Name} alredy exists!");
+                throw new DataResourceException($"Index {iFile.Name} alredy exists!");
             }
 
             try
             {
                 lock (_locks[dbName])
                 {
-                    string mongoID = _storedDataManager.AddIndexFile(dbName, tableName);
-                    _metaDataManager.AddIndex(dbName, tableName, indexName, columnName, mongoID);
+                    iFile.MongoID = _storedDataManager.AddIndexFile(dbName, tableName);
+                    _metaDataManager.AddIndex(dbName, tableName, iFile);
 
-                    var pKList = _metaDataManager.GetPrimaryKeys(dbName, tableName);
-                    pKList.Insert(0, columnName);
-                    GetAllRows(dbName, tableName, pKList).ForEach(row =>
+                    var attrList = _metaDataManager.GetPrimaryKeys(dbName, tableName);
+                    attrList.AddRange(iFile.Attributes);
+                    GetAllRows(dbName, tableName, attrList).ForEach(row =>
                     {
                         List<string> values = row.Split('^').ToList();
-                        string indexVal = values[0];
-                        values.RemoveAt(0);
-                        _storedDataManager.InsertToIndexFile(dbName, tableName, mongoID, string.Join('^', values), indexVal);
+                        int nrPKeys = attrList.Count - iFile.Attributes.Count;
+                        string indVal = string.Join('^', values.Skip(nrPKeys));
+                        string pKey = string.Join('^', values.Take(nrPKeys));
+                        _storedDataManager.InsertToIndexFile(dbName, tableName, iFile.MongoID, pKey, indVal);
                     });
                 }
             }
@@ -393,7 +447,10 @@ namespace GerGO.Manager
             {
                 lock (_locks[dbName])
                 {
-                    _storedDataManager.DropAllIndexes($"{dbName}_{table.Name}_indexfiles");
+                    // the DropDatabase basically drops a collection, and the constraints are stored in separate collections for the table
+                    _storedDataManager.DropDatabase($"{dbName}_{table.Name}_indexfiles");
+                    _storedDataManager.DropDatabase($"{dbName}_{table.Name}_foreignkeys");
+                    _storedDataManager.DropDatabase($"{dbName}_{table.Name}_uniquekeys");
                     _storedDataManager.DropTable(dbName, _metaDataManager.GetTableMongoId(dbName, table.Name));
                     _metaDataManager.DropTable(dbName, table);
                 }
@@ -516,7 +573,7 @@ namespace GerGO.Manager
 
         // DATA MANIPULATION
 
-        public void Insert(string dbName, string tableName, List<string> columnNames, string value)
+        public int Insert(string dbName, string tableName, List<string> columnNames, List<string> rows)
         {
             if (!_metaDataManager.ExistsDb(dbName) || !_metaDataManager.ExistsTable(dbName, tableName))
             {
@@ -530,96 +587,120 @@ namespace GerGO.Manager
             }
 
             Table table = _metaDataManager.GetTable(dbName, tableName);
-            Dictionary<string, string> indexFiles = [];
-            table.IndexFiles.ForEach(iFile => indexFiles.Add(iFile.Attributes[0], iFile.MongoID));
+            int count = 0;
             try
             {
                 lock (_locks[dbName])
                 {
-                    string key = "";
-                    int innerSeed = 0;
-                    if (!_storedDataManager.IsValidRow(dbName, table, columnNames, _metaDataManager.GetColumnPostions(dbName,tableName, columnNames), ref key, ref value, ref innerSeed))
-                        throw new DataResourceException("");
-
-                    // foreign key check
-                    foreach (var fk in table.ForeignKeys)
+                    foreach (string row in rows)
                     {
-                        if (columnNames.Contains(fk.AttributeName))
+                        try
                         {
-                            var refTable = _metaDataManager.GetTable(dbName, fk.RefTableName);
-                            int indexRef = _metaDataManager.GetColumnPostions(dbName, fk.RefTableName, [fk.RefAttributeName])[0];
-                            int index = _metaDataManager.GetColumnPostions(dbName, tableName, [fk.AttributeName])[0];
-                            string insertedValue = (key + "^" + value).Split('^')[index];
-                            if (!_storedDataManager.ContainsValue(dbName, refTable.MongoID, indexRef, insertedValue))
+                            // validate pk and attributes
+                            string pKey = _metaDataManager.GetPrimaryKey(dbName, table, row, columnNames);
+                            string value = _metaDataManager.GetValuePart(table, row, columnNames);
+
+                            string[] rowSplitted = row.Split('^');
+                            // foreign key check
+                            foreach (var fk in table.ForeignKeys)
                             {
-                                throw new DataResourceException("Error with foreign keys!");
+                                string fKeyVal = rowSplitted[columnNames.IndexOf(fk.AttributeName)];
+                                if (!_storedDataManager.ExistsKey(dbName, _metaDataManager.GetTableMongoId(dbName, fk.RefTableName), fKeyVal))
+                                    throw new DataAccesException("");
+                                _storedDataManager.InsertToForeignKeyFile(dbName, tableName, fk.MongoID, pKey, fKeyVal);
                             }
+
+                            // unique key chack
+                            foreach (var uKey in table.UniqueKeys)
+                            {
+                                string uniqueVal = rowSplitted[columnNames.IndexOf(uKey.Column)];
+                                _storedDataManager.InsertToUniqueFile(dbName, tableName, uKey.MongoID, pKey, uniqueVal);
+                            }
+
+                            // inserting data
+                            _storedDataManager.Insert(dbName, table.MongoID, pKey, value);
+
+                            // inserting to index files
+                            foreach (var iFile in table.IndexFiles)
+                            {
+                                string indexKey = rowSplitted[columnNames.IndexOf(iFile.Attributes[0])];
+                                for (int i = 1; i < iFile.Attributes.Count; i++)
+                                {
+                                    indexKey = indexKey + "^" + rowSplitted[columnNames.IndexOf(iFile.Attributes[i])];
+                                }
+                                _storedDataManager.InsertToIndexFile(dbName, tableName, iFile.MongoID, pKey, indexKey);
+                            }
+
+                            count++;
+                        }
+                        catch (DataAccesException)
+                        {
+                            continue;
                         }
                     }
-
-                    foreach (var iFile in table.IndexFiles)
-                    {
-                        string[] insertedValues = value.Split('^');
-                        int nrPKeys = _metaDataManager.GetNrPkeys(dbName, tableName);
-                        string val = insertedValues[_metaDataManager.GetColumnPostions(dbName, tableName, [iFile.Attributes[0]])[0] - nrPKeys];
-                        _storedDataManager.InsertToIndexFile(dbName, tableName, iFile.MongoID, key, val);
-                    }
-
-                    _storedDataManager.Insert(dbName, table.MongoID, key, value);
-                    if (innerSeed > 0)
-                        _metaDataManager.UpdateInnerSeed(dbName,tableName, innerSeed);
                 }
-            }
-            catch (DataAccesException ex)
-            {
-                _logger.Error($"Failed to insert: {ex.Message}");
-                throw new DataResourceException(ex.Message);
+                return count;
             }
             catch (Exception)
             {
                 throw new DataResourceException("");
             }
         }
-        public void Delete(string dbName, string tableName, string key)
+        public int Delete(string dbName, string tableName, List<string> keys)
         {
-            if (!_metaDataManager.ExistsDb(dbName) || !_metaDataManager.ExistsTable(dbName, tableName) || string.IsNullOrEmpty(key))
+            if (!_metaDataManager.ExistsDb(dbName) || !_metaDataManager.ExistsTable(dbName, tableName) || keys.Count == 0)
             {
                 throw new DataResourceException("Table doesn't exist");
             }
 
-            string tableMongoId = _metaDataManager.GetTableMongoId(dbName, tableName);
             Table table = _metaDataManager.GetTable(dbName, tableName);
-            try
+            int count = 0;
+            lock (_locks[dbName])
             {
-                lock (_locks[dbName])
+                foreach (var key in keys)
                 {
-                    string row = key + "^" + _storedDataManager.GetValue(dbName, tableMongoId, key);
-                    // foreign key check
-                    List<Table> tables = _metaDataManager.GetTables(dbName).ToList().Select(t => _metaDataManager.GetTable(dbName, t)).ToList();
-                    foreach (var t in tables)
+                    try
                     {
-                        List<ForeignKey> fKeys = t.ForeignKeys.FindAll(fk => fk.RefTableName.Equals(tableName));
-
-                        foreach (var fk in fKeys)
+                        // foreign keys that refer to this table
+                        List<string> refForeignKeys = _metaDataManager.GetReferingForeignKeys(dbName, tableName);
+                        refForeignKeys.ForEach(fk =>
                         {
-                            string colValue = row.Split('^')[_metaDataManager.GetColumnPostions(dbName, tableName, [fk.RefAttributeName])[0]];
-                            int index = _metaDataManager.GetColumnPostions(dbName, t.Name, [fk.AttributeName])[0];
-                            if (_storedDataManager.ContainsValue(dbName, t.MongoID, index, colValue))
-                                throw new DataResourceException("Value referrenced by foreign key!");
-                        }
-                    }
+                            string[] tmp = fk.Split('^');
+                            if (_storedDataManager.ExistsKey($"{dbName}_{tmp[0]}_foreignkeys", tmp[1], key))
+                                throw new DataAccesException("");
+                        });
 
-                    _storedDataManager.Delete(dbName, tableMongoId, key);
-                    foreach (var indexFile in table.IndexFiles)
+                        string row = _storedDataManager.GetValue(dbName, table.MongoID, key);
+                        // foreign keys
+                        foreach (var fKey in table.ForeignKeys)
+                        {
+                            string fkeyVal = row.Split('^')[_metaDataManager.GetColumns(dbName, tableName).ToList().IndexOf(fKey.AttributeName) - table.PrimaryKeys.Count];
+                            _storedDataManager.DeleteFromForeignKeyFile(dbName, tableName, fKey.MongoID, key, fkeyVal);
+                        }
+
+                        // unique key check
+                        foreach (var uKey in table.UniqueKeys)
+                        {
+                            string uKeyVal = row.Split('^')[_metaDataManager.GetColumns(dbName, tableName).ToList().IndexOf(uKey.Column) - table.PrimaryKeys.Count];
+                            _storedDataManager.DeleteFromUniqueFile(dbName, tableName, table.MongoID, uKeyVal);
+                        }
+
+                        // index file
+                        foreach (var indexFile in table.IndexFiles)
+                        {
+                            _storedDataManager.DeleteFromIndexFile(dbName, tableName, indexFile.MongoID, key);
+                        }
+                        _storedDataManager.Delete(dbName, table.MongoID, key);
+
+                        count++;
+                    }
+                    catch (DataAccesException)
                     {
-                        _storedDataManager.DeleteFromIndexFile(dbName, tableName, indexFile.MongoID, key);
+                        continue;
                     }
                 }
-            }
-            catch (DataAccesException ex)
-            {
-                _logger.Error($"Failed to delete: {ex.Message}");
-                throw new DataResourceException(ex.Message);
+
+                return count;
             }
         }
 

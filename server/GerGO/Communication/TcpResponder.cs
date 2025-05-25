@@ -7,6 +7,7 @@ namespace GerGO.Communication
     class TcpResponder : ICommunicator
     {
         private static readonly ILogger _logger = LoggerFactory.GetLogger();
+        private static readonly int _maxSize = 50;
 
         public static string ReadValue(NetworkStream stream)
         {
@@ -67,6 +68,41 @@ namespace GerGO.Communication
             catch (IOException)
             {
                 _logger.Error("Failed to send message: IOException on the network stream!");
+                throw new CommunicationException("IOException on the network stream!");
+            }
+        }
+
+        public static void SendBatchedMessage(NetworkStream stream, List<string> messages)
+        {
+            if (messages.Count > _maxSize)
+            {
+                _logger.Error($"Batched message can't be larger than {_maxSize} messages!");
+                throw new CommunicationException($"Batched message can't be larger than {_maxSize} messages!");
+            }
+
+            byte[] buffer = Encoding.UTF8.GetBytes(string.Join('#', messages));
+            try
+            {
+                stream.Write(buffer, 0, buffer.Length);
+            }
+            catch (IOException)
+            {
+                _logger.Error("Failed to send batched message: IOException on the network stream!");
+                throw new CommunicationException("IOException on the network stream!");
+            }
+        }
+        public static List<string> ReadValueBatched(NetworkStream stream)
+        {
+            byte[] buffer = new byte[10000];
+            try
+            {
+                stream.Read(buffer, 0, buffer.Length);
+                string data = Encoding.UTF8.GetString(buffer, 0, buffer.Length);
+                return data.Replace("\0", "").Split('#').ToList();
+            }
+            catch (IOException)
+            {
+                _logger.Error("Failed to read batched data: IOException on the network stream!");
                 throw new CommunicationException("IOException on the network stream!");
             }
         }

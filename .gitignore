@@ -4,3 +4,4 @@ server/*/.vs/
 server/*/clubs.txt
 server/*/players.txt
 server/**/TestInserter.cs
+server/*/Catalog.xml

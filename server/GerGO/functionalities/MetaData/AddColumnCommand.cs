@@ -38,7 +38,10 @@ namespace GerGO.Functionalities.MetaData
                     column.DefaultVal = arguments[7];
 
                 if (!arguments[8].Equals("--") && pKey != null)
+                {
                     pKey.PKIdentity.Seed = int.Parse(arguments[8]);
+                    pKey.PKIdentity.InnerSeed = int.Parse(arguments[8]);
+                }
                 if (!arguments[9].Equals("--") && pKey != null)
                     pKey.PKIdentity.Step = int.Parse(arguments[9]);
 

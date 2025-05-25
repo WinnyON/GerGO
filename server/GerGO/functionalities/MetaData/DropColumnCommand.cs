@@ -15,11 +15,10 @@ namespace GerGO.Functionalities.MetaData
             {
                 string dbName = arguments[1].ToLower();
                 string tableName = arguments[2].ToLower();
-                Column col = new Column();
-                col.Name = arguments[3].ToLower();
+                string colName = arguments[3].ToLower();
 
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
-                manager.DropColumn(dbName, tableName, col);
+                manager.DropColumn(dbName, tableName, colName);
 
                 TcpResponder.SendMessage(stream, "Ok");
             }

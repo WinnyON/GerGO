@@ -15,11 +15,10 @@ namespace GerGO.Functionalities.MetaData
             {
                 string dbName = arguments[1].ToLower();
                 string tableName = arguments[2].ToLower();
-                ForeignKey fKey = new ForeignKey();
-                fKey.Name = arguments[3].ToLower();
+                string fkName = arguments[3].ToLower();
 
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
-                manager.DropForeignKey(dbName, tableName, fKey);
+                manager.DropForeignKey(dbName, tableName, fkName);
 
                 TcpResponder.SendMessage(stream, "Ok");
             }

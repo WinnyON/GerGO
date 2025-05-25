@@ -3,7 +3,7 @@
   <Databases>
     <DataBase Name="bolt">
       <Tables>
-        <Table TableName="markak" MongoID="68319ae7077a482ec9ffbfb4">
+        <Table TableName="markak" MongoID="68330771ad432e0f60f361aa">
           <ForeignKeys />
           <IndexFiles />
           <Structure>
@@ -19,26 +19,32 @@
           <UniqueKeys />
           <PrimaryKeys>
             <PKAttribute Name="markaid">
-              <Identity Seed="1" Step="1" InnerSeed="12" />
+              <Identity Seed="1" Step="1" InnerSeed="8" />
             </PKAttribute>
           </PrimaryKeys>
         </Table>
-        <Table TableName="autok" MongoID="68319c92c43ef1b7708f68cf">
+        <Table TableName="autok" MongoID="68330790ad432e0f60f361ab">
           <ForeignKeys>
-            <ForeignKey Name="fk_autok_markak">
+            <ForeignKey Name="fk_autok_markak" MongoID="6833085fad432e0f60f361ac">
               <AttributeName>markaid</AttributeName>
               <RefTableName>markak</RefTableName>
               <RefAttributeName>markaid</RefAttributeName>
             </ForeignKey>
           </ForeignKeys>
-          <IndexFiles />
+          <IndexFiles>
+            <Index Name="ind_ar" MongoID="68332decd663522f3626aaec">
+              <Attributes>
+                <Attribute>ar</Attribute>
+              </Attributes>
+            </Index>
+          </IndexFiles>
           <Structure>
             <Column FieldName="autoid" Type="int" NotNull="false">
               <DefaultVal />
               <Check />
             </Column>
             <Column FieldName="ar" Type="float" NotNull="false">
-              <DefaultVal>10</DefaultVal>
+              <DefaultVal />
               <Check />
             </Column>
             <Column FieldName="markaid" Type="int" NotNull="false">
@@ -49,7 +55,7 @@
           <UniqueKeys />
           <PrimaryKeys>
             <PKAttribute Name="autoid">
-              <Identity Seed="1" Step="1" InnerSeed="2" />
+              <Identity Seed="1" Step="1" InnerSeed="12" />
             </PKAttribute>
           </PrimaryKeys>
         </Table>

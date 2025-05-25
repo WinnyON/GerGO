@@ -15,11 +15,16 @@ namespace GerGO.Functionalities.MetaData
             {
                 string dbName = arguments[1].ToLower();
                 string tableNname = arguments[2].ToLower();
-                string indexName = arguments[3].ToLower();
-                string columnName = arguments[4].ToLower();
+
+                IndexFile iFile = new IndexFile();
+                iFile.Name = arguments[3].ToLower();
+                for (int i = 4; i < arguments.Length; i++)
+                {
+                    iFile.Attributes.Add(arguments[4].ToLower());
+                }
 
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
-                manager.AddIndexFile(dbName, tableNname, indexName, columnName);
+                manager.AddIndexFile(dbName, tableNname, iFile);
 
                 TcpResponder.SendMessage(stream, "Ok");
             }
