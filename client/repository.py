@@ -1,3 +1,5 @@
+from numba.cpython.listobj import all_list
+
 from connectionException import ConnectionError
 import re
 
@@ -298,9 +300,15 @@ class Repository():
 			if code[0] == '1':
 				return 1, code.split('^')[1]
 			code = self.client.send_message("0")
+			# while code[0] != '0':
+			# 	row = code.split('^')[1:] # elso 0^ arra van hogy vege van
+			# 	rows.append(row)
+			# 	code = self.client.send_message("0")
 			while code[0] != '0':
-				row = code.split('^')[1:] # elso 0^ arra van hogy vege van
-				rows.append(row)
+				rows_text = code[2:].split('#')
+				for row in rows_text:
+					row_data = row.split('^')
+					rows.append(row_data)
 				code = self.client.send_message("0")
 			return 0, rows
 		except ConnectionError as ce:
@@ -357,6 +365,12 @@ class Repository():
 		except ConnectionError as ce:
 			return 1, ce.get_text()
 
+	def create_batch(self, rows):
+		command = ""
+		for row in rows:
+			command += self.build_row_command(row) + "#"
+		return command[:-1]
+
 	def insert_rows(self, db_name, table_name, rows, column_names):
 		column_string = self.build_row_command(column_names)
 		command = "11^" + db_name + "^" + table_name + "^" + column_string
@@ -365,11 +379,22 @@ class Repository():
 			code = self.client.send_message(command)
 			if code[0] == '1':
 				return 1, code.split('^')[1]
-			for row in rows:
-				command = self.build_row_command(row)
+			i = 0
+			count = 50
+			n = len(rows)
+			while i < n:
+				if i + count > n:
+					count = n - i
+				command = self.create_batch(rows[i:i+count])
 				code = self.client.send_message(command)
 				if code[0] == '1':
 					return 1, code.split('^')[1]
+				i += 50
+			# for row in rows:
+			# 	command = self.build_row_command(row)
+			# 	code = self.client.send_message(command)
+			# 	if code[0] == '1':
+			# 		return 1, code.split('^')[1]
 			code = self.client.send_message("0")
 			# print(code)
 			return 0, "OK"
@@ -381,11 +406,15 @@ class Repository():
 		command = "13^" + db_name + "^" + table_name + "^" + name + "^" + self.build_row_command(columns)
 		try:
 			self.client.connect()
+			self.client.set_timeout(180)
 			code = self.client.send_message(command)
 			if code[0] == '1':
+				self.client.set_timeout()
 				return 1, code.split('^')[1]
+			self.client.set_timeout()
 			return 0, "OK"
 		except ConnectionError as ce:
+			self.client.set_timeout()
 			return 1, ce.get_text()
 
 	#TODO: delete index
@@ -403,24 +432,65 @@ class Repository():
 			return 1, ce.get_text()
 
 
-	def select_rows(self, db_name, table_name, columns, join_tables, conditions):
+	def select_rows(self, db_name, table_name, columns, join_tables, conditions, aliases):
 		select_all = False
 		try:
 			command = "19^" + db_name + "^" + table_name
 			self.client.connect()
+			self.client.set_timeout(180)
 			code = self.client.send_message(command)
 			if code[0] == '1':
+				self.client.set_timeout()
 				return 1, code.split('^')[1]
 			for table in join_tables:
-				command = "20^" + table["table"] + "^" + table["col1"] + "^" + table["col2"]
+				if '.' not in table["col1"] or '.' not in table["col2"]:
+					return 1, "Incorrect Syntax Error"
+				table1, col1 = table["col1"].split('.')
+				table2, col2 = table["col2"].split('.')
+				table_name1 = table1
+				table_name2 = table2
+				if table1 in aliases.keys():
+					table_name1 = aliases[table1]
+				if table2 in aliases.keys():
+					table_name2 = aliases[table2]
+				if table_name1 == table["table"]:
+					command = "20^" + table_name2 + "^" + col2 + "^" + table_name1 + "^" + col1
+				elif table_name2 == table["table"]:
+					command = "20^" + table_name1 + "^" + col1 + "^" + table_name2 + "^" + col2
+				else:
+					return 1, "Incorrect Syntax Error"
+				# command = "20^" + table["table"] + "^" + table["col1"] + "^" + table["col2"]
 				code = self.client.send_message(command)
 				if code[0] == '1':
+					self.client.set_timeout()
 					return 1, code.split('^')[1]
 			for table in conditions:
-				command = "21^" + table_name + "^" + table["col1"] + "^" + table["op"] + "^" + table["col2"]
+				if '.' not in table["col1"] and '.' not in table["col2"]:
+					command = "21^" + table_name + "^" + table["col1"] + "^" + table["op"] + "^" + table["col2"]
+				else:
+					if '.' in table["col1"]:
+						table1, col1 = table["col1"].split('.')
+						table_name1 = table1
+						if table1 in aliases.keys():
+							table_name1 = aliases[table1]
+						part1 = table_name1 + "^" + col1
+					else:
+						part1 = table["col1"]
+					if '.' in table["col2"]:
+						table2, col2 = table["col2"].split('.')
+						table_name2 = table2
+						if table2 in aliases.keys():
+							table_name2 = aliases[table2]
+						part2 = table_name2 + "^" + col2
+					else:
+						part2 = table["col2"]
+
+					command = "21^" + part1 + "^" + table["op"] + "^" + part2
+
 				# command = "21^" + table["col1"] + "^" + table["op"] + "^" + table["col2"]
 				code = self.client.send_message(command)
 				if code[0] == '1':
+					self.client.set_timeout()
 					return 1, code.split('^')[1]
 			for column in columns:
 				if column == "*":
@@ -428,16 +498,26 @@ class Repository():
 					command = "25^*"
 					code = self.client.send_message(command)
 					if code[0] == '1':
+						self.client.set_timeout()
 						return 1, code.split('^')[1]
 					break
 				# command = "25^" + column["table"] + "^" + column["name"] # TODO: itt majd fog kelleni egy ellenorzes hogy melyik oszlop melyik tablabol van
-				command = "25^" + table_name + "^" + column
+				if '.' not in column:
+					command = "25^" + table_name + "^" + column
+				else:
+					table1, col1 = column.split('.')
+					table_name1 = table1
+					if table1 in aliases.keys():
+						table_name1 = aliases[table1]
+					command = "25^" + table_name1 + "^" + col1
 				code = self.client.send_message(command)
 				if code[0] == '1':
+					self.client.set_timeout()
 					return 1, code.split('^')[1]
 			command = "0^OK"
 			code = self.client.send_message(command)
 			if code[0] == '1':
+				self.client.set_timeout()
 				return 1, code.split('^')[1]
 			args = code.split('^')
 			row_count = int(args[1])
@@ -445,15 +525,32 @@ class Repository():
 				column_names = args[2:]
 			else:
 				# column_names = [column["table"] + "." + column["name"] for column in columns] #TODO: fix table-column later
-				column_names = [table_name + "." + column for column in columns]
+				# column_names = [table_name + "." + column for column in columns]
+				column_names = []
+				for column in columns:
+					table1, col1 = column.split('.')
+					table_name1 = table1
+					if table1 in aliases.keys():
+						table_name1 = aliases[table1]
+					column_names.append(table_name1 + "." + col1)
 			rows = []
 			code = self.client.send_message("0")
+			# while code[0] != '0':
+			# 	row = code.split('^')[1:]  # elso 0^ arra van hogy vege van
+			# 	rows.append(row)
+			# 	code = self.client.send_message("0")
 			while code[0] != '0':
-				row = code.split('^')[1:]  # elso 0^ arra van hogy vege van
-				rows.append(row)
+				rows_text = code[2:].split('#')
+				for row in rows_text:
+					row_data = row.split('^')
+					rows.append(row_data)
 				code = self.client.send_message("0")
+
+			self.client.set_timeout()
+			print(rows)
 			return 0, (row_count, column_names, rows)
 		except ConnectionError as ce:
+			self.client.set_timeout()
 			return 1, ce.get_text()
 
 	def delete_where_rows(self, db_name, table_name, conditions):

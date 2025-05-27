@@ -1,0 +1,1000 @@
+Red Wolves FC^The Red Wolves^9436^47
+Athletic Helsinki^The Helsinki^45226^41
+Blue Tigers FC^The Blue Tigers^24869^36
+White Tigers FC^The White Tigers^26182^24
+SC Athens^The Athens^121438^10
+Bratislava PSV^The Bratislava^58225^9
+Gold Bears FC^The Gold Bears^81457^4
+Red Lions FC^The Red Lions^114195^17
+TSV Oslo^The Oslo^135273^5
+SV Stockholm^The Stockholm^110924^27
+Real Moscow^The Moscow^91592^5
+Red Rhinos FC^The Red Rhinos^60625^22
+Red Panthers^The Red Panthers^142457^13
+Red Bears FC^The Red Bears^106803^45
+SV Warsaw^The Warsaw^116823^23
+Olympic Bucharest^The Bucharest^36570^30
+Red Sharks FC^The Red Sharks^73780^41
+Bratislava TSV^The Bratislava^25128^38
+Los Angeles Eagles^The Fighting Blues^74573^34
+SC Barcelona^The Barcelona^74305^48
+Athens Lions^The Athens^98501^46
+Gold Lions FC^The Gold Lions^20010^29
+Rapid Athens^The Athens^120306^37
+Rapid Budapest^The Budapest^62107^49
+Chicago Club^The Chicago^146184^25
+White Wolves FC^The White Wolves^135233^46
+Gold Rhinos FC^The Gold Rhinos^110167^5
+Green Rhinos^The Green Rhinos^53141^5
+Manchester Hawks^The Manchester^146062^9
+Blue Hawks FC^The Blue Hawks^128955^27
+United Amsterdam^The Amsterdam^59761^47
+Paris FC^The Paris^8666^40
+Helsinki NK^The Helsinki^21864^24
+Bucharest AC^The Bucharest^54398^38
+Red Bears^The Red Bears^93213^46
+Orange Tigers FC^The Orange Tigers^97182^37
+Yellow Lions FC^The Yellow Lions^143319^22
+Belgrade PSV^The Belgrade^126512^50
+Green Lions FC^The Green Lions^41944^31
+Green Hawks FC^The Green Hawks^74378^17
+Munich United^The Munich^22799^11
+Dubai TSV^The Dubai^143461^26
+Purple Panthers FC^The Purple Panthers^57913^35
+Green Rhinos FC^The Green Rhinos^14930^7
+Los Angeles Foxes^The Golden Legion^94252^47
+Prague Athletic^The Prague^51724^33
+Green Dragons FC^The Green Dragons^42745^33
+Blue Eagles FC^The Blue Eagles^107510^34
+White Eagles FC^The White Eagles^38277^16
+Lisbon Hotspur^The Lisbon^105777^8
+AIK Oslo^The Oslo^43634^18
+Black Hawks^The Black Hawks^92069^7
+Black Panthers FC^The Black Panthers^35867^40
+Buenos Aires AC^The Super Stars^30466^49
+Gold Rhinos FC^The Gold Rhinos^14166^11
+Berlin AIK^The Berlin^21955^46
+Milan Wolves^The Milan^100996^26
+Bratislava Royals^The Bratislava^41598^30
+Toronto TSV^The Toronto^93282^21
+Stockholm Club^The Stockholm^31169^7
+Orange Wolves FC^The Orange Wolves^73048^27
+White Rhinos^The White Rhinos^70039^32
+New York Sporting^The Orange Angels^116806^39
+Barcelona Giants^The Barcelona^87438^50
+HJK Warsaw^The Warsaw^69290^2
+Gold Panthers^The Gold Panthers^29871^26
+Orange Tigers^The Orange Tigers^52428^31
+AFC Rio^The Rio^94761^26
+Purple Eagles^The Purple Eagles^86528^13
+FK New York^The Iron Legion^56429^43
+Green Panthers FC^The Green Panthers^41382^38
+FK Rome^The Rome^135109^32
+Blue Panthers FC^The Blue Panthers^24234^41
+Silver Tigers FC^The Silver Tigers^96747^30
+London PSV^The London^113671^34
+Paris Lions^The Paris^52121^24
+Gold Eagles FC^The Gold Eagles^9751^21
+Red Hawks^The Red Hawks^36658^33
+HJK Beijing^The Beijing^36559^25
+Silver Sharks FC^The Silver Sharks^114037^28
+Purple Eagles^The Purple Eagles^35521^24
+White Rhinos^The White Rhinos^53008^16
+Yellow Sharks FC^The Yellow Sharks^42161^0
+Blue Dragons^The Blue Dragons^76317^20
+Silver Rhinos^The Silver Rhinos^49698^8
+Dubai FC^The Dubai^84108^44
+Bratislava Town^The Bratislava^125616^33
+Purple Panthers FC^The Purple Panthers^116380^30
+Blue Wolves^The Blue Wolves^64482^36
+Istanbul Sporting^The Istanbul^78716^43
+Silver Rhinos^The Silver Rhinos^63527^39
+Cape Town Club^The Silver Warriors^60443^41
+Orange Wolves^The Orange Wolves^8563^14
+Rio NK^The Rio^71024^43
+AS Lisbon^The Lisbon^71910^41
+Green Panthers^The Green Panthers^145565^2
+Red Wolves FC^The Red Wolves^107908^41
+Orange Dragons FC^The Orange Dragons^69779^17
+Green Eagles FC^The Green Eagles^137224^26
+Red Panthers^The Red Panthers^81822^12
+Olympique Helsinki^The Helsinki^77109^6
+Zagreb Athletic^The Zagreb^139546^3
+Orange Panthers FC^The Orange Panthers^40755^0
+Purple Bears FC^The Purple Bears^12573^9
+Amsterdam FC^The Amsterdam^57016^45
+United Los Angeles^The Yellow Angels^92060^1
+Gold Lions FC^The Gold Lions^30421^24
+Red Panthers^The Red Panthers^79996^40
+SV Istanbul^The Istanbul^99699^20
+Red Panthers^The Red Panthers^59460^49
+Green Eagles^The Green Eagles^16826^44
+Blue Tigers FC^The Blue Tigers^36871^36
+Purple Tigers^The Purple Tigers^134988^37
+Blue Lions^The Blue Lions^142459^29
+Cairo SC^The Cairo^30443^23
+Silver Eagles^The Silver Eagles^39027^21
+Silver Tigers^The Silver Tigers^89286^19
+Green Lions^The Green Lions^110473^30
+Orange Wolves^The Orange Wolves^98984^37
+Black Hawks FC^The Black Hawks^68625^20
+Lisbon FK^The Lisbon^80275^19
+White Dragons^The White Dragons^41281^11
+Beijing BSC^The Beijing^115380^2
+Gold Lions FC^The Gold Lions^19023^48
+Bucharest Wednesday^The Bucharest^105856^46
+New York Saints^The Brave Spirit^28817^14
+FK New York^The Silver Demons^48362^46
+Red Dragons^The Red Dragons^88420^22
+Red Rhinos FC^The Red Rhinos^124666^45
+Atletico Bratislava^The Bratislava^60962^11
+Bucharest HJK^The Bucharest^89332^14
+Blue Rhinos FC^The Blue Rhinos^62034^7
+Silver Sharks FC^The Silver Sharks^12420^37
+Rapid Los Angeles^The Fighting Blues^34888^42
+Los Angeles Atletico^The Fighting Reds^139591^30
+Berlin Dons^The Berlin^15324^43
+Black Dragons^The Black Dragons^91210^26
+Sofia Town^The Sofia^10016^2
+Yellow Bears FC^The Yellow Bears^68853^38
+Black Hawks FC^The Black Hawks^99119^12
+Oslo United^The Oslo^112584^23
+Yellow Lions FC^The Yellow Lions^83327^19
+NK Los Angeles^The Super Giants^62179^43
+Gold Panthers FC^The Gold Panthers^96142^35
+Gold Panthers^The Gold Panthers^85072^4
+Stockholm Town^The Stockholm^105557^42
+Purple Tigers^The Purple Tigers^138008^7
+Silver Tigers^The Silver Tigers^69836^46
+Green Tigers FC^The Green Tigers^51222^37
+Gold Eagles FC^The Gold Eagles^12050^45
+BSC London^The London^34673^46
+White Lions FC^The White Lions^33337^27
+Lisbon AFC^The Lisbon^145584^18
+Lisbon SK^The Lisbon^17974^46
+Barcelona Rangers^The Barcelona^90249^24
+Gold Wolves FC^The Gold Wolves^126215^32
+PSV New York^The Iron Legion^99275^0
+Green Tigers^The Green Tigers^98833^38
+Gold Eagles^The Gold Eagles^5513^19
+Silver Dragons FC^The Silver Dragons^115610^26
+SC Prague^The Prague^108521^23
+Sofia Club^The Sofia^147581^34
+Blue Dragons FC^The Blue Dragons^80202^23
+Athletic Sydney^The Sydney^91191^33
+Sydney NK^The Sydney^34572^31
+Red Rhinos FC^The Red Rhinos^7030^3
+Warsaw Foxes^The Warsaw^44601^6
+Silver Dragons FC^The Silver Dragons^25530^50
+Silver Tigers FC^The Silver Tigers^62407^38
+FC Bratislava^The Bratislava^28701^3
+Berlin HJK^The Berlin^87089^34
+White Panthers FC^The White Panthers^36748^37
+NK Cairo^The Cairo^39966^24
+Black Panthers^The Black Panthers^31641^1
+Belgrade FC^The Belgrade^53375^37
+White Lions FC^The White Lions^81789^3
+TSV Zagreb^The Zagreb^95007^25
+Moscow Hotspur^The Moscow^136882^37
+Helsinki Wednesday^The Helsinki^135221^30
+Rome Tigers^The Rome^71439^0
+Warsaw Giants^The Warsaw^101386^0
+Moscow FC^The Moscow^127827^25
+Green Eagles FC^The Green Eagles^40412^27
+White Rhinos FC^The White Rhinos^40260^22
+Silver Rhinos FC^The Silver Rhinos^65455^41
+Stockholm City^The Stockholm^114018^14
+PSV Helsinki^The Helsinki^51415^40
+Tokyo FK^The Tokyo^36906^14
+White Bears FC^The White Bears^17533^12
+Black Wolves FC^The Black Wolves^53180^10
+Yellow Bears^The Yellow Bears^38446^11
+Black Eagles^The Black Eagles^12534^39
+Blue Panthers FC^The Blue Panthers^143237^43
+Orange Dragons FC^The Orange Dragons^67675^6
+Black Wolves FC^The Black Wolves^96821^16
+Lisbon Wednesday^The Lisbon^109691^22
+Gold Tigers^The Gold Tigers^80893^16
+AIK Barcelona^The Barcelona^116692^44
+Green Lions FC^The Green Lions^132326^30
+Belgrade Wanderers^The Belgrade^86847^38
+Green Bears^The Green Bears^118683^6
+Silver Lions FC^The Silver Lions^81475^36
+Lisbon United^The Lisbon^71113^9
+Orange Sharks FC^The Orange Sharks^122959^41
+Green Sharks FC^The Green Sharks^38128^28
+Black Eagles FC^The Black Eagles^59897^39
+Vienna Real^The Vienna^64999^3
+Munich Rapid^The Munich^26715^38
+SK Cairo^The Cairo^15793^50
+Amsterdam Town^The Amsterdam^55782^7
+Purple Sharks FC^The Purple Sharks^50758^25
+White Wolves FC^The White Wolves^33326^4
+Yellow Wolves FC^The Yellow Wolves^138671^7
+Sofia Wanderers^The Sofia^82261^4
+Yellow Tigers FC^The Yellow Tigers^146590^27
+Black Sharks FC^The Black Sharks^68883^15
+White Sharks FC^The White Sharks^15524^2
+Red Dragons FC^The Red Dragons^51825^32
+Olympique Buenos Aires^The Ultra Stars^5296^15
+Orange Eagles FC^The Orange Eagles^51944^15
+FC Dubai^The Dubai^57163^16
+IFK Prague^The Prague^46868^14
+City Moscow^The Moscow^101748^5
+Yellow Tigers^The Yellow Tigers^107665^7
+Black Rhinos^The Black Rhinos^127021^16
+United Beijing^The Beijing^93351^5
+Oslo AC^The Oslo^21431^26
+Helsinki AC^The Helsinki^49851^12
+Red Rhinos FC^The Red Rhinos^90641^41
+Green Dragons^The Green Dragons^50368^27
+Black Lions^The Black Lions^139331^8
+Amsterdam Real^The Amsterdam^102902^1
+Yellow Wolves^The Yellow Wolves^109694^8
+Green Hawks^The Green Hawks^126228^1
+Yellow Tigers^The Yellow Tigers^35054^2
+Moscow IFK^The Moscow^18508^22
+Green Dragons FC^The Green Dragons^28874^48
+Olympique Dublin^The Dublin^127128^21
+Inter Belgrade^The Belgrade^147023^30
+Olympique Oslo^The Oslo^113265^36
+Purple Panthers^The Purple Panthers^22265^3
+London SK^The London^79506^32
+Olympic London^The London^129818^47
+Blue Eagles FC^The Blue Eagles^124915^14
+White Panthers^The White Panthers^55572^16
+Red Rhinos FC^The Red Rhinos^68186^0
+SV Dubai^The Dubai^69441^26
+Gold Dragons^The Gold Dragons^89950^6
+Dublin Club^The Dublin^87005^19
+Munich Albion^The Munich^131964^25
+White Dragons FC^The White Dragons^15416^29
+Orange Tigers FC^The Orange Tigers^119254^47
+London Lions^The London^113252^13
+Black Dragons^The Black Dragons^14988^10
+Toronto Hotspur^The Toronto^144408^42
+Barcelona Sporting^The Barcelona^91256^6
+Silver Sharks FC^The Silver Sharks^144803^1
+Atletico Chicago^The Chicago^101871^34
+Purple Eagles FC^The Purple Eagles^15793^22
+Rio Athletic^The Rio^141785^34
+White Lions^The White Lions^46118^18
+Orange Dragons FC^The Orange Dragons^128701^47
+Black Panthers^The Black Panthers^135280^25
+Budapest SV^The Budapest^115512^28
+Purple Eagles FC^The Purple Eagles^51954^30
+Munich Foxes^The Munich^124053^20
+AS Budapest^The Budapest^138184^4
+HJK Milan^The Milan^146624^13
+Dublin Giants^The Dublin^118336^8
+Red Bears FC^The Red Bears^113357^48
+Real Amsterdam^The Amsterdam^84274^21
+United Moscow^The Moscow^103269^8
+NK Los Angeles^The Fighting Blues^109008^12
+Athletic Liverpool^The Liverpool^141092^23
+Red Sharks FC^The Red Sharks^42344^13
+Belgrade SK^The Belgrade^145862^30
+Olympique Madrid^The Madrid^31522^33
+Sydney FK^The Sydney^140714^41
+Silver Wolves FC^The Silver Wolves^45883^5
+Cape Town Wanderers^The Super Giants^140856^13
+Purple Hawks^The Purple Hawks^133834^30
+Red Lions^The Red Lions^55063^40
+NK Dubai^The Dubai^66277^47
+Red Dragons FC^The Red Dragons^26016^26
+Yellow Hawks^The Yellow Hawks^9876^6
+White Dragons FC^The White Dragons^128778^12
+AC Rome^The Rome^27221^26
+Buenos Aires PSV^The Silver Devils^7185^3
+Sporting London^The London^58173^46
+Purple Dragons FC^The Purple Dragons^48813^11
+Amsterdam Town^The Amsterdam^121498^28
+Purple Sharks^The Purple Sharks^115453^13
+Yellow Tigers FC^The Yellow Tigers^31678^21
+White Wolves^The White Wolves^127356^32
+Yellow Bears FC^The Yellow Bears^29591^19
+Red Bears FC^The Red Bears^87031^15
+Sofia Olympique^The Sofia^65558^16
+Red Lions^The Red Lions^128823^46
+Helsinki Olympic^The Helsinki^120930^3
+Inter Sydney^The Sydney^48203^45
+Red Wolves^The Red Wolves^96847^34
+Rio City^The Rio^140368^7
+Purple Dragons FC^The Purple Dragons^25635^3
+Budapest Giants^The Budapest^27524^9
+White Rhinos^The White Rhinos^130162^30
+IFK Oslo^The Oslo^110415^23
+Purple Hawks^The Purple Hawks^134225^33
+Red Rhinos FC^The Red Rhinos^48688^26
+Budapest SK^The Budapest^27584^8
+Black Rhinos FC^The Black Rhinos^102258^32
+Red Bears FC^The Red Bears^30637^29
+FK Los Angeles^The Mighty Spirit^92764^2
+Orange Hawks FC^The Orange Hawks^128190^9
+Orange Tigers^The Orange Tigers^140287^15
+Madrid Dynamo^The Madrid^22682^15
+White Panthers FC^The White Panthers^15794^47
+AC Dubai^The Dubai^120916^28
+Silver Wolves^The Silver Wolves^36995^24
+Silver Bears^The Silver Bears^27914^38
+Black Bears FC^The Black Bears^24695^34
+Atletico Toronto^The Toronto^149909^40
+Vienna Lions^The Vienna^127718^5
+Gold Wolves FC^The Gold Wolves^142937^44
+TSV Munich^The Munich^115317^1
+Athletic Warsaw^The Warsaw^21360^25
+Liverpool Tigers^The Liverpool^70751^14
+Beijing Rangers^The Beijing^114329^10
+Green Dragons FC^The Green Dragons^113350^33
+Silver Eagles^The Silver Eagles^26169^41
+Yellow Eagles FC^The Yellow Eagles^9793^4
+Blue Bears FC^The Blue Bears^65332^25
+Red Lions FC^The Red Lions^115329^42
+Yellow Bears FC^The Yellow Bears^113956^32
+Blue Eagles^The Blue Eagles^143613^44
+Buenos Aires AS^The Mega Champions^71444^11
+Gold Panthers^The Gold Panthers^80736^19
+Blue Tigers FC^The Blue Tigers^57396^12
+AIK Sydney^The Sydney^84085^27
+Silver Panthers FC^The Silver Panthers^20583^43
+Blue Tigers FC^The Blue Tigers^49672^20
+PSV Manchester^The Manchester^131139^26
+Buenos Aires Hawks^The Blue Angels^42558^33
+Yellow Hawks FC^The Yellow Hawks^87957^25
+Sporting Barcelona^The Barcelona^6140^35
+FC Toronto^The Toronto^149035^23
+Black Sharks FC^The Black Sharks^34720^1
+Bratislava Giants^The Bratislava^5463^11
+Green Panthers FC^The Green Panthers^11858^11
+Cairo HJK^The Cairo^7878^29
+Olympic Toronto^The Toronto^108055^35
+Gold Panthers^The Gold Panthers^96057^13
+Athletic Los Angeles^The Silver Warriors^52566^17
+Black Bears FC^The Black Bears^49544^7
+White Eagles FC^The White Eagles^107861^5
+Barcelona Royals^The Barcelona^6539^31
+Black Panthers^The Black Panthers^70884^43
+Manchester PSV^The Manchester^105757^21
+Oslo Athletic^The Oslo^42032^36
+Blue Lions FC^The Blue Lions^17010^33
+Blue Bears FC^The Blue Bears^129097^9
+Tokyo Rovers^The Tokyo^17348^41
+Gold Dragons^The Gold Dragons^22735^10
+Sofia Rapid^The Sofia^110635^14
+White Tigers^The White Tigers^72727^30
+Inter Madrid^The Madrid^120182^30
+Red Sharks^The Red Sharks^58168^0
+Milan City^The Milan^130224^5
+Prague FC^The Prague^22862^17
+Yellow Wolves FC^The Yellow Wolves^87615^28
+White Sharks^The White Sharks^90262^24
+Yellow Hawks^The Yellow Hawks^111516^22
+Silver Dragons FC^The Silver Dragons^110890^30
+Prague TSV^The Prague^111285^1
+Gold Tigers^The Gold Tigers^34778^32
+Blue Hawks^The Blue Hawks^28509^31
+Orange Tigers FC^The Orange Tigers^64233^6
+Yellow Bears^The Yellow Bears^87725^34
+Green Eagles FC^The Green Eagles^86365^16
+SC Athens^The Athens^89999^30
+Rome Real^The Rome^72437^30
+Blue Wolves FC^The Blue Wolves^84243^19
+Rome Dons^The Rome^26917^15
+Blue Tigers FC^The Blue Tigers^30557^37
+Orange Dragons^The Orange Dragons^44995^17
+Silver Wolves FC^The Silver Wolves^133190^48
+BSC Sydney^The Sydney^85838^27
+Red Hawks^The Red Hawks^61401^10
+Silver Rhinos^The Silver Rhinos^138610^34
+Prague HJK^The Prague^6100^18
+Blue Lions FC^The Blue Lions^137515^26
+Orange Hawks^The Orange Hawks^130431^24
+Milan FC^The Milan^148694^0
+Green Dragons^The Green Dragons^90979^22
+Cairo Athletic^The Cairo^14415^26
+White Tigers FC^The White Tigers^33350^28
+TSV Bucharest^The Bucharest^70566^9
+TSV Budapest^The Budapest^18885^0
+Yellow Bears^The Yellow Bears^66812^25
+Prague FC^The Prague^136905^49
+Rio AFC^The Rio^109897^36
+Vienna Dragons^The Vienna^127341^32
+Gold Panthers^The Gold Panthers^70498^11
+Manchester Atletico^The Manchester^116627^48
+Black Dragons FC^The Black Dragons^59028^47
+Red Lions^The Red Lions^99315^0
+Manchester BSC^The Manchester^69046^8
+Gold Eagles FC^The Gold Eagles^14942^25
+City Buenos Aires^The Mighty Spirit^75644^39
+AS Istanbul^The Istanbul^20075^20
+Yellow Panthers FC^The Yellow Panthers^37276^43
+Green Dragons FC^The Green Dragons^60047^10
+Lisbon Dragons^The Lisbon^35661^7
+IFK Dublin^The Dublin^99355^10
+Black Dragons FC^The Black Dragons^11837^35
+Green Rhinos FC^The Green Rhinos^117152^40
+Yellow Hawks FC^The Yellow Hawks^142768^35
+White Eagles^The White Eagles^56142^11
+Blue Sharks FC^The Blue Sharks^37168^11
+SK Los Angeles^The Mighty Reds^121195^29
+White Hawks^The White Hawks^62626^37
+Gold Dragons^The Gold Dragons^61343^47
+Gold Tigers FC^The Gold Tigers^87822^36
+PSV Cairo^The Cairo^94157^2
+Blue Dragons FC^The Blue Dragons^109241^17
+Purple Lions FC^The Purple Lions^69485^27
+Los Angeles Club^The Green Devils^123808^27
+Barcelona Royals^The Barcelona^105714^45
+Green Bears^The Green Bears^122888^36
+Los Angeles Dons^The Iron Legion^94687^19
+Oslo Town^The Oslo^101268^11
+Bratislava United^The Bratislava^41568^0
+Oslo Hawks^The Oslo^108306^43
+Zagreb Albion^The Zagreb^75524^33
+Olympic Toronto^The Toronto^33524^21
+Blue Sharks FC^The Blue Sharks^129733^38
+Real Sydney^The Sydney^51762^16
+Blue Tigers FC^The Blue Tigers^58402^40
+Orange Dragons FC^The Orange Dragons^107419^29
+Dynamo Rio^The Rio^84501^9
+Black Sharks FC^The Black Sharks^41356^23
+TSV Dublin^The Dublin^147626^44
+Tokyo Rapid^The Tokyo^100264^0
+Rome Rangers^The Rome^148613^49
+HJK Vienna^The Vienna^44480^8
+SK Manchester^The Manchester^59902^40
+Green Tigers FC^The Green Tigers^61162^39
+Purple Hawks FC^The Purple Hawks^140942^39
+White Wolves FC^The White Wolves^95617^21
+Sofia NK^The Sofia^84246^21
+Silver Panthers FC^The Silver Panthers^86008^44
+Buenos Aires Atletico^The Orange Angels^68512^30
+Silver Tigers^The Silver Tigers^125759^17
+SK Barcelona^The Barcelona^24822^32
+Gold Wolves FC^The Gold Wolves^38827^2
+Dublin SV^The Dublin^59889^39
+Sofia Wanderers^The Sofia^52934^22
+Dublin Rangers^The Dublin^48935^8
+Purple Sharks FC^The Purple Sharks^56754^46
+Green Wolves FC^The Green Wolves^26489^20
+Bucharest PSV^The Bucharest^34653^41
+Green Eagles^The Green Eagles^38976^14
+Buenos Aires AFC^The Silver Army^32702^30
+Berlin SC^The Berlin^46920^48
+Yellow Rhinos FC^The Yellow Rhinos^74414^28
+Athens Eagles^The Athens^25268^20
+Barcelona Wanderers^The Barcelona^97878^33
+Moscow AC^The Moscow^93802^50
+Gold Panthers^The Gold Panthers^26785^7
+Green Wolves FC^The Green Wolves^31367^16
+Tokyo AFC^The Tokyo^36528^33
+Orange Eagles FC^The Orange Eagles^34760^32
+Blue Eagles FC^The Blue Eagles^96655^9
+Milan HJK^The Milan^21815^36
+SC Madrid^The Madrid^132465^13
+AIK Budapest^The Budapest^48015^29
+Zagreb Albion^The Zagreb^35002^36
+Paris Dons^The Paris^13747^28
+BSC Cairo^The Cairo^114886^28
+SV Amsterdam^The Amsterdam^50209^10
+Black Bears FC^The Black Bears^42727^19
+Blue Rhinos FC^The Blue Rhinos^146814^2
+Black Panthers^The Black Panthers^30680^40
+IFK Chicago^The Chicago^25951^27
+Rio Dynamo^The Rio^8922^47
+Vienna City^The Vienna^112586^16
+Silver Panthers FC^The Silver Panthers^119830^34
+White Rhinos FC^The White Rhinos^59915^31
+Black Dragons FC^The Black Dragons^110436^31
+Bucharest NK^The Bucharest^116801^5
+Green Eagles FC^The Green Eagles^95681^31
+Silver Panthers^The Silver Panthers^99790^20
+Inter Beijing^The Beijing^63272^48
+NK Manchester^The Manchester^57704^36
+Purple Hawks FC^The Purple Hawks^122767^40
+Real Berlin^The Berlin^78348^50
+Silver Bears^The Silver Bears^126538^22
+Silver Hawks^The Silver Hawks^8395^33
+Black Panthers FC^The Black Panthers^74094^34
+Yellow Hawks^The Yellow Hawks^92641^19
+Warsaw Wanderers^The Warsaw^111450^45
+Rio Inter^The Rio^117241^44
+Stockholm Wolves^The Stockholm^45963^31
+Manchester Giants^The Manchester^72449^3
+Inter Cape Town^The Gold Demons^26208^6
+Purple Tigers FC^The Purple Tigers^59188^29
+Dublin Dynamo^The Dublin^146562^0
+Silver Wolves FC^The Silver Wolves^18625^18
+Yellow Eagles FC^The Yellow Eagles^106224^2
+Prague Real^The Prague^113993^2
+Barcelona Spurs^The Barcelona^93912^19
+Red Panthers FC^The Red Panthers^61360^0
+Black Eagles FC^The Black Eagles^113977^19
+Milan FC^The Milan^122596^11
+Black Tigers FC^The Black Tigers^133764^0
+Purple Panthers^The Purple Panthers^135681^10
+Sporting Manchester^The Manchester^148134^31
+Bratislava Dragons^The Bratislava^19796^35
+Buenos Aires Dons^The Golden Army^146833^49
+IFK Vienna^The Vienna^147428^27
+AS Manchester^The Manchester^50736^28
+Black Sharks FC^The Black Sharks^21952^50
+Real Milan^The Milan^45268^30
+United Lisbon^The Lisbon^49614^3
+IFK Istanbul^The Istanbul^46679^32
+Buenos Aires Olympique^The Ultra Stars^50577^6
+Orange Panthers FC^The Orange Panthers^82450^36
+Helsinki City^The Helsinki^14162^34
+Green Panthers FC^The Green Panthers^106749^4
+Blue Tigers FC^The Blue Tigers^16288^39
+Blue Wolves FC^The Blue Wolves^110957^38
+Silver Bears FC^The Silver Bears^39328^11
+White Rhinos FC^The White Rhinos^66910^24
+Red Hawks^The Red Hawks^63126^45
+Bucharest Athletic^The Bucharest^59317^45
+Orange Panthers FC^The Orange Panthers^22717^26
+Lisbon FK^The Lisbon^26895^42
+IFK Manchester^The Manchester^14567^36
+Purple Lions FC^The Purple Lions^144426^42
+Rome Dragons^The Rome^137823^13
+Black Eagles FC^The Black Eagles^7003^4
+City Budapest^The Budapest^63189^36
+Warsaw Giants^The Warsaw^134095^12
+Atletico Cape Town^The White Angels^108026^47
+Belgrade Club^The Belgrade^127884^20
+Oslo Dragons^The Oslo^81460^14
+Olympic Moscow^The Moscow^107714^18
+Sofia City^The Sofia^105501^36
+Barcelona Real^The Barcelona^65414^32
+Manchester Wednesday^The Manchester^59535^6
+Black Rhinos^The Black Rhinos^50210^20
+Gold Hawks FC^The Gold Hawks^50395^11
+White Dragons^The White Dragons^91684^50
+Red Lions^The Red Lions^98861^14
+Orange Lions FC^The Orange Lions^130996^18
+White Wolves FC^The White Wolves^55699^15
+SK Moscow^The Moscow^35191^8
+White Bears FC^The White Bears^41154^33
+Orange Eagles^The Orange Eagles^93624^6
+Vienna BSC^The Vienna^54187^12
+Bucharest SK^The Bucharest^61200^7
+Orange Dragons^The Orange Dragons^47272^40
+Yellow Eagles FC^The Yellow Eagles^68387^13
+Cape Town Royals^The Blue Demons^129837^20
+Sydney Wanderers^The Sydney^103753^45
+Munich PSV^The Munich^29330^20
+Vienna Town^The Vienna^9593^28
+BSC Lisbon^The Lisbon^122296^38
+Black Eagles^The Black Eagles^85989^32
+White Hawks FC^The White Hawks^123315^36
+Black Sharks FC^The Black Sharks^40494^24
+Athletic Dubai^The Dubai^29138^5
+Red Hawks FC^The Red Hawks^51822^15
+Black Bears FC^The Black Bears^29769^16
+Green Wolves^The Green Wolves^141676^7
+Lisbon Dynamo^The Lisbon^109178^3
+Moscow TSV^The Moscow^43824^31
+City Moscow^The Moscow^6816^27
+IFK Manchester^The Manchester^16261^27
+Helsinki HJK^The Helsinki^123896^23
+Yellow Wolves FC^The Yellow Wolves^60608^34
+Black Tigers FC^The Black Tigers^104710^37
+Bratislava AIK^The Bratislava^42197^32
+Rio Spurs^The Rio^148518^34
+Silver Sharks FC^The Silver Sharks^72268^4
+SV Moscow^The Moscow^112711^6
+Gold Hawks FC^The Gold Hawks^128417^21
+Orange Lions^The Orange Lions^51255^23
+Blue Lions FC^The Blue Lions^12708^17
+Gold Panthers^The Gold Panthers^62586^21
+Real Sydney^The Sydney^116804^27
+AC Oslo^The Oslo^74600^7
+Green Eagles FC^The Green Eagles^118353^36
+White Rhinos FC^The White Rhinos^124336^18
+Moscow FC^The Moscow^56653^26
+Prague Lions^The Prague^54869^23
+Black Hawks^The Black Hawks^76628^9
+Purple Rhinos^The Purple Rhinos^118498^15
+Black Eagles FC^The Black Eagles^113151^44
+White Hawks FC^The White Hawks^44603^40
+Black Dragons FC^The Black Dragons^83803^27
+Los Angeles IFK^The Super Champions^99685^7
+Paris Inter^The Paris^12583^14
+Dynamo Sydney^The Sydney^146033^28
+Purple Dragons FC^The Purple Dragons^34196^10
+Silver Wolves FC^The Silver Wolves^37772^25
+Orange Dragons^The Orange Dragons^34990^10
+Rapid Buenos Aires^The Red Saints^131433^21
+Orange Rhinos^The Orange Rhinos^130015^24
+SK Madrid^The Madrid^78952^15
+City Los Angeles^The Mega Champions^95760^25
+Green Rhinos FC^The Green Rhinos^49307^26
+Beijing Giants^The Beijing^35504^33
+Real Amsterdam^The Amsterdam^15571^27
+Purple Panthers^The Purple Panthers^81354^23
+Yellow Dragons^The Yellow Dragons^56380^2
+PSV Warsaw^The Warsaw^10337^3
+Red Lions FC^The Red Lions^133089^36
+White Sharks^The White Sharks^11522^16
+Inter Vienna^The Vienna^94119^45
+Black Sharks FC^The Black Sharks^51243^30
+White Dragons FC^The White Dragons^80095^50
+Sydney SV^The Sydney^84127^24
+Manchester SK^The Manchester^82300^47
+Orange Rhinos FC^The Orange Rhinos^145425^3
+Barcelona NK^The Barcelona^128981^34
+New York TSV^The Brave Ones^133666^0
+Dubai Lions^The Dubai^95921^10
+BSC Vienna^The Vienna^14807^5
+Red Bears FC^The Red Bears^43812^22
+Green Tigers FC^The Green Tigers^57144^40
+Purple Tigers FC^The Purple Tigers^100591^25
+Silver Dragons FC^The Silver Dragons^91455^49
+Toronto SK^The Toronto^59230^9
+Green Dragons^The Green Dragons^138959^10
+Silver Tigers^The Silver Tigers^94942^19
+London FC^The London^122135^7
+Purple Hawks FC^The Purple Hawks^122951^17
+Toronto FC^The Toronto^135072^9
+Orange Panthers FC^The Orange Panthers^134157^7
+Green Lions^The Green Lions^85380^0
+Helsinki FC^The Helsinki^130620^8
+Berlin FK^The Berlin^65756^40
+Green Eagles FC^The Green Eagles^149130^47
+Blue Lions^The Blue Lions^63515^17
+Blue Lions^The Blue Lions^12830^37
+Sydney AC^The Sydney^98144^35
+Bratislava Wanderers^The Bratislava^97446^44
+New York City^The Mighty Blues^47021^24
+Gold Wolves^The Gold Wolves^84032^19
+Milan BSC^The Milan^60300^4
+Yellow Lions FC^The Yellow Lions^65163^11
+Vienna Rangers^The Vienna^14771^24
+Athens United^The Athens^35575^12
+Gold Panthers FC^The Gold Panthers^136259^14
+Orange Panthers FC^The Orange Panthers^69701^49
+Green Bears FC^The Green Bears^83128^29
+Buenos Aires AFC^The Fighting Blues^146984^40
+Atletico Sydney^The Sydney^142416^50
+AFC Cape Town^The Brave Spirit^131283^21
+Dublin Club^The Dublin^102670^33
+AIK Moscow^The Moscow^128662^31
+Orange Sharks^The Orange Sharks^66184^47
+Red Dragons^The Red Dragons^67897^2
+White Sharks FC^The White Sharks^61882^8
+FC Bratislava^The Bratislava^113264^47
+Yellow Rhinos FC^The Yellow Rhinos^80571^1
+Purple Sharks FC^The Purple Sharks^110835^25
+White Lions^The White Lions^126443^18
+Purple Sharks FC^The Purple Sharks^38373^7
+Inter Helsinki^The Helsinki^139386^1
+Yellow Eagles^The Yellow Eagles^6648^47
+White Tigers FC^The White Tigers^113622^7
+Lisbon Hawks^The Lisbon^124657^20
+White Hawks FC^The White Hawks^99778^18
+White Panthers^The White Panthers^104602^46
+Black Eagles^The Black Eagles^130266^23
+Los Angeles Real^The Blue Devils^117593^1
+White Hawks FC^The White Hawks^23699^50
+Black Rhinos^The Black Rhinos^143230^4
+Dubai Town^The Dubai^110439^45
+Buenos Aires Olympic^The Golden Warriors^63429^13
+Silver Wolves^The Silver Wolves^132894^14
+Helsinki City^The Helsinki^51626^44
+Red Wolves FC^The Red Wolves^66897^5
+Athletic Rome^The Rome^93639^21
+Istanbul Giants^The Istanbul^99931^22
+Sofia Rovers^The Sofia^89927^47
+Silver Dragons FC^The Silver Dragons^20329^21
+Orange Lions^The Orange Lions^111440^31
+Yellow Dragons^The Yellow Dragons^83696^11
+Stockholm IFK^The Stockholm^9683^42
+Orange Bears FC^The Orange Bears^146365^30
+PSV Prague^The Prague^100495^44
+Silver Eagles FC^The Silver Eagles^139892^10
+Blue Bears FC^The Blue Bears^141906^1
+Black Wolves FC^The Black Wolves^85773^4
+Paris Inter^The Paris^75451^36
+Gold Dragons FC^The Gold Dragons^74251^42
+SC Zagreb^The Zagreb^18426^40
+Sydney IFK^The Sydney^15730^8
+Warsaw Hotspur^The Warsaw^97224^39
+United Tokyo^The Tokyo^124847^2
+Milan Saints^The Milan^45975^1
+Zagreb Giants^The Zagreb^64136^42
+Orange Bears FC^The Orange Bears^20765^48
+Belgrade TSV^The Belgrade^132859^42
+Dynamo Munich^The Munich^145922^36
+Green Tigers FC^The Green Tigers^131563^21
+Cairo Albion^The Cairo^103123^31
+Beijing NK^The Beijing^140627^4
+Yellow Bears FC^The Yellow Bears^131755^34
+White Hawks FC^The White Hawks^95201^19
+Stockholm AC^The Stockholm^105363^13
+Toronto City^The Toronto^32153^39
+Dubai Hawks^The Dubai^148513^5
+Yellow Wolves FC^The Yellow Wolves^12507^31
+Vienna Tigers^The Vienna^73475^12
+White Dragons^The White Dragons^107003^34
+Olympic Dublin^The Dublin^143993^28
+White Wolves FC^The White Wolves^10634^0
+Olympic Stockholm^The Stockholm^47888^48
+HJK Cape Town^The Orange Saints^72197^50
+Red Sharks FC^The Red Sharks^71712^17
+Buenos Aires FK^The Mega Champions^20474^9
+White Dragons FC^The White Dragons^121366^45
+Olympique Paris^The Paris^147270^39
+Tokyo Wolves^The Tokyo^105636^49
+Budapest Eagles^The Budapest^49189^39
+Zagreb AIK^The Zagreb^113528^1
+Dublin Olympique^The Dublin^143262^8
+Helsinki BSC^The Helsinki^110462^10
+Purple Wolves FC^The Purple Wolves^93613^41
+Gold Wolves^The Gold Wolves^51281^12
+Silver Lions^The Silver Lions^95871^7
+Budapest Eagles^The Budapest^73902^25
+Yellow Hawks FC^The Yellow Hawks^79436^21
+PSV Beijing^The Beijing^9290^11
+Yellow Lions FC^The Yellow Lions^6317^3
+Los Angeles Inter^The Iron Army^80618^22
+AIK Vienna^The Vienna^127572^50
+City Liverpool^The Liverpool^121760^5
+Black Sharks FC^The Black Sharks^26453^8
+London Athletic^The London^145117^3
+Blue Hawks^The Blue Hawks^117581^43
+Yellow Sharks^The Yellow Sharks^64071^8
+Red Bears FC^The Red Bears^65802^34
+Yellow Dragons FC^The Yellow Dragons^138504^1
+Green Lions^The Green Lions^20945^48
+Purple Eagles^The Purple Eagles^103973^27
+Rome Olympique^The Rome^18160^14
+Madrid Town^The Madrid^118428^23
+Gold Rhinos FC^The Gold Rhinos^37174^30
+Olympic Chicago^The Chicago^47991^41
+Gold Lions^The Gold Lions^91271^7
+Munich Rovers^The Munich^17436^45
+Black Tigers FC^The Black Tigers^7736^1
+Green Sharks^The Green Sharks^100716^7
+Amsterdam Foxes^The Amsterdam^63171^23
+Blue Tigers FC^The Blue Tigers^126059^23
+Gold Dragons FC^The Gold Dragons^19177^28
+Black Wolves^The Black Wolves^143349^44
+Orange Rhinos^The Orange Rhinos^53021^50
+Purple Bears FC^The Purple Bears^118095^10
+SK Dublin^The Dublin^91366^13
+AIK Rome^The Rome^141336^37
+Bucharest City^The Bucharest^18191^25
+White Bears FC^The White Bears^120146^37
+Sofia Hotspur^The Sofia^96909^42
+Inter Toronto^The Toronto^36202^1
+Red Rhinos FC^The Red Rhinos^144398^16
+Yellow Wolves FC^The Yellow Wolves^55598^31
+Madrid Dynamo^The Madrid^78475^26
+Inter Prague^The Prague^23085^32
+Orange Dragons FC^The Orange Dragons^64388^25
+Warsaw Wanderers^The Warsaw^91177^41
+Green Dragons FC^The Green Dragons^84932^50
+Gold Sharks FC^The Gold Sharks^38081^44
+Beijing Wednesday^The Beijing^7717^42
+Beijing City^The Beijing^129675^37
+Paris Wanderers^The Paris^119661^12
+Gold Eagles^The Gold Eagles^101851^24
+United Warsaw^The Warsaw^96646^9
+Sporting Tokyo^The Tokyo^33518^7
+Tokyo PSV^The Tokyo^33705^10
+White Rhinos FC^The White Rhinos^30059^3
+Purple Wolves^The Purple Wolves^47000^43
+Yellow Lions FC^The Yellow Lions^130146^21
+White Rhinos FC^The White Rhinos^101427^16
+Red Tigers FC^The Red Tigers^37776^23
+Stockholm Inter^The Stockholm^58258^31
+FK Dublin^The Dublin^75149^15
+Inter Cairo^The Cairo^148518^34
+Yellow Tigers FC^The Yellow Tigers^58568^24
+Purple Panthers^The Purple Panthers^6600^12
+Purple Tigers FC^The Purple Tigers^6411^23
+Orange Eagles^The Orange Eagles^138051^35
+Black Eagles^The Black Eagles^132943^46
+Vienna FC^The Vienna^91741^40
+Gold Tigers FC^The Gold Tigers^134849^46
+Purple Bears FC^The Purple Bears^52841^7
+Yellow Eagles^The Yellow Eagles^25167^13
+Munich Royals^The Munich^29936^40
+Los Angeles Eagles^The Ultra Stars^144327^36
+Gold Sharks^The Gold Sharks^75824^34
+Blue Sharks FC^The Blue Sharks^98863^28
+Olympic Belgrade^The Belgrade^118598^45
+Sporting Athens^The Athens^145389^9
+Purple Dragons^The Purple Dragons^100839^47
+Bucharest Sporting^The Bucharest^146625^5
+Paris Dynamo^The Paris^70601^10
+Toronto United^The Toronto^135674^24
+Black Bears FC^The Black Bears^129055^36
+Gold Panthers^The Gold Panthers^54980^43
+Paris NK^The Paris^42182^45
+AC Munich^The Munich^42351^35
+White Panthers FC^The White Panthers^100165^20
+Rio SC^The Rio^48001^46
+Blue Rhinos^The Blue Rhinos^102540^4
+Olympique Warsaw^The Warsaw^98373^16
+Blue Tigers FC^The Blue Tigers^62878^2
+Black Bears^The Black Bears^48294^50
+Red Eagles^The Red Eagles^62282^31
+TSV Istanbul^The Istanbul^28984^32
+Sofia Hawks^The Sofia^75307^22
+Red Hawks FC^The Red Hawks^48584^48
+White Bears^The White Bears^70982^8
+Blue Hawks FC^The Blue Hawks^143815^5
+Black Tigers FC^The Black Tigers^50133^0
+Orange Hawks FC^The Orange Hawks^62858^13
+Orange Hawks FC^The Orange Hawks^46652^25
+SK Prague^The Prague^61641^45
+SK Rome^The Rome^100111^34
+Black Tigers FC^The Black Tigers^95896^49
+Beijing Eagles^The Beijing^104553^21
+Cairo Royals^The Cairo^80635^16
+Silver Bears^The Silver Bears^135968^36
+Moscow AS^The Moscow^89937^34
+Orange Wolves^The Orange Wolves^145071^30
+Berlin AFC^The Berlin^82953^8
+Los Angeles TSV^The Purple Angels^17721^24
+Oslo Dragons^The Oslo^36622^1
+BSC Dublin^The Dublin^120211^15
+Buenos Aires Lions^The Mighty Reds^82917^0
+Orange Dragons FC^The Orange Dragons^87096^32
+Chicago Town^The Chicago^36313^22
+Milan SV^The Milan^81186^5
+Barcelona BSC^The Barcelona^63214^23
+Yellow Lions FC^The Yellow Lions^65375^8
+Green Eagles FC^The Green Eagles^5053^21
+AFC Munich^The Munich^99818^36
+Cairo Wanderers^The Cairo^109324^16
+Buenos Aires FC^The Iron Legion^76480^43
+Orange Dragons^The Orange Dragons^140554^22
+Blue Hawks FC^The Blue Hawks^139506^34
+Stockholm BSC^The Stockholm^61068^18
+Silver Hawks FC^The Silver Hawks^71544^6
+Inter Dubai^The Dubai^100572^31
+Orange Rhinos^The Orange Rhinos^95129^21
+Dublin Foxes^The Dublin^22989^20
+Stockholm Athletic^The Stockholm^59745^39
+Inter Moscow^The Moscow^111465^16
+Real Bratislava^The Bratislava^141675^27
+AFC Cape Town^The Brave Reds^73223^9
+Belgrade HJK^The Belgrade^101723^14
+SV Manchester^The Manchester^35861^20
+Orange Eagles FC^The Orange Eagles^90704^25
+AC Cairo^The Cairo^58405^29
+Prague Albion^The Prague^27230^0
+Red Rhinos^The Red Rhinos^134512^48
+PSV Stockholm^The Stockholm^53340^8
+Orange Wolves^The Orange Wolves^55781^31
+Purple Eagles FC^The Purple Eagles^65285^45
+Manchester Lions^The Manchester^27482^19
+Silver Sharks^The Silver Sharks^90565^23
+Rome Dragons^The Rome^20790^42
+Purple Lions FC^The Purple Lions^83377^44
+Cape Town Hotspur^The Yellow Devils^57504^6
+Sydney City^The Sydney^126210^29
+Yellow Hawks FC^The Yellow Hawks^85329^7
+Tokyo Rovers^The Tokyo^105702^48
+Cairo Club^The Cairo^73210^44
+Blue Eagles FC^The Blue Eagles^79521^37
+United Vienna^The Vienna^76634^14
+Helsinki Hawks^The Helsinki^16107^6
+AC Rio^The Rio^20929^20
+Tokyo SK^The Tokyo^142872^34
+Purple Bears FC^The Purple Bears^118352^45
+White Rhinos^The White Rhinos^130378^9
+Red Rhinos^The Red Rhinos^112085^27
+Purple Tigers FC^The Purple Tigers^94578^15
+SC Dublin^The Dublin^91892^22
+SC Liverpool^The Liverpool^82695^20
+Paris Hawks^The Paris^146906^50
+Vienna Tigers^The Vienna^67590^8
+United Dublin^The Dublin^8120^19
+Buenos Aires Tigers^The Gold Angels^118981^41
+White Eagles^The White Eagles^130193^14
+Rome AFC^The Rome^41387^23
+Orange Wolves FC^The Orange Wolves^37204^11
+Belgrade FK^The Belgrade^43330^8
+Yellow Panthers FC^The Yellow Panthers^34708^32
+Dublin HJK^The Dublin^129090^35
+White Lions FC^The White Lions^50208^4
+Red Bears FC^The Red Bears^58537^28
+Manchester Town^The Manchester^70745^0
+Green Bears FC^The Green Bears^48880^25
+United Munich^The Munich^69816^9
+Rome AS^The Rome^28774^28
+Orange Tigers FC^The Orange Tigers^81675^33
+Istanbul Saints^The Istanbul^104849^0
+SK Zagreb^The Zagreb^63364^1
+SK Milan^The Milan^15949^38
+Silver Tigers^The Silver Tigers^60876^13
+White Sharks^The White Sharks^5522^20
+Prague Albion^The Prague^5219^6
+Real Stockholm^The Stockholm^81840^21
+White Panthers FC^The White Panthers^77381^14
+New York Lions^The Brave Spirit^104147^5
+Beijing SC^The Beijing^19295^18
+Silver Dragons^The Silver Dragons^61087^21
+Barcelona Inter^The Barcelona^86695^8
+Cairo SK^The Cairo^110158^48
+Barcelona FC^The Barcelona^46769^21
+FC London^The London^64805^37
+Blue Bears^The Blue Bears^109055^2
+Cape Town United^The Super Stars^136945^14
+Amsterdam Olympique^The Amsterdam^86738^45
+Black Bears FC^The Black Bears^36545^9
+United Cape Town^The Super Giants^141589^38
+White Dragons^The White Dragons^133464^45
+Blue Hawks FC^The Blue Hawks^137685^6
+Silver Panthers FC^The Silver Panthers^59441^40
+Black Tigers FC^The Black Tigers^25352^18
+Zagreb Wanderers^The Zagreb^119025^15
+Black Tigers FC^The Black Tigers^149608^14
+Olympique Milan^The Milan^96731^14
+Atletico Sofia^The Sofia^94123^45
+White Eagles FC^The White Eagles^147122^21
+White Bears FC^The White Bears^58399^26
+Berlin TSV^The Berlin^133495^33
+Gold Tigers^The Gold Tigers^28025^12
+Atletico Beijing^The Beijing^122215^27
+Rome Atletico^The Rome^88281^6
+Vienna FC^The Vienna^119479^14
+Purple Panthers FC^The Purple Panthers^144060^35
+Gold Eagles FC^The Gold Eagles^87973^8
+FC Buenos Aires^The Brave Spirit^27261^34
+AIK Vienna^The Vienna^137228^34
+Istanbul Rapid^The Istanbul^113335^21
+Tokyo Foxes^The Tokyo^145395^0
+Blue Sharks^The Blue Sharks^112840^41
+Oslo IFK^The Oslo^29752^46
+AIK Barcelona^The Barcelona^123245^24
+White Dragons FC^The White Dragons^49322^37
+Oslo Eagles^The Oslo^85411^11
+Green Panthers FC^The Green Panthers^8541^12
+Orange Bears FC^The Orange Bears^87269^39
+Orange Dragons FC^The Orange Dragons^9763^16
+Prague Inter^The Prague^128997^14
+AC Chicago^The Chicago^149398^26
+Berlin United^The Berlin^139506^27
+AFC Helsinki^The Helsinki^149407^31
+Bratislava Royals^The Bratislava^118356^41
+Dubai AFC^The Dubai^60017^7
+Purple Rhinos^The Purple Rhinos^93863^26
+Silver Lions FC^The Silver Lions^71971^33
+Manchester FC^The Manchester^9516^42
+White Hawks FC^The White Hawks^64332^5
+Black Eagles FC^The Black Eagles^38887^18
+City Paris^The Paris^44329^33
+Red Rhinos FC^The Red Rhinos^101004^7
+White Rhinos^The White Rhinos^91430^49
+Vienna Spurs^The Vienna^50104^39
+White Dragons FC^The White Dragons^25912^38
+PSV Cape Town^The Mega Stars^97465^31
+Purple Eagles^The Purple Eagles^14843^8
+Gold Rhinos FC^The Gold Rhinos^55513^17
+Black Hawks FC^The Black Hawks^61254^29
+Real Dublin^The Dublin^55135^10
+London Hotspur^The London^65133^28
+Amsterdam Dynamo^The Amsterdam^44092^31
+Orange Wolves FC^The Orange Wolves^65078^32
+United Los Angeles^The Purple Demons^145655^50
+White Wolves FC^The White Wolves^30792^34
+Liverpool Sporting^The Liverpool^149760^16
+Red Wolves FC^The Red Wolves^71109^5
+White Lions FC^The White Lions^132858^11
+SK Sydney^The Sydney^71317^14
+NK Belgrade^The Belgrade^72455^12
+Los Angeles Dynamo^The Black Saints^119379^19
+White Sharks FC^The White Sharks^62879^40
+Red Dragons^The Red Dragons^126705^0
+Blue Tigers FC^The Blue Tigers^145821^48
+Liverpool PSV^The Liverpool^102403^27
+Silver Rhinos FC^The Silver Rhinos^80809^6
+Manchester Giants^The Manchester^108135^21
+Istanbul Atletico^The Istanbul^139326^18
+Los Angeles Dynamo^The Iron Army^52843^19
+Rapid Liverpool^The Liverpool^90098^5
+Berlin FC^The Berlin^65274^3
