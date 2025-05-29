@@ -29,8 +29,8 @@ namespace GerGO.Functionalities.Data
                 } while (!response.StartsWith('0'));
 
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
-                manager.DeleteWhere(dbName, tableName, wheres);
-                TcpResponder.SendMessage(stream, "OK");
+                int count = manager.DeleteWhere(dbName, tableName, wheres);
+                TcpResponder.SendMessage(stream, $"{count}");
             }
             catch (DataResourceException ex)
             {

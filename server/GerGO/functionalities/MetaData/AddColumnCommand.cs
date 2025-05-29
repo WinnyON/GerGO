@@ -39,11 +39,11 @@ namespace GerGO.Functionalities.MetaData
 
                 if (!arguments[8].Equals("--") && pKey != null)
                 {
-                    pKey.PKIdentity.Seed = int.Parse(arguments[8]);
-                    pKey.PKIdentity.InnerSeed = int.Parse(arguments[8]);
+                    pKey.IdentitySeed = int.Parse(arguments[8]);
+                    pKey.IdentityInnerSeed = pKey.IdentitySeed;
                 }
                 if (!arguments[9].Equals("--") && pKey != null)
-                    pKey.PKIdentity.Step = int.Parse(arguments[9]);
+                    pKey.IdentityStep = int.Parse(arguments[9]);
 
                 if (arguments[10].Equals("--"))
                     isUnique = false;

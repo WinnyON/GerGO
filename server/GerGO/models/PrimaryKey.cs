@@ -6,27 +6,27 @@ namespace GerGO.Models
     {
         [XmlAttribute("Name")]
         public string Name { get; set; }
-        [XmlElement("Identity")]
-        public Identity PKIdentity { get; set; }
+        [XmlElement("IdentitySeed")]
+        public Int64 IdentitySeed { get; set; }
+        [XmlElement("IdentityStep")]
+        public Int64 IdentityStep { get; set; }
+        [XmlElement("IdentityInnerSeed")]
+        public Int64 IdentityInnerSeed { get; set; }
 
         public PrimaryKey()
         {
             Name = string.Empty;
-            PKIdentity = new Identity();
+            IdentitySeed = 0;
+            IdentityInnerSeed = 0;
+            IdentityStep = 0;
         }
 
         public PrimaryKey(string name, int seed, int step)
         {
             Name = name;
-            PKIdentity = new Identity();
-            PKIdentity.Seed = seed;
-            PKIdentity.Step = step;
-        }
-
-        public PrimaryKey(string name, Identity pKIdentity)
-        {
-            Name = name;
-            PKIdentity = pKIdentity;
+            IdentitySeed = seed;
+            IdentityStep = step;
+            IdentityInnerSeed = seed;
         }
 
         public override bool Equals(object? obj)

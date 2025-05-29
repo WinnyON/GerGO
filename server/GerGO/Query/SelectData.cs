@@ -1,4 +1,4 @@
-﻿namespace GerGO.Models
+﻿namespace GerGO.Query
 {
     class SelectData
     {

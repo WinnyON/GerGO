@@ -30,11 +30,14 @@ namespace GerGO.Functionalities.Data
                 columnNames.Add(arguments[i]);
             }
 
+            TcpResponder.SendMessage(stream, "OK");
+            _ = TcpResponder.ReadValue(stream);
+
             try
             {
                 List<string> rows = resourceManager.GetAllRows(dbName, tableName, columnNames);
-                TcpResponder.SendMessage(stream, rows.Count.ToString());
-                _ = TcpResponder.ReadValue(stream);
+                // TcpResponder.SendMessage(stream, rows.Count.ToString());
+                // _ = TcpResponder.ReadValue(stream);
 
                 int i = 0;
                 while (i < rows.Count)
@@ -43,7 +46,7 @@ namespace GerGO.Functionalities.Data
                     List<string> data = [];
                     while (i < rows.Count && batched < 50)
                     {
-                        data.Add($"1^{rows[i]}");
+                        data.Add(rows[i]);
                         batched++;
                         i++;
                     }

@@ -12,13 +12,12 @@ namespace GerGO.DataAcces.MetaData
         public bool HasFkConstraint(string dbName, string tableName, string columnName);
         public void AddDatabase(DataBase database);
         public void DropDatabase(DataBase database);
-        public void AddTable(string dbName, string tableId, Table table);
+        public void AddTable(string dbName, Table table);
         public void DropTable(string dbName, Table table);
-        public void AddColumn(string dbName, string tableName, Column column, PrimaryKey? pKey, UniqueKey? uKey);
+        public void AddColumn(string dbName, string tableName, Column column, PrimaryKey? pKey, bool isUnique);
         public void AddForeignKey(string dbName, string tableName, ForeignKey foreignKey);
         public void AddIndex(string dbName, string tableName, IndexFile iFile);
         public void DropIndex(string dbName, string tableName, IndexFile index);
-        public string GetTableMongoId(string dbName, string tableName);
         // returns the list of the tables of a db
         public string[] GetTables(string dbName);
         // return all table of all db
@@ -37,10 +36,8 @@ namespace GerGO.DataAcces.MetaData
         public ForeignKey GetForeignKey(string dbName, string tableName, string fkName);
 
         public List<int> GetColumnPostions(string dbName, string tableName, List<string> columnNames);
-        public int GetNrPkeys(string dbName, string tableName);
         public void DropColumn(string dbName, string tableName, Column column);
         public void DropForeignKey(string dbName, string tableName, ForeignKey foreignKey);
-        public string HasIndexOnIt(string dbName, string tableName, string columnName);
 
         
 

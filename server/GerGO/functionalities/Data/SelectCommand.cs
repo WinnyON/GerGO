@@ -1,9 +1,8 @@
 ﻿using GerGO.Communication;
 using GerGO.Manager;
-using GerGO.Models;
+using GerGO.Query;
 using GerGO.Utils;
 using System.Net.Sockets;
-using System.Text;
 
 namespace GerGO.Functionalities.Data
 {
@@ -73,7 +72,7 @@ namespace GerGO.Functionalities.Data
                     List<string> data = [];
                     while (i < result.Count && batched < 50)
                     {
-                        data.Add($"1^{result[i]}");
+                        data.Add(result[i]);
                         batched++;
                         i++;
                     }

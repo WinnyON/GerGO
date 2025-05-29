@@ -3,9 +3,53 @@
   <Databases>
     <DataBase Name="bolt">
       <Tables>
-        <Table TableName="markak" MongoID="68330771ad432e0f60f361aa">
-          <ForeignKeys />
+        <Table TableName="autok">
+          <ForeignKeys>
+            <ForeignKey Name="fk_autok_markak">
+              <AttributeName>markaid</AttributeName>
+              <RefTableName>markak</RefTableName>
+              <RefAttributeName>markaid</RefAttributeName>
+            </ForeignKey>
+          </ForeignKeys>
           <IndexFiles />
+          <Structure>
+            <Column FieldName="autoid" Type="int" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="ar" Type="float" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="rendszam" Type="string" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="markaid" Type="int" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+          </Structure>
+          <UniqueKeys>
+            <UniqueKey>rendszam</UniqueKey>
+          </UniqueKeys>
+          <PrimaryKeys>
+            <PKAttribute Name="autoid">
+              <IdentitySeed>1</IdentitySeed>
+              <IdentityStep>1</IdentityStep>
+              <IdentityInnerSeed>4</IdentityInnerSeed>
+            </PKAttribute>
+          </PrimaryKeys>
+        </Table>
+        <Table TableName="markak">
+          <ForeignKeys />
+          <IndexFiles>
+            <Index Name="ind_markanev">
+              <Attributes>
+                <Attribute>markanev</Attribute>
+              </Attributes>
+            </Index>
+          </IndexFiles>
           <Structure>
             <Column FieldName="markaid" Type="int" NotNull="false">
               <DefaultVal />
@@ -19,135 +63,9 @@
           <UniqueKeys />
           <PrimaryKeys>
             <PKAttribute Name="markaid">
-              <Identity Seed="1" Step="1" InnerSeed="8" />
-            </PKAttribute>
-          </PrimaryKeys>
-        </Table>
-        <Table TableName="autok" MongoID="68330790ad432e0f60f361ab">
-          <ForeignKeys>
-            <ForeignKey Name="fk_autok_markak" MongoID="6833085fad432e0f60f361ac">
-              <AttributeName>markaid</AttributeName>
-              <RefTableName>markak</RefTableName>
-              <RefAttributeName>markaid</RefAttributeName>
-            </ForeignKey>
-          </ForeignKeys>
-          <IndexFiles>
-            <Index Name="ind_ar" MongoID="68332decd663522f3626aaec">
-              <Attributes>
-                <Attribute>ar</Attribute>
-              </Attributes>
-            </Index>
-          </IndexFiles>
-          <Structure>
-            <Column FieldName="autoid" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="ar" Type="float" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="markaid" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-          </Structure>
-          <UniqueKeys />
-          <PrimaryKeys>
-            <PKAttribute Name="autoid">
-              <Identity Seed="1" Step="1" InnerSeed="12" />
-            </PKAttribute>
-          </PrimaryKeys>
-        </Table>
-      </Tables>
-    </DataBase>
-    <DataBase Name="soccer">
-      <Tables>
-        <Table TableName="clubs" MongoID="683336d2836c9c783131696d">
-          <ForeignKeys />
-          <IndexFiles>
-            <Index Name="ind_trophy" MongoID="6833a05bc74e66c7e0c80fb5">
-              <Attributes>
-                <Attribute>trophies</Attribute>
-              </Attributes>
-            </Index>
-          </IndexFiles>
-          <Structure>
-            <Column FieldName="clubid" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="clubname" Type="string" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="nickname" Type="string" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="capacity" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="trophies" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-          </Structure>
-          <UniqueKeys />
-          <PrimaryKeys>
-            <PKAttribute Name="clubid">
-              <Identity Seed="1" Step="1" InnerSeed="1001" />
-            </PKAttribute>
-          </PrimaryKeys>
-        </Table>
-        <Table TableName="players" MongoID="683336e7836c9c783131696e">
-          <ForeignKeys>
-            <ForeignKey Name="fk_players_clubs" MongoID="683338df836c9c783131696f">
-              <AttributeName>cid</AttributeName>
-              <RefTableName>clubs</RefTableName>
-              <RefAttributeName>clubid</RefAttributeName>
-            </ForeignKey>
-          </ForeignKeys>
-          <IndexFiles />
-          <Structure>
-            <Column FieldName="playerid" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="age" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="telnum" Type="string" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="email" Type="string" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="goals" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="assists" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="cid" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="name" Type="string" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-          </Structure>
-          <UniqueKeys />
-          <PrimaryKeys>
-            <PKAttribute Name="playerid">
-              <Identity Seed="1" Step="1" InnerSeed="99001" />
+              <IdentitySeed>1</IdentitySeed>
+              <IdentityStep>1</IdentityStep>
+              <IdentityInnerSeed>10</IdentityInnerSeed>
             </PKAttribute>
           </PrimaryKeys>
         </Table>

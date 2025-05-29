@@ -80,6 +80,7 @@ namespace GerGO.Communication
                 throw new CommunicationException($"Batched message can't be larger than {_maxSize} messages!");
             }
 
+            messages[0] = $"1#{messages[0]}";
             byte[] buffer = Encoding.UTF8.GetBytes(string.Join('#', messages));
             try
             {

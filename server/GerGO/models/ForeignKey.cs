@@ -6,8 +6,6 @@ namespace GerGO.Models
     {
         [XmlAttribute("Name")]
         public string Name { get; set; }
-        [XmlAttribute("MongoID")]
-        public string MongoID { get; set; }
         [XmlElement("AttributeName")]
         public string AttributeName { get; set; }
         [XmlElement("RefTableName")]
@@ -18,7 +16,6 @@ namespace GerGO.Models
         public ForeignKey()
         {
             Name = string.Empty;
-            MongoID = string.Empty;
             RefTableName = string.Empty;
             RefAttributeName = string.Empty;
             AttributeName = string.Empty;
@@ -27,7 +24,6 @@ namespace GerGO.Models
         public ForeignKey(string name, string mongoId, string refTableName, string refAttributeName, string attributeName)
         {
             Name = name;
-            MongoID = mongoId;
             RefTableName = refTableName;
             RefAttributeName = refAttributeName;
             AttributeName = attributeName;

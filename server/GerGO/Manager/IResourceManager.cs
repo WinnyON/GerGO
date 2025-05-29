@@ -1,4 +1,5 @@
 ﻿using GerGO.Models;
+using GerGO.Query;
 
 namespace GerGO.Manager
 {
@@ -21,7 +22,6 @@ namespace GerGO.Manager
         // return the columns with constraints
         public List<string[]> GetTableData(string dbName, string tableName);
         //return the column names
-        public string[] GetColumns(string dbName, string tableName);
         public List<string[]> GetForeignKeys(string dbName, string tableName);
         public List<string> GetIndexes(string dbName, string tableName);
         public int Insert(string dbName, string tableName, List<string> columnNames, List<string> rows);
@@ -29,6 +29,6 @@ namespace GerGO.Manager
         public List<string> GetAllRows(string dbName, string tableName, List<string> columnNames);
 
         public List<string> Select(SelectData selectData, ref string columnNames);
-        public void DeleteWhere(string dbName, string tableName, List<string[]> wheres);
+        public int DeleteWhere(string dbName, string tableName, List<string[]> wheres);
     }
 }
