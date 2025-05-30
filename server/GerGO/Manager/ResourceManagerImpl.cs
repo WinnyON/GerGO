@@ -587,13 +587,20 @@ namespace GerGO.Manager
                                 string uniqueVal = rowSplitted[columnNames.IndexOf(uKey)];
                                 if (_storedDataManager.ExistsKey(dbName, $"{tableName}_{uKey}_uniquekey", uniqueVal))
                                     throw new DataAccesException("");
-                                uniqueInsertData[$"{tableName}_{uKey}_uniquekey"].Add(new MongoEntity(uniqueVal, pKey));
+                                string tmp = $"{tableName}_{uKey}_uniquekey";
+                                if (uniqueInsertData.ContainsKey(tmp))
+                                    uniqueInsertData[tmp].Add(new MongoEntity(uniqueVal, pKey));
+                                else
+                                    uniqueInsertData.Add(tmp, [new MongoEntity(uniqueVal, pKey)]);
                             }
 
                             foreach (var fk in table.ForeignKeys)
                             {
                                 string fKeyVal = rowSplitted[columnNames.IndexOf(fk.AttributeName)];
-                                fKeyData[fk.Name].Add(new MongoEntity(fKeyVal, pKey));
+                                if (fKeyData.ContainsKey(fk.Name))
+                                    fKeyData[fk.Name].Add(new MongoEntity(fKeyVal, pKey));
+                                else
+                                    fKeyData.Add(fk.Name, [new MongoEntity(fKeyVal, pKey)]);
                             }
 
                             // inserting data
@@ -607,7 +614,10 @@ namespace GerGO.Manager
                                 {
                                     indexKey = indexKey + "^" + rowSplitted[columnNames.IndexOf(iFile.Attributes[i])];
                                 }
-                                indexData[iFile.Name].Add(new MongoEntity(indexKey, pKey));
+                                if (indexData.ContainsKey(iFile.Name))
+                                    fKeyData[iFile.Name].Add(new MongoEntity(indexKey, pKey));
+                                else
+                                    fKeyData.Add(iFile.Name, [new MongoEntity(indexKey, pKey)]);
                             }
 
                             count++;
@@ -618,6 +628,9 @@ namespace GerGO.Manager
                         }
 
                     }
+                    if (insertData.Count == 0)
+                        return 0;
+
                     // batched inserts
                     _storedDataManager.Insert(dbName, tableName, insertData);
                     foreach (var iFileData in indexData)
@@ -672,6 +685,8 @@ namespace GerGO.Manager
                         continue;
                     }
                 }
+                if (pKeysToDelete.Count == 0)
+                    return 0;
 
                 _storedDataManager.Delete(dbName, tableName, pKeysToDelete);
                 foreach (var iFile in table.IndexFiles)

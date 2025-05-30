@@ -37,7 +37,7 @@
             <PKAttribute Name="autoid">
               <IdentitySeed>1</IdentitySeed>
               <IdentityStep>1</IdentityStep>
-              <IdentityInnerSeed>4</IdentityInnerSeed>
+              <IdentityInnerSeed>23</IdentityInnerSeed>
             </PKAttribute>
           </PrimaryKeys>
         </Table>
@@ -66,6 +66,44 @@
               <IdentitySeed>1</IdentitySeed>
               <IdentityStep>1</IdentityStep>
               <IdentityInnerSeed>10</IdentityInnerSeed>
+            </PKAttribute>
+          </PrimaryKeys>
+        </Table>
+      </Tables>
+    </DataBase>
+    <DataBase Name="soccer">
+      <Tables>
+        <Table TableName="clubs">
+          <ForeignKeys />
+          <IndexFiles />
+          <Structure>
+            <Column FieldName="clubid" Type="int" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="clubname" Type="string" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="nickname" Type="string" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="capacity" Type="int" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="trophies" Type="int" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+          </Structure>
+          <UniqueKeys />
+          <PrimaryKeys>
+            <PKAttribute Name="clubid">
+              <IdentitySeed>1</IdentitySeed>
+              <IdentityStep>1</IdentityStep>
+              <IdentityInnerSeed>1001</IdentityInnerSeed>
             </PKAttribute>
           </PrimaryKeys>
         </Table>

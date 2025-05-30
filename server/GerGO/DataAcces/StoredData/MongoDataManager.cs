@@ -222,8 +222,10 @@ namespace GerGO.DataAcces.StoredData
 
             try
             {
-                collection.InsertMany(docsToInsert);
-                collection.BulkWrite(docsToUpdate);
+                if (docsToInsert.Count > 0)
+                    collection.InsertMany(docsToInsert);
+                if (docsToUpdate.Count > 0)
+                    collection.BulkWrite(docsToUpdate);
             }
             catch (MongoException)
             {
@@ -262,12 +264,15 @@ namespace GerGO.DataAcces.StoredData
                         updates.Add(new UpdateOneModel<BsonDocument>(filter, update));
                     }
                 }
-
                 try
                 {
-                    collection.BulkWrite(updates);
-                    var filter = Builders<BsonDocument>.Filter.In("_id", keysToDelete);
-                    var result = collection.DeleteMany(filter);
+                    if (updates.Count > 0)
+                        collection.BulkWrite(updates);
+                    if (keysToDelete.Count == 0)
+                    {
+                        var filter = Builders<BsonDocument>.Filter.In("_id", keysToDelete);
+                        var result = collection.DeleteMany(filter);
+                    }
                 } catch (Exception)
                 {
                     throw new DataAccesException("Failed to delete index data!");
