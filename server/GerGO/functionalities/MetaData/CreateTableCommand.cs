@@ -17,10 +17,11 @@ namespace GerGO.Functionalities.MetaData
                 string dbName = arguments[1].ToLower();
                 string name = arguments[2].ToLower();
                 table.Name = name;
-                // table.FileName = dbName + "_" + name + ".data";
 
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
                 manager.AddTable(dbName, table);
+
+                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (IndexOutOfRangeException)
             {
@@ -31,11 +32,6 @@ namespace GerGO.Functionalities.MetaData
             {
                 _logger.Error($"Failed to create table {arguments[2]}: {ex.Message}");
                 throw new CommandException($"Failed to create table {arguments[2]}: {ex.Message}");
-            }
-
-            try
-            {
-                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (CommunicationException ex)
             {

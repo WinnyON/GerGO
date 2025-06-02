@@ -23,6 +23,8 @@ namespace GerGO.Functionalities.MetaData
 
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
                 manager.AddForeignKey(dbName, tableNname, foreignKey);
+
+                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (IndexOutOfRangeException)
             {
@@ -33,11 +35,6 @@ namespace GerGO.Functionalities.MetaData
             {
                 _logger.Error($"Failed to add foreign key: {ex.Message}");
                 throw new CommandException($"Failed to add foreign key: {ex.Message}");
-            }
-
-            try
-            {
-                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (CommunicationException ex)
             {

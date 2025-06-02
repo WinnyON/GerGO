@@ -4,14 +4,14 @@ namespace GerGO.Models
 {
     public class ForeignKey
     {
-        [XmlElement("Name")]
+        [XmlAttribute("Name")]
         public string Name { get; set; }
+        [XmlElement("AttributeName")]
+        public string AttributeName { get; set; }
         [XmlElement("RefTableName")]
         public string RefTableName { get; set; }
         [XmlElement("RefAttributeName")]
         public string RefAttributeName { get; set; }
-        [XmlElement("AttributeName")]
-        public string AttributeName { get; set; }
 
         public ForeignKey()
         {
@@ -21,7 +21,7 @@ namespace GerGO.Models
             AttributeName = string.Empty;
         }
 
-        public ForeignKey(string name, string refTableName, string refAttributeName, string attributeName)
+        public ForeignKey(string name, string mongoId, string refTableName, string refAttributeName, string attributeName)
         {
             Name = name;
             RefTableName = refTableName;

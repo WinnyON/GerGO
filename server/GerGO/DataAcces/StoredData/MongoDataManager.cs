@@ -2,7 +2,6 @@
 using GerGO.Utils;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using System.Xml.Linq;
 
 namespace GerGO.DataAcces.StoredData
 {
@@ -10,482 +9,428 @@ namespace GerGO.DataAcces.StoredData
     {
         private readonly MongoClient _client;
         private readonly string connectionString = "mongodb://localhost:27017";
-        private readonly IMongoDatabase _coreDB;
         public MongoDataManager()
         {
             _client = new MongoClient(connectionString);
-            // Connect to the 'GerGOStorage' database
-            _coreDB = _client.GetDatabase("GerGOStorage");
         }
 
-        public void AddColumn(string dbName, string tableID, string value)
+        public void AddColumn(string dbName, string tableName, string value)
         {
-            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
-            var filter = Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(tableID));
-            var document = collection.Find(filter).FirstOrDefault();
+            var db = _client.GetDatabase(dbName);
+            var collection = db.GetCollection<BsonDocument>(tableName);
 
-            if (document.Elements.Count() == 1)
+            var documents = collection.Find(FilterDefinition<BsonDocument>.Empty).ToList();
+            if (documents.Count == 0)
                 return;
 
-            var updateDef = new List<UpdateDefinition<BsonDocument>>();
+            var updates = new List<WriteModel<BsonDocument>>();
 
-            foreach (var element in document.Elements)
+            foreach (var document in documents)
             {
-                if (element.Name != "_id")
+                var id = document["_id"];
+                var currentVal = document["Value"].AsString;
+
+                string newVal = $"{currentVal}^{value}";
+                var filter = Builders<BsonDocument>.Filter.Eq("_id", id);
+                var update = Builders<BsonDocument>.Update.Set("Value", newVal);
+
+                updates.Add(new UpdateOneModel<BsonDocument>(filter, update));
+            }
+
+            if (updates.Count > 0)
+            {
+                try
                 {
-                    updateDef.Add(Builders<BsonDocument>.Update.Set(element.Name, $"{element.Value}^{value}"));
+                    collection.BulkWrite(updates);
+                } catch (Exception ex)
+                {
+                    throw new DataAccesException($"Failed bulk write at add column: {ex.Message}");
                 }
             }
-
-            var combinedUpdate = Builders<BsonDocument>.Update.Combine(updateDef);
-            var result = collection.UpdateOne(filter, combinedUpdate);
-
-            if (result.ModifiedCount == 0)
-            {
-                throw new DataAccesException("Document was not updated.");
-            }
         }
-        public void RemoveColumn(string dbName, string tableID, bool isPkKey, int index, int nrPKeys)
+        public void RemoveColumn(string dbName, string tableName, int index)
         {
-            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
-            var filter = Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(tableID));
-            var document = collection.Find(filter).FirstOrDefault();
-
-            if (document.Elements.Count() == 1)
+            var db = _client.GetDatabase(dbName);
+            var collection = db.GetCollection<BsonDocument>(tableName);
+            var documents = collection.Find(FilterDefinition<BsonDocument>.Empty).ToList();
+            if (documents.Count == 0)
                 return;
 
-            List<string> keysToDelete = [];
+            var updates = new List<WriteModel<BsonDocument>>();
 
-            var updateDef = new List<UpdateDefinition<BsonDocument>>();
-            foreach (var element in document.Elements)
+            foreach (var document in documents)
             {
-                if (element.Name != "_id")
-                {
-                    List<string> values = (element.Name + "^" + element.Value.AsString).Split('^').ToList();
-                    string key = "";
-                    string value;
+                var id = document["_id"];
+                var currentVal = document["Value"].AsString;
 
-                    if (!isPkKey)
-                    {
-                        values.RemoveAt(index);
-                        for (int i = 0; i < nrPKeys; i++)
-                        {
-                            values.RemoveAt(0);
-                        }
-                        value = string.Join('^', values);
-                        updateDef.Add(Builders<BsonDocument>.Update.Set(element.Name, value));
-                    }
-                    else
-                    {
-                        keysToDelete.Add(element.Name);
-                        nrPKeys--;
-                        values.RemoveAt(index);
-                        List<string> keys = [];
-                        for (int i = 0; i < nrPKeys; i++)
-                        {
-                            keys.Add(values[0]);
-                            values.RemoveAt(0);
-                        }
-                        value = string.Join('^', values);
-                        key = string.Join('^', keys);
-                        updateDef.Add(Builders<BsonDocument>.Update.Set(key, value));
-                    }
+                List<string> data = currentVal.Split('^').ToList();
+                data.RemoveAt(index);
+                string newVal = string.Join('^', data);
+                var filter = Builders<BsonDocument>.Filter.Eq("_id", id);
+                var update = Builders<BsonDocument>.Update.Set("Value", newVal);
+
+                updates.Add(new UpdateOneModel<BsonDocument>(filter, update));
+            }
+
+            if (updates.Count > 0)
+            {
+                try
+                {
+                    collection.BulkWrite(updates);
                 }
-            }
-
-            var combinedUpdate = Builders<BsonDocument>.Update.Combine(updateDef);
-            var result = collection.UpdateOne(filter, combinedUpdate);
-
-            if (result.ModifiedCount == 0)
-            {
-                throw new DataAccesException("Document was not updated.");
-            }
-
-            foreach (var key in keysToDelete)
-            {
-                var deletedRow = Builders<BsonDocument>.Update.Unset(key);
-                var resultDelete = collection.UpdateOne(filter, deletedRow);
-
-                if (resultDelete.ModifiedCount == 0)
+                catch (Exception ex)
                 {
-                    throw new DataAccesException("No matching key!");
+                    throw new DataAccesException($"Failed bulk write at add column: {ex.Message}");
                 }
             }
         }
 
-        public void Delete(string dbName, string tableID, string key)
+        public void Delete(string dbName, string tableName, List<string> pKeys)
         {
-            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+            var db = _client.GetDatabase(dbName);
+            var collection = db.GetCollection<BsonDocument>(tableName);
 
-            ObjectId objId = ObjectId.Parse(tableID);
-            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+            var filter = Builders<BsonDocument>.Filter.In("_id", pKeys);
 
-            var deletedRow = Builders<BsonDocument>.Update.Unset(key);
-            var result = collection.UpdateOne(filter, deletedRow);
-
-            if (result.ModifiedCount == 0)
+            try
             {
-                throw new DataAccesException("No matching key!");
+                var result = collection.DeleteMany(filter);
             }
+            catch (Exception)
+            {
+                throw new DataAccesException("Failed to delete pKeys!");
+            }
+
         }
 
         public void DropDatabase(string dbName)
         {
-            _coreDB.DropCollection(dbName);
+            _client.DropDatabase(dbName);
         }
 
-        public void DropTable(string dbName, string mongoId)
+        public void DropTable(string dbName, string tableName)
         {
-            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
-            var filter = Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(mongoId));
+            var db = _client.GetDatabase(dbName);
 
-            var result = collection.DeleteOne(filter);
-
-            if (result.DeletedCount == 0)
-            {
-                throw new DataAccesException("No document found to delete.");
-            }
+            db.DropCollection(tableName);
         }
 
-        public List<string> GetAllRows(string dbName, string tableID)
+        public List<string> GetAllRows(string dbName, string tableName)
         {
-            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
-            ObjectId objId = ObjectId.Parse(tableID);
-            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+            var db = _client.GetDatabase(dbName);
+            var collection = db.GetCollection<BsonDocument>(tableName);
 
-            var table = collection.Find(filter).First();
-            
-            var result = new List<string>();
-
-            foreach (var item in table)
-            {
-                if (!item.Name.Equals("_id"))
-                    result.Add($"{item.Name}^{item.Value}");
-            }
+            var documents = collection.Find(FilterDefinition<BsonDocument>.Empty).ToList();
+            var result = documents.Select(doc => $"{doc["_id"]}^{doc["Value"]}").ToList();
 
             return result;
         }
 
-        public void Insert(string dbName, string tableID, string key, string value)
+        public void Insert(string dbName, string collectionName, List<MongoEntity> data)
         {
-            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+            var db = _client.GetDatabase(dbName);
+            var collection = db.GetCollection<BsonDocument>(collectionName);
 
-            ObjectId objId = ObjectId.Parse(tableID);
-            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+            List<BsonDocument> rows = data.Select(x => new BsonDocument { { "_id", x.Key }, { "Value", x.Value } }).ToList();
 
-            var insertedRow = Builders<BsonDocument>.Update.Set(key, value);
-
-            var result = collection.UpdateOne(filter, insertedRow);
-
-            if (result.ModifiedCount == 0)
+            try
             {
-                throw new DataAccesException("Failed to insert!");
+                collection.InsertMany(rows);
+            }
+            catch (Exception)
+            {
+                throw new DataAccesException("Failed to insert data!");
+            }
+        }
+        public void DeleteUniqueIndexData(string dbName, string collectionName, List<string> pKeys)
+        {
+            var db = _client.GetDatabase(dbName);
+            var collection = db.GetCollection<BsonDocument>(collectionName);
+
+            var filter = Builders<BsonDocument>.Filter.In("Value", pKeys);
+
+            try
+            {
+                var result = collection.DeleteMany(filter);
+            }
+            catch (MongoException)
+            {
+                throw new DataAccesException("Error at deleting documents!");
             }
         }
 
-        public bool IsValidRow(string dbName, Table table, List<string> columnNames, List<int> columnPositions,
-            ref string key, ref string value, ref int innerSeed)
+        public bool ExistsKey(string dbName, string collectionName, string key)
         {
-            string[] insertedRow = value.Split('^');
-            string row = "";
-            key = "";
+            var db = _client.GetDatabase(dbName);
+            var collection = db.GetCollection<BsonDocument>(collectionName);
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", key);
+            var document = collection.Find(filter).FirstOrDefault();
 
-            foreach (var column in table.Columns)
+            if (document == null)
             {
-                if (!columnNames.Contains(column.Name) && !column.PrimaryKey)
-                {
-                    row = string.IsNullOrEmpty(row) ? "null" : row + "^null";
-                    continue;
-                }
-
-                int index = columnNames.IndexOf(column.Name);
-
-                if (column.PrimaryKey)
-                {
-                    string tmp = "";
-                    if (index != -1)
-                    {
-                        tmp = insertedRow[index];
-                    }
-                    if (column.PKIdentity.Step > 0)
-                    {
-                        tmp = (column.PKIdentity.InnerSeed + column.PKIdentity.Step).ToString();
-                        column.PKIdentity.InnerSeed += column.PKIdentity.Step;
-                        innerSeed = column.PKIdentity.InnerSeed;
-                        key = string.IsNullOrEmpty(key) ? tmp : (key + "^" + tmp);
-                        continue;
-                    }
-                    key = string.IsNullOrEmpty(key) ? tmp : (key + "^" + tmp);
-                }
-
-                if (!string.IsNullOrEmpty(column.DefaultVal) && (insertedRow[index].Equals("0") || insertedRow[index].Equals("null") || insertedRow[index].Equals(string.Empty)))
-                    insertedRow[index] = column.DefaultVal;
-
-                try
-                {
-                    // type check
-                    switch (column.Type)
-                    {
-                        case "int":
-                            _ = int.Parse(insertedRow[index]);
-                            break;
-                        case "float":
-                            _ = float.Parse(insertedRow[index]);
-                            break;
-                        case "bit":
-                            _ = bool.Parse(insertedRow[index]);
-                            break;
-                        case "date":
-                            _ = DateTime.Parse(insertedRow[index]);
-                            break;
-                        case "datetime":
-                            _ = TimeSpan.Parse(insertedRow[index]);
-                            break;
-                        case "string":
-                            break;
-                        default:
-                            return false;
-                    }
-                }
-                catch (Exception)
-                {
-                    return false;
-                }
-
-                if (column.NotNull)
-                {
-                    if (insertedRow[index].Equals("0") || insertedRow[index].Equals("null") || insertedRow[index].Equals(string.Empty))
-                        return false;
-                }
-
-                // unique check
-                if (column.Unique)
-                {
-                    if (GetAllRows(dbName, table.MongoID).Select(row => row.Split('^')[columnPositions[index]]).ToList().Contains(insertedRow[index]))
-                        return false;
-                }
-
-                // check condition
-                if (!column.Check.Equals("--") && !string.IsNullOrEmpty(column.Check))
-                {
-                    string[] checkConst = column.Check.Split('^');
-                    switch (checkConst[0])
-                    {
-                        case "=":
-                        case "==":
-                            if (insertedRow[index] != checkConst[1]) return false;
-                            break;
-                        case ">":
-                            if (insertedRow[index].CompareTo(checkConst[1]) <= 0) return false;
-                            break;
-                        case ">=":
-                            if (insertedRow[index].CompareTo(checkConst[1]) < 0) return false;
-                            break;
-                        case "<":
-                            if (insertedRow[index].CompareTo(checkConst[1]) >= 0) return false;
-                            break;
-                        case "<=":
-                            if (insertedRow[index].CompareTo(checkConst[1]) > 0) return false;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-                if (!column.PrimaryKey)
-                    row = string.IsNullOrEmpty(row) ? insertedRow[index] : row + "^" + insertedRow[index];
-            }
-
-            if (string.IsNullOrEmpty(key))
                 return false;
-
-            value = row;
-
+            }
             return true;
         }
 
-        public string PrepareTable(string dbName, string tableName)
+        public void InsertIndexData(string dbName, string collectionName, List<MongoEntity> data)
         {
-            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
-            var newTable = new BsonDocument();
-            collection.InsertOne(newTable);
+            var db = _client.GetDatabase(dbName);
+            var collection = db.GetCollection<BsonDocument>(collectionName);
 
-            string id = newTable["_id"].AsObjectId.ToString();
-
-            return id;
-        }
-
-        public string AddIndexFile(string dbName, string tableName)
-        {
-            var collection = _coreDB.GetCollection<BsonDocument>($"{dbName}_{tableName}_indexfiles");
-            var newIndex = new BsonDocument();
-            collection.InsertOne(newIndex);
-
-            string id = newIndex["_id"].AsObjectId.ToString();
-
-            return id;
-        }
-
-        public void DropIndexFile(string colName, string mongoID)
-        {
-            var collection = _coreDB.GetCollection<BsonDocument>(colName);
-            var filter = Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(mongoID));
-
-            var result = collection.DeleteOne(filter);
-
-            if (result.DeletedCount == 0)
+            Dictionary<string, string> dict = [];
+            data.ForEach(d =>
             {
-                throw new DataAccesException("No document found to delete.");
-            }
-        }
-
-        public void InsertToIndexFile(string dbName, string tableName, string mongoID, string pKey, string value)
-        {
-            var collection = _coreDB.GetCollection<BsonDocument>($"{dbName}_{tableName}_indexfiles");
-            ObjectId objId = ObjectId.Parse(mongoID);
-            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
-            var document = collection.Find(filter).FirstOrDefault();
-
-            foreach (var item in document.Elements)
-            {
-                if (item.Name == value)
+                if (dict.ContainsKey(d.Key))
                 {
-                    var insertedRow = Builders<BsonDocument>.Update.Set(value, $"{item.Value}#{pKey}");
-                    var result = collection.UpdateOne(filter, insertedRow);
-                    if (result.ModifiedCount == 0)
-                    {
-                        throw new DataAccesException("Failed to insert index data!");
-                    }
-                    return;
+                    string val = dict[d.Key];
+                    dict[d.Key] = $"{val}#{d.Value}";
+                }
+                else
+                {
+                    dict.Add(d.Key, d.Value);
+                }
+            });
+
+            List<BsonDocument> docsToInsert = [];
+            List<WriteModel<BsonDocument>> docsToUpdate = [];
+
+            if (dict.Count == 0)
+                return;
+
+            foreach (var entity in dict)
+            {
+                var filter = Builders<BsonDocument>.Filter.Eq("_id", entity.Key);
+                var document = collection.Find(filter).FirstOrDefault();
+
+                if (document != null)
+                {
+                    var id = document["_id"];
+                    var currentVal = document["Value"].AsString;
+
+                    string newVal = $"{currentVal}#{entity.Value}";
+                    var filterDoc = Builders<BsonDocument>.Filter.Eq("_id", id);
+                    var update = Builders<BsonDocument>.Update.Set("Value", newVal);
+
+                    docsToUpdate.Add(new UpdateOneModel<BsonDocument>(filterDoc, update));
+                }
+                else
+                {
+                    docsToInsert.Add(new BsonDocument { { "_id", entity.Key }, { "Value", entity.Value } });
                 }
             }
 
-            var insertedIndex = Builders<BsonDocument>.Update.Set(value, pKey);
-            var res = collection.UpdateOne(filter, insertedIndex);
-            if (res.ModifiedCount == 0)
+            try
             {
-                throw new DataAccesException("Failed to insert index data!");
+                if (docsToInsert.Count > 0)
+                    collection.InsertMany(docsToInsert);
+                if (docsToUpdate.Count > 0)
+                    collection.BulkWrite(docsToUpdate);
+            }
+            catch (MongoException)
+            {
+                throw new DataAccesException("Failed to insert data!");
             }
         }
 
-        public void DeleteFromIndexFile(string dbName, string tableName, string mongoID, string pKey)
-        {
-            string indexDocName = $"{dbName}_{tableName}_indexfiles";
-            var collection = _coreDB.GetCollection<BsonDocument>(indexDocName);
-            ObjectId objId = ObjectId.Parse(mongoID);
-            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
-            var document = collection.Find(filter).FirstOrDefault();
 
-            List<string> keysToDelete = [];
-            foreach (var item in document.Elements)
+        public void DeleteIndexData(string dbName, string collectionName, List<string> pKeys)
+        {
+            var db = _client.GetDatabase(dbName);
+            var collection = db.GetCollection<BsonDocument>(collectionName);
+
+            var filterDocs = Builders<BsonDocument>.Filter.Empty;
+            var documents = collection.Find(FilterDefinition<BsonDocument>.Empty).ToList();
+            foreach (var key in pKeys)
             {
-                if (!item.Name.Equals("_id"))
+                var updates = new List<WriteModel<BsonDocument>>();
+                List<string> keysToDelete = [];
+                foreach (var doc in documents)
                 {
-                    string row = item.Value.AsString;
-                    List<string> values = row.Split('#').ToList();
-                    if (values.Contains(pKey))
+                    List<string> vals = doc["Value"].AsString.Split('#').ToList();
+                    if (vals.Contains(key))
                     {
-                        values.Remove(pKey);
-                        if (values.Count == 0)
+                        if (vals.Count == 1)
                         {
-                            keysToDelete.Add(item.Name);
+                            keysToDelete.Add(doc["_id"].AsString);
                             continue;
                         }
-                        string tmp = string.Join('#', values);
-                        var insertedRow = Builders<BsonDocument>.Update.Set(item.Name, $"{tmp}");
-                        var result = collection.UpdateOne(filter, insertedRow);
-                        if (result.ModifiedCount == 0)
-                        {
-                            throw new DataAccesException("Failed to delete index data!");
-                        }
+
+                        vals.Remove(key);
+
+                        var filter = Builders<BsonDocument>.Filter.Eq("_id", doc["_id"].AsString);
+                        var update = Builders<BsonDocument>.Update.Set("Value", string.Join('#', vals));
+
+                        updates.Add(new UpdateOneModel<BsonDocument>(filter, update));
                     }
                 }
+                try
+                {
+                    if (updates.Count > 0)
+                        collection.BulkWrite(updates);
+                    if (keysToDelete.Count == 0)
+                    {
+                        var filter = Builders<BsonDocument>.Filter.In("_id", keysToDelete);
+                        var result = collection.DeleteMany(filter);
+                    }
+                } catch (Exception)
+                {
+                    throw new DataAccesException("Failed to delete index data!");
+                }
             }
-
-            keysToDelete.ForEach(key => Delete(indexDocName, mongoID, key));
         }
 
-        public bool ContainsValue(string dbName, string tableID, int index, string value)
-        {
-            return GetAllRows(dbName, tableID).Select(row => row.Split('^')[index]).Contains(value);
-        }
+        //public string GetFullRow(string dbName, string mongoID, string key)
+        //{
+        //    var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+        //    ObjectId objId = ObjectId.Parse(mongoID);
+        //    var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
 
-        public string GetValue(string dbName, string mongoID, string key)
-        {
-            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
-            ObjectId objId = ObjectId.Parse(mongoID);
-            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+        //    var document = collection.Find(filter).FirstOrDefault();
 
-            var document = collection.Find(filter).FirstOrDefault();
+        //    return $"{key}^{document[key].AsString}";
+        //}
 
-            return document[key].AsString;
-        }
+        //public string GetValue(string dbName, string mongoID, string key)
+        //{
+        //    var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+        //    ObjectId objId = ObjectId.Parse(mongoID);
+        //    var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
 
-        public List<string> GetValues(string dbName, string mongoID, List<string> keys)
-        {
-            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
-            ObjectId objId = ObjectId.Parse(mongoID);
-            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+        //    var document = collection.Find(filter).FirstOrDefault();
 
-            var document = collection.Find(filter).FirstOrDefault();
+        //    return document[key].AsString;
+        //}
 
-            List<string> res = [];
+        //public List<string> GetValues(string dbName, string mongoID, List<string> keys)
+        //{
+        //    var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+        //    ObjectId objId = ObjectId.Parse(mongoID);
+        //    var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
 
-            keys.ForEach(key => res.Add($"{key}^{document[key].AsString}"));
+        //    var document = collection.Find(filter).FirstOrDefault();
 
-            return res;
-        }
+        //    List<string> res = [];
 
-        public List<string> GetValuesWhere(string dbName, string mongoId, string type, string op, string val)
-        {
-            var collection = _coreDB.GetCollection<BsonDocument>(dbName);
-            ObjectId objId = ObjectId.Parse(mongoId);
-            var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+        //    keys.ForEach(key => res.Add($"{key}^{document[key].AsString}"));
 
-            var document = collection.Find(filter).FirstOrDefault();
+        //    return res;
+        //}
 
-            List<string> result = [];
-            val = Validator.TrimApostrpohes(val);
-            switch (op)
-            {
-                case "=":
-                case "==":
-                    if (document.Contains(val))
-                        result = document[val].AsString.Split('#').ToList();
-                    break;
-                case ">":
-                    foreach (var item in document)
-                    {
-                        if (item.Name != "_id" && Validator.IsGreater(item.Name, val, type))
-                            result.AddRange(item.Value.AsString.Split("#"));
-                    }
-                    break;
-                case ">=":
-                    foreach (var item in document)
-                    {
-                        if (item.Name != "_id" && Validator.IsGreaterOrEqual(item.Name, val, type))
-                            result.AddRange(item.Value.AsString.Split("#"));
-                    }
-                    break;
-                case "<":
-                    foreach (var item in document)
-                    {
-                        if (item.Name != "_id" && Validator.IsLess(item.Name, val, type))
-                            result.AddRange(item.Value.AsString.Split("#"));
-                    }
-                    break;
-                case "<=":
-                    foreach (var item in document)
-                    {
-                        if (item.Name != "_id" && Validator.IsLessOrEqual(item.Name, val, type))
-                            result.AddRange(item.Value.AsString.Split("#"));
-                    }
-                    break;
-                default:
-                    break;
-            }
+        //public List<string> GetPrimaryKeysWhere(string dbName, string mongoId, int colIndex, string type, string op, string val)
+        //{
+        //    var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+        //    ObjectId objId = ObjectId.Parse(mongoId);
+        //    var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
 
-            return result;
-        }
+        //    var document = collection.Find(filter).FirstOrDefault();
+
+        //    List<string> result = [];
+        //    val = Validator.TrimApostrpohes(val);
+        //    switch (op)
+        //    {
+        //        case "=":
+        //        case "==":
+        //            if (document.Names.Any(name => name.Split('^')[colIndex] == val))
+        //                result = document[val].AsString.Split('#').ToList();
+        //            break;
+        //        case ">":
+        //            foreach (var item in document)
+        //            {
+        //                if (item.Name != "_id" && Validator.IsGreater(item.Name.Split('^')[colIndex], val, type))
+        //                    result.AddRange(item.Value.AsString.Split("#"));
+        //            }
+        //            break;
+        //        case ">=":
+        //            foreach (var item in document)
+        //            {
+        //                if (item.Name != "_id" && Validator.IsGreaterOrEqual(item.Name.Split('^')[colIndex], val, type))
+        //                    result.AddRange(item.Value.AsString.Split("#"));
+        //            }
+        //            break;
+        //        case "<":
+        //            foreach (var item in document)
+        //            {
+        //                if (item.Name != "_id" && Validator.IsLess(item.Name.Split('^')[colIndex], val, type))
+        //                    result.AddRange(item.Value.AsString.Split("#"));
+        //            }
+        //            break;
+        //        case "<=":
+        //            foreach (var item in document)
+        //            {
+        //                if (item.Name != "_id" && Validator.IsLessOrEqual(item.Name.Split('^')[colIndex], val, type))
+        //                    result.AddRange(item.Value.AsString.Split("#"));
+        //            }
+        //            break;
+        //        default:
+        //            break;
+        //    }
+
+        //    return result;
+        //}
+
+        //public List<string> GetPrimaryKeysWhereAllRow(string dbName, string mongoId, int colIndex, string type, string op, string val)
+        //{
+        //    var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+        //    ObjectId objId = ObjectId.Parse(mongoId);
+        //    var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+
+        //    var document = collection.Find(filter).FirstOrDefault();
+
+        //    List<string> result = [];
+        //    val = Validator.TrimApostrpohes(val);
+        //    foreach (var item in document.Elements)
+        //    {
+        //        if (item.Name.Equals("_id"))
+        //            continue;
+
+        //        string row = $"{item.Name}^{item.Value}";
+        //        switch (op)
+        //        {
+        //            case "=":
+        //            case "==":
+        //                if (row.Split('^')[colIndex] == val)
+        //                    result.Add(item.Name);
+        //                break;
+        //            case ">":
+        //                if (Validator.IsGreater(row.Split('^')[colIndex], val, type))
+        //                    result.Add(item.Name);
+        //                break;
+        //            case ">=":
+        //                if (Validator.IsGreaterOrEqual(row.Split('^')[colIndex], val, type))
+        //                    result.Add(item.Name);
+        //                break;
+        //            case "<":
+        //                if (Validator.IsLess(row.Split('^')[colIndex], val, type))
+        //                    result.Add(item.Name);
+        //                break;
+        //            case "<=":
+        //                if (Validator.IsLessOrEqual(row.Split('^')[colIndex], val, type))
+        //                    result.Add(item.Name);
+        //                break;
+        //            default:
+        //                break;
+        //        }
+        //    }
+
+        //    return result;
+        //}
+
+        //public List<string> GetPrimaryKeys(string dbName, string mongoID)
+        //{
+        //    var collection = _coreDB.GetCollection<BsonDocument>(dbName);
+        //    ObjectId objId = ObjectId.Parse(mongoID);
+        //    var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+
+        //    var document = collection.Find(filter).FirstOrDefault();
+
+        //    if (document == null)
+        //        throw new DataAccesException("No matching document!");
+
+        //    List<string> pKeys = document.Names.ToList();
+        //    pKeys.Remove("_id");
+
+        //    return pKeys;
+        //}
     }
 }

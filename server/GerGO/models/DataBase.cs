@@ -10,7 +10,7 @@ namespace GerGO.Models
 
         [XmlArray("Tables")]
         [XmlArrayItem("Table")]
-        public List<Table> Tables {  get; set; }
+        public List<Table> Tables { get; set; }
 
         public DataBase()
         {

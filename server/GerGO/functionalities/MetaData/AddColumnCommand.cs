@@ -12,6 +12,8 @@ namespace GerGO.Functionalities.MetaData
         public void Execute(NetworkStream stream, string[] arguments)
         {
             Column column = new Column();
+            PrimaryKey? pKey = null;
+            bool isUnique = true;
             try
             {
                 string dbName = arguments[1].ToLower();
@@ -19,10 +21,11 @@ namespace GerGO.Functionalities.MetaData
                 column.Name = arguments[3].ToLower();
                 column.Type = arguments[4].ToLower();
 
-                if (arguments[5].Equals("--"))
-                    column.PrimaryKey = false;
-                else
-                    column.PrimaryKey = true;
+                if (!arguments[5].Equals("--"))
+                {
+                    pKey = new PrimaryKey();
+                    pKey.Name = column.Name;
+                }
 
                 if (arguments[6].Equals("--"))
                     column.NotNull = false;
@@ -34,15 +37,16 @@ namespace GerGO.Functionalities.MetaData
                 else
                     column.DefaultVal = arguments[7];
 
-                if (!arguments[8].Equals("--"))
-                    column.PKIdentity.Seed = int.Parse(arguments[8]);
-                if (!arguments[9].Equals("--"))
-                    column.PKIdentity.Step = int.Parse(arguments[9]);
+                if (!arguments[8].Equals("--") && pKey != null)
+                {
+                    pKey.IdentitySeed = int.Parse(arguments[8]);
+                    pKey.IdentityInnerSeed = pKey.IdentitySeed;
+                }
+                if (!arguments[9].Equals("--") && pKey != null)
+                    pKey.IdentityStep = int.Parse(arguments[9]);
 
                 if (arguments[10].Equals("--"))
-                    column.Unique = false;
-                else
-                    column.Unique = true;
+                    isUnique = false;
 
                 if (arguments[11].Equals("--"))
                     column.Check = string.Empty;
@@ -61,7 +65,9 @@ namespace GerGO.Functionalities.MetaData
                 }
 
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
-                manager.AddColumn(dbName, tableName, column);
+                manager.AddColumn(dbName, tableName, column, pKey, isUnique);
+
+                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (IndexOutOfRangeException)
             {
@@ -72,11 +78,6 @@ namespace GerGO.Functionalities.MetaData
             {
                 _logger.Error($"Failed to add column: {ex.Message}");
                 throw new CommandException($"Failed to add column: {ex.Message}");
-            }
-
-            try
-            {
-                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (CommunicationException ex)
             {

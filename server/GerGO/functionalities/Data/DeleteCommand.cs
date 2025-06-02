@@ -23,44 +23,39 @@ namespace GerGO.Functionalities.Data
                 _logger.Error("Not enough arguments for deleting data!");
                 throw new CommandException("Not enough arguments for deleting data!");
             }
-            catch (IOException)
-            {
-                _logger.Error("Failed to send response!");
-                throw new CommandException("Failed to send response!");
-            }
 
             TcpResponder.SendMessage(stream, "OK");
 
-            string response;
             int count = 0;
+            List<string> keys;
+            IResourceManager _manager = ResourceManagerFactory.GetInstance();
             do
             {
-                byte[] buffer = new byte[1024];
-                stream.Read(buffer, 0, buffer.Length);
-                response = Encoding.UTF8.GetString(buffer);
-                if (response.StartsWith('0'))
+                keys = TcpResponder.ReadValueBatched(stream);
+                if (keys.Count == 1 && keys[0].StartsWith('0'))
                     break;
-                string key = response.Replace("\0", string.Empty);
 
-                IResourceManager _manager = ResourceManagerFactory.GetInstance();
                 try
                 {
-                    _manager.Delete(dbName, tableName, key);
+                    count += _manager.Delete(dbName, tableName, keys);
                     TcpResponder.SendMessage(stream, "OK");
-                    count++;
                 }
                 catch (DataResourceException)
                 {
                     TcpResponder.SendDataMessage(stream, "1^You can't delete! NGGYU!");
                     continue;
                 }
-            } while (!response.StartsWith('0'));
+                catch (CommunicationException)
+                {
+                    continue;
+                }
+            } while (!(keys.Count == 1 && keys[0].StartsWith('0')));
 
             try
             {
                 TcpResponder.SendMessage(stream, $"{count}");
             }
-            catch (CommandException ex)
+            catch (CommunicationException ex)
             {
                 _logger.Error($"Failed to send message: {ex.Message}");
             }

@@ -2,7 +2,6 @@
 using GerGO.Manager;
 using GerGO.Utils;
 using System.Net.Sockets;
-using System.Text;
 
 namespace GerGO.Functionalities.Data
 {
@@ -22,9 +21,7 @@ namespace GerGO.Functionalities.Data
                 do
                 {
                     TcpResponder.SendMessage(stream, "OK");
-                    byte[] buffer = new byte[1024];
-                    stream.Read(buffer, 0, buffer.Length);
-                    response = Encoding.UTF8.GetString(buffer);
+                    response = TcpResponder.ReadValue(stream);
                     if (response.StartsWith('0'))
                         break;
                     response = response.Replace("\0", string.Empty);
@@ -32,8 +29,8 @@ namespace GerGO.Functionalities.Data
                 } while (!response.StartsWith('0'));
 
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
-                manager.DeleteWhere(dbName, tableName, wheres);
-                TcpResponder.SendMessage(stream, "OK");
+                int count = manager.DeleteWhere(dbName, tableName, wheres);
+                TcpResponder.SendMessage(stream, $"{count}");
             }
             catch (DataResourceException ex)
             {

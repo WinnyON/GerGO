@@ -35,43 +35,32 @@ namespace GerGO.Functionalities.Data
             TcpResponder.SendMessage(stream, "OK");
 
             int count = 0;
-            string response;
+            List<string> rows;
             try
             {
                 do
                 {
-                    byte[] buffer = new byte[1024];
-                    stream.Read(buffer, 0, buffer.Length);
-                    response = Encoding.UTF8.GetString(buffer);
-                    response = response.Replace("\0", string.Empty);
+                    rows = TcpResponder.ReadValueBatched(stream);
 
-                    if (response.Equals("0"))
+                    if (rows.Count == 1 && rows[0].Equals("0"))
                         break; 
-                    try
-                    {
-                        resourceManager.Insert(dbName, tableName, columnNames, response);
-                        count++;
-                    }
-                    catch (DataResourceException)
-                    {
-                        TcpResponder.SendDataMessage(stream, "1^Invalid data!");
-                        continue;
-                    }
+                    
+                    count += resourceManager.Insert(dbName, tableName, columnNames, rows);
                     TcpResponder.SendMessage(stream, "OK");
 
-                } while (!response.Equals("0"));
+                } while (!(rows.Count == 1 && rows[0].Equals("0")));
 
                 TcpResponder.SendMessage(stream, $"{count}");
             }
-            catch (IOException)
-            {
-                _logger.Error("Failed to read data while inserting!");
-                throw new CommandException("Failed to read data while inserting!");
-            }
             catch (CommunicationException ex)
             {
-                _logger.Error($"Failed to send data: {ex.Message}");
-                throw new CommandException($"Failed to send data: {ex.Message}");
+                _logger.Error($"Error with communication: {ex.Message}");
+                throw new CommandException($"Error with communication: {ex.Message}");
+            }
+            catch (DataResourceException)
+            {
+                _logger.Error("Error at inserting!");
+                TcpResponder.SendDataMessage(stream, "1^Invalid data!");
             }
         }
     }

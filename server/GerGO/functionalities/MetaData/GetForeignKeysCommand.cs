@@ -20,16 +20,14 @@ namespace GerGO.Functionalities.MetaData
 
                 TcpResponder.SendMessage(stream, "OK");
 
-                byte[] okMesBuffer = new byte[4];
-                stream.Read(okMesBuffer, 0, okMesBuffer.Length);
+                _ = TcpResponder.ReadValue(stream);
 
                 fkList = manager.GetForeignKeys(dbName, tableName);
 
                 foreach (var foreignKey in fkList)
                 {
                     TcpResponder.SendDataMessage(stream, string.Join('^', foreignKey));
-                    byte[] buffer = new byte[10];
-                    stream.Read(buffer, 0, buffer.Length);
+                    _ = TcpResponder.ReadValue(stream);
                 }
                 TcpResponder.SendMessage(stream, "OK");
             }

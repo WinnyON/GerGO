@@ -15,11 +15,12 @@ namespace GerGO.Functionalities.MetaData
             {
                 string dbName = arguments[1].ToLower();
                 string tableName = arguments[2].ToLower();
-                Column col = new Column();
-                col.Name = arguments[3].ToLower();
+                string colName = arguments[3].ToLower();
 
                 IResourceManager manager = ResourceManagerFactory.GetInstance();
-                manager.DropColumn(dbName, tableName, col);
+                manager.DropColumn(dbName, tableName, colName);
+
+                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (IndexOutOfRangeException)
             {
@@ -36,11 +37,6 @@ namespace GerGO.Functionalities.MetaData
 
                 _logger.Error($"Failed to drop column {arguments[3]}: {ex.Message}");
                 throw new CommandException($"Failed to drop column {arguments[3]}: {ex.Message}");
-            }
-
-            try
-            {
-                TcpResponder.SendMessage(stream, "Ok");
             }
             catch (CommunicationException ex)
             {

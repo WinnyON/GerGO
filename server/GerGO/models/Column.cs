@@ -17,15 +17,6 @@ namespace GerGO.Models
         
         [XmlElement("DefaultVal")]
         public string DefaultVal { get; set; }
-        
-        [XmlElement("PrimaryKey")]
-        public bool PrimaryKey{ get; set; }
-
-        [XmlElement("Identity")]
-        public Identity PKIdentity { get; set; }
-        
-        [XmlAttribute("Unique")]
-        public bool Unique { get; set; }
 
         [XmlElement("Check")]
         public string Check {  get; set; }
@@ -36,21 +27,15 @@ namespace GerGO.Models
             Type = string.Empty;
             NotNull = false;
             DefaultVal = string.Empty;
-            PrimaryKey = false;
-            PKIdentity = new Identity(0, 0);
-            Unique = false;
             Check = string.Empty;
         }
 
-        public Column(string name, string type, bool notNull, string defaultVal, bool primaryKey, Identity identity, bool unique, string check)
+        public Column(string name, string type, bool notNull, string defaultVal, string check)
         {
             Name = name;
             Type = type;
             NotNull = notNull;
             DefaultVal = defaultVal;
-            PrimaryKey = primaryKey;
-            PKIdentity = identity;
-            Unique = unique;
             Check = check;
         }
 
