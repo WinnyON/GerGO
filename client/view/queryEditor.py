@@ -9,7 +9,7 @@ class QueryEditor(QLineEdit):
     def __init__(self, parent=None):
         super(QueryEditor, self).__init__(parent)
         self.setPlaceholderText("Write query here")
-        self.words = ["SELECT", "WHERE", "FROM", "JOIN", "DELETE", "AND"]
+        self.words = ["SELECT", "WHERE", "FROM", "JOIN", "INNER JOIN", "DELETE", "AND", "GROUP BY", "ORDER BY", "LIMIT", "DISTINCT", "HAVING", "UPDATE", "COUNT", "MAX", "MIN", "AVG"]
         self.table_names = None
         shortcut = QShortcut(Qt.Key_Tab, self)
         shortcut.activated.connect(self.handle_tab)
@@ -101,10 +101,64 @@ class QueryEditor(QLineEdit):
         """
         return bool(re.fullmatch(pattern, sql, re.IGNORECASE | re.VERBOSE))
 
+    def validate_select_query(self, query):
+        """
+        Validates the syntax of a SQL SELECT query using regular expressions.
+
+        Args:
+            query (str): The SQL SELECT query to validate
+
+        Returns:
+            bool: True if the query syntax appears valid, False otherwise
+        """
+        # Normalize the query by removing excessive whitespace
+        query = ' '.join(query.split())
+
+        # Main SELECT query pattern with various optional components
+        pattern = r"""
+            ^\s*SELECT\s+                          # SELECT clause
+            (?:DISTINCT\s+)?                       # Optional DISTINCT
+            (?:[\w\s,.*()]+?)\s+                   # Column list
+            FROM\s+                                # FROM clause
+            (?:[\w]+\s*(?:AS\s+[\w]+\s*)?          # Table with optional alias
+            (?:,\s*[\w]+\s*(?:AS\s+[\w]+\s*)?)*)   # More tables with aliases
+            (?:\s+JOIN\s+[\w]+\s*(?:AS\s+[\w]+\s*)?\s+ON\s+[^;]+)*  # JOIN clauses
+            (?:\s+WHERE\s+[^;]+)?                  # Optional WHERE
+            (?:\s+GROUP\s+BY\s+[^;]+)?             # Optional GROUP BY
+            (?:\s+HAVING\s+[^;]+)?                 # Optional HAVING
+            (?:\s+ORDER\s+BY\s+[^;]+)?             # Optional ORDER BY
+            (?:\s+LIMIT\s+\d+)?                    # Optional LIMIT
+            (?:\s+OFFSET\s+\d+)?                  # Optional OFFSET
+            \s*;?\s*$                              # Optional semicolon
+        """
+
+        # Compile the pattern with verbose flag
+        try:
+            regex = re.compile(pattern, re.VERBOSE | re.IGNORECASE)
+        except re.error as e:
+            print(f"Regex compilation error: {e}")
+            return False
+
+        # Check if the query matches the pattern
+        if not regex.fullmatch(query):
+            return False
+
+        # Additional checks
+        if query.count('(') != query.count(')'):
+            return False
+
+        # Check for common aggregate functions
+        agg_functions = ['COUNT', 'AVG', 'SUM', 'MIN', 'MAX']
+        for func in agg_functions:
+            if func.lower() in query.lower() and not re.search(rf'{func}\s*\([^)]+\)', query, re.IGNORECASE):
+                return False
+
+        return True
+
     def read_insert_data(self):
         values = []
         with open('players.txt', 'r') as file:
-            lines = file.readlines()
+            lines = file.readlines()[:10000]
             for line in lines:
                 values.append(line.split('^'))
         return values
@@ -117,8 +171,10 @@ class QueryEditor(QLineEdit):
         # rs = parts[4]
         # rows = []
         # return None
-        table = "testtable"
-        columns = ["name", "age", "tel"]
+        # table = "test3"
+        # columns = ["name", "age", "tel"]
+        table = "players"
+        columns = ["name", "age", "tel", "email", "goals", "assists", "clubid"]
         return (table, columns, self.rows)
 
 
@@ -155,14 +211,15 @@ class QueryEditor(QLineEdit):
         command = self.text()
         if command.split()[0] == "INSERT":
             return 1, self.get_insert_data(command)
-        if not self.validate_simple_select(command):
-            return -1, "Incorrect Syntax Error"
+        # if not self.validate_select_query(command): #self.validate_simple_select(command):
+        #     return -1, "Incorrect Syntax Error"
         if command[-1] == ';':
             command = command[:-1]
         command = self.add_whitespaces(command)
         if command.split()[0] == "DELETE":
             return self.get_delete_data(command)
 
+        aliases = {}
         columns = []
         join_tables = []
         conditions = []
@@ -184,11 +241,17 @@ class QueryEditor(QLineEdit):
                 i += 1
                 main_table = parts[i].strip()
                 i += 1
+                if i < len(parts) and parts[i] != 'JOIN' and parts[i] != 'WHERE':
+                    aliases[parts[i].strip()] = main_table
+                    i += 1
                 while i < len(parts) and parts[i] == 'JOIN':
                     join = {}
                     join["table"] = parts[i+1].strip()
+                    if parts[i+2].strip() != 'ON' and parts[i+3].strip() != 'ON':
+                        return -1, "Incorrect Syntax Error"
                     if parts[i+2].strip() != 'ON':
-                        return -1, "Incorrect Sytax Error"
+                        aliases[parts[i+2].strip()] = join["table"]
+                        i += 1
                     if '=' in parts[i+3]:
                         cols = parts[i+3].split('=')
                         join["col1"] = cols[0].strip()
@@ -212,7 +275,7 @@ class QueryEditor(QLineEdit):
                         col2 = parts[i+2].strip()
                         conditions.append({"col1": col1, "col2": col2, "op": op})
                         i += 3
-                return 0, (main_table, columns, join_tables, conditions)
+                return 0, (main_table, columns, join_tables, conditions, aliases)
             else:
                 return -1, "Incorrect Syntax Error"
         except IndexError:

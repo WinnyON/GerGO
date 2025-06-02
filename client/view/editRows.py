@@ -91,7 +91,7 @@ class EditRows(QTableWidget):
 			# data.append(row_data)
 		data = self.modified_rows.values()
 		self.modified_rows = {}
-		return data
+		return list(data)
 
 	def get_deleted_rows(self):
 		removed = self.deleted_rows

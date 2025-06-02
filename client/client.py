@@ -6,10 +6,14 @@ class Client():
     def __init__(self, server_ip="localhost", server_port=5555):
         self.server_ip = server_ip
         self.server_port = int(server_port)
+        self.max_bytes = 50000 # 2048
 
     def setDestination(self, server_ip, server_port):
         self.server_ip = server_ip
         self.server_port = int(server_port)
+
+    def set_timeout(self, seconds=180):
+        self.client_socket.settimeout(seconds)
 
     def connect(self):
         self.client_socket = socket(AF_INET, SOCK_STREAM)
@@ -37,8 +41,8 @@ class Client():
     def send_message(self, message):
         try:
             self.client_socket.send(message.encode())
-            print("SENT MESSAGE: ", message)
-            data =  self.client_socket.recv(2048).decode()
+            # print("SENT MESSAGE: ", message)
+            data =  self.client_socket.recv(self.max_bytes).decode()
             return data
         except timeout:
             print("Connection timed out")
