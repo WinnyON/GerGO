@@ -304,12 +304,14 @@ class Repository():
 			# 	row = code.split('^')[1:] # elso 0^ arra van hogy vege van
 			# 	rows.append(row)
 			# 	code = self.client.send_message("0")
-			while code[0] != '0':
+			while code[0] == '2':
 				rows_text = code[2:].split('#')
 				for row in rows_text:
 					row_data = row.split('^')
 					rows.append(row_data)
 				code = self.client.send_message("0")
+			if code[0] == '1':
+				return 1, code.split('^')[1]
 			return 0, rows
 		except ConnectionError as ce:
 			return 1, ce.get_text()
