@@ -15,7 +15,7 @@ namespace GerGO.DataAcces.StoredData
         public void RemoveColumn(string dbName, string tableName, int index);
         public void DeleteIndexData(string dbName, string collectionName, List<string> pKeys);
         public void DeleteUniqueIndexData(string dbName, string collectionName, List<string> pKeys);
-        public List<string> GetAllPrimaryKeys(string dbName, string tableName);
+        public List<string> GetAllKeys(string dbName, string tableName);
         public List<string> GetKeysWhere(string dbName, string collectionName, string op, string val);
         public List<string> Get_idWhere(string dbName, string collectionName, string op, string val);
         public List<string> GetKeysWhereIter(string dbName, string tableName, int colIndex, string type, string op, string val);

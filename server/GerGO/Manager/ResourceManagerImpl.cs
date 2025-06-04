@@ -557,6 +557,19 @@ namespace GerGO.Manager
                 lock (_locks[dbName])
                 {
                     List<MongoEntity> insertData = [];
+                    
+                    Dictionary<string, List<string>> uKeyVals = new Dictionary<string, List<string>>();
+                    foreach (var uKey in table.UniqueKeys)
+                    {
+                        uKeyVals.Add(uKey, _storedDataManager.GetAllKeys(dbName, $"{tableName}_{uKey}_uniquekey"));
+                    }
+
+                    Dictionary<string, List<string>> fKeyVals = new Dictionary<string, List<string>>();
+                    foreach (var fKey in table.ForeignKeys)
+                    {
+                        fKeyVals.Add(fKey.Name, _storedDataManager.GetAllKeys(dbName, fKey.RefTableName));
+                    }
+
                     Dictionary<string, List<MongoEntity>> uniqueInsertData = [];
                     Dictionary<string, List<MongoEntity>> indexData = [];
                     Dictionary<string, List<MongoEntity>> fKeyData = [];
@@ -573,7 +586,7 @@ namespace GerGO.Manager
                             foreach (var fk in table.ForeignKeys)
                             {
                                 string fKeyVal = rowSplitted[columnNames.IndexOf(fk.AttributeName)];
-                                if (!_storedDataManager.ExistsKey(dbName, fk.RefTableName, fKeyVal))
+                                if (!fKeyVals[fk.Name].Contains(fKeyVal))
                                     throw new DataAccesException("");
 
                                 bool isUnique = _metaDataManager.GetTable(dbName, fk.RefTableName).UniqueKeys.Contains(fk.RefAttributeName);
@@ -585,7 +598,7 @@ namespace GerGO.Manager
                             foreach (var uKey in table.UniqueKeys)
                             {
                                 string uniqueVal = rowSplitted[columnNames.IndexOf(uKey)];
-                                if (_storedDataManager.ExistsKey(dbName, $"{tableName}_{uKey}_uniquekey", uniqueVal))
+                                if (uKeyVals[uKey].Contains(uniqueVal))
                                     throw new DataAccesException("");
                                 string tmp = $"{tableName}_{uKey}_uniquekey";
                                 if (uniqueInsertData.ContainsKey(tmp))
@@ -628,6 +641,17 @@ namespace GerGO.Manager
                         }
 
                     }
+
+                    try
+                    {
+                        _metaDataManager.WriteData();
+                    }
+                    catch (DataAccesException)
+                    {
+                        _logger.Error("Failed to write meta data to file!");
+                        throw new DataResourceException("Failed to write meta data!");
+                    }
+
                     if (insertData.Count == 0)
                         return 0;
 

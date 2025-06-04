@@ -46,7 +46,7 @@ namespace GerGO.Query
         private List<string> Selection(string dbName, Table table, List<string[]> whereClauses)
         {
             if (whereClauses == null || whereClauses.Count == 0)
-                return _storedDataManager.GetAllPrimaryKeys(dbName, table.Name);
+                return _storedDataManager.GetAllKeys(dbName, table.Name);
 
             List<string> pKeys = [];
             List<string[]> clausesToCheck = [];

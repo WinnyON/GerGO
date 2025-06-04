@@ -279,14 +279,14 @@ namespace GerGO.DataAcces.StoredData
                 }
             }
         }
-        public List<string> GetAllPrimaryKeys(string dbName, string tableName)
+        public List<string> GetAllKeys(string dbName, string tableName)
         {
             var db = _client.GetDatabase(dbName);
             var collection = db.GetCollection<BsonDocument>(tableName);
             var projection = Builders<BsonDocument>.Projection.Include("_id");
 
             var result = collection.Find(FilterDefinition<BsonDocument>.Empty).Project(projection).ToList()
-                .Select(doc => doc["_id"].ToString()).ToList();
+                .Select(doc => doc["_id"].AsString).ToList();
 
             return result;
         }

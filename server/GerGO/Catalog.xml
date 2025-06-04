@@ -240,7 +240,7 @@
             <PKAttribute Name="playerid">
               <IdentitySeed>1</IdentitySeed>
               <IdentityStep>1</IdentityStep>
-              <IdentityInnerSeed>99001</IdentityInnerSeed>
+              <IdentityInnerSeed>297001</IdentityInnerSeed>
             </PKAttribute>
           </PrimaryKeys>
         </Table>
