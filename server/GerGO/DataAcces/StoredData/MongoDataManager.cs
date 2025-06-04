@@ -279,6 +279,125 @@ namespace GerGO.DataAcces.StoredData
                 }
             }
         }
+        public List<string> GetAllPrimaryKeys(string dbName, string tableName)
+        {
+            var db = _client.GetDatabase(dbName);
+            var collection = db.GetCollection<BsonDocument>(tableName);
+            var projection = Builders<BsonDocument>.Projection.Include("_id");
+
+            var result = collection.Find(FilterDefinition<BsonDocument>.Empty).Project(projection).ToList()
+                .Select(doc => doc["_id"].ToString()).ToList();
+
+            return result;
+        }
+        public List<string> GetKeysWhere(string dbName, string collectionName, string op, string val)
+        {
+            var db = _client.GetDatabase(dbName);
+            var collection = db.GetCollection<BsonDocument>(collectionName);
+
+            FilterDefinition<BsonDocument> filterDef;
+
+            val = Validator.TrimApostrpohes(val);
+            switch (op)
+            {
+                case "=":
+                case "==":
+                    filterDef = Builders<BsonDocument>.Filter.Eq("_id", val);
+                    break;
+                case ">":
+                    filterDef = Builders<BsonDocument>.Filter.Gt("_id", val);
+                    break;
+                case ">=":
+                    filterDef = Builders<BsonDocument>.Filter.Gte("_id", val);
+                    break;
+                case "<":
+                    filterDef = Builders<BsonDocument>.Filter.Lt("_id", val);
+                    break;
+                case "<=":
+                    filterDef = Builders<BsonDocument>.Filter.Lte("_id", val);
+                    break;
+                default:
+                    throw new DataAccesException("Invalid operator!");
+            }
+
+            var projection = Builders<BsonDocument>.Projection.Include("Value");
+            try
+            {
+                var result = collection.Find(filterDef).Project(projection).ToList().SelectMany(doc => doc["Value"].ToString().Split('#')).ToList();
+                return result;
+            } catch (Exception ex)
+            {
+                throw new DataAccesException("Failed to get data!");
+            }
+        }
+
+
+        public List<string> Get_idWhere(string dbName, string collectionName, string op, string val)
+        {
+            var db = _client.GetDatabase(dbName);
+            var collection = db.GetCollection<BsonDocument>(collectionName);
+
+            FilterDefinition<BsonDocument> filterDef;
+
+            val = Validator.TrimApostrpohes(val);
+            switch (op)
+            {
+                case "=":
+                case "==":
+                    filterDef = Builders<BsonDocument>.Filter.Eq("_id", val);
+                    break;
+                case ">":
+                    filterDef = Builders<BsonDocument>.Filter.Gt("_id", val);
+                    break;
+                case ">=":
+                    filterDef = Builders<BsonDocument>.Filter.Gte("_id", val);
+                    break;
+                case "<":
+                    filterDef = Builders<BsonDocument>.Filter.Lt("_id", val);
+                    break;
+                case "<=":
+                    filterDef = Builders<BsonDocument>.Filter.Lte("_id", val);
+                    break;
+                default:
+                    throw new DataAccesException("Invalid operator!");
+            }
+
+            var projection = Builders<BsonDocument>.Projection.Include("_id");
+            try
+            {
+                var result = collection.Find(filterDef).Project(projection).ToList().Select(doc => doc["_id"].AsString).ToList();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new DataAccesException("Failed to get data!");
+            }
+        }
+
+        public List<string> GetKeysWhereIter(string dbName, string tableName, int colIndex, string type, string op, string val)
+        {
+            var db = _client.GetDatabase(dbName);
+            var collection = db.GetCollection<BsonDocument>(tableName);
+
+            val = Validator.TrimApostrpohes(val);
+            
+            List<string> result = collection.Find(FilterDefinition<BsonDocument>.Empty).ToList().
+                FindAll(doc => Validator.Match(type, doc["Value"].AsString.Split('^')[colIndex], val, op)).
+                Select(doc => doc["_id"].AsString).ToList();
+
+            return result;
+        }
+
+        //public string GetValue(string dbName, string tableName, string key)
+        //{
+        //    var db = _client.GetDatabase(dbName);
+        //    var collection = db.GetCollection<BsonDocument>(tableName);
+        //    ObjectId objId = ObjectId.Parse(key);
+        //    var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+        //    var document = collection.Find(filter).FirstOrDefault();
+
+        //    return document[key].AsString;
+        //}
 
         //public string GetFullRow(string dbName, string mongoID, string key)
         //{
@@ -289,17 +408,6 @@ namespace GerGO.DataAcces.StoredData
         //    var document = collection.Find(filter).FirstOrDefault();
 
         //    return $"{key}^{document[key].AsString}";
-        //}
-
-        //public string GetValue(string dbName, string mongoID, string key)
-        //{
-        //    var collection = _coreDB.GetCollection<BsonDocument>(dbName);
-        //    ObjectId objId = ObjectId.Parse(mongoID);
-        //    var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
-
-        //    var document = collection.Find(filter).FirstOrDefault();
-
-        //    return document[key].AsString;
         //}
 
         //public List<string> GetValues(string dbName, string mongoID, List<string> keys)
@@ -315,122 +423,6 @@ namespace GerGO.DataAcces.StoredData
         //    keys.ForEach(key => res.Add($"{key}^{document[key].AsString}"));
 
         //    return res;
-        //}
-
-        //public List<string> GetPrimaryKeysWhere(string dbName, string mongoId, int colIndex, string type, string op, string val)
-        //{
-        //    var collection = _coreDB.GetCollection<BsonDocument>(dbName);
-        //    ObjectId objId = ObjectId.Parse(mongoId);
-        //    var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
-
-        //    var document = collection.Find(filter).FirstOrDefault();
-
-        //    List<string> result = [];
-        //    val = Validator.TrimApostrpohes(val);
-        //    switch (op)
-        //    {
-        //        case "=":
-        //        case "==":
-        //            if (document.Names.Any(name => name.Split('^')[colIndex] == val))
-        //                result = document[val].AsString.Split('#').ToList();
-        //            break;
-        //        case ">":
-        //            foreach (var item in document)
-        //            {
-        //                if (item.Name != "_id" && Validator.IsGreater(item.Name.Split('^')[colIndex], val, type))
-        //                    result.AddRange(item.Value.AsString.Split("#"));
-        //            }
-        //            break;
-        //        case ">=":
-        //            foreach (var item in document)
-        //            {
-        //                if (item.Name != "_id" && Validator.IsGreaterOrEqual(item.Name.Split('^')[colIndex], val, type))
-        //                    result.AddRange(item.Value.AsString.Split("#"));
-        //            }
-        //            break;
-        //        case "<":
-        //            foreach (var item in document)
-        //            {
-        //                if (item.Name != "_id" && Validator.IsLess(item.Name.Split('^')[colIndex], val, type))
-        //                    result.AddRange(item.Value.AsString.Split("#"));
-        //            }
-        //            break;
-        //        case "<=":
-        //            foreach (var item in document)
-        //            {
-        //                if (item.Name != "_id" && Validator.IsLessOrEqual(item.Name.Split('^')[colIndex], val, type))
-        //                    result.AddRange(item.Value.AsString.Split("#"));
-        //            }
-        //            break;
-        //        default:
-        //            break;
-        //    }
-
-        //    return result;
-        //}
-
-        //public List<string> GetPrimaryKeysWhereAllRow(string dbName, string mongoId, int colIndex, string type, string op, string val)
-        //{
-        //    var collection = _coreDB.GetCollection<BsonDocument>(dbName);
-        //    ObjectId objId = ObjectId.Parse(mongoId);
-        //    var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
-
-        //    var document = collection.Find(filter).FirstOrDefault();
-
-        //    List<string> result = [];
-        //    val = Validator.TrimApostrpohes(val);
-        //    foreach (var item in document.Elements)
-        //    {
-        //        if (item.Name.Equals("_id"))
-        //            continue;
-
-        //        string row = $"{item.Name}^{item.Value}";
-        //        switch (op)
-        //        {
-        //            case "=":
-        //            case "==":
-        //                if (row.Split('^')[colIndex] == val)
-        //                    result.Add(item.Name);
-        //                break;
-        //            case ">":
-        //                if (Validator.IsGreater(row.Split('^')[colIndex], val, type))
-        //                    result.Add(item.Name);
-        //                break;
-        //            case ">=":
-        //                if (Validator.IsGreaterOrEqual(row.Split('^')[colIndex], val, type))
-        //                    result.Add(item.Name);
-        //                break;
-        //            case "<":
-        //                if (Validator.IsLess(row.Split('^')[colIndex], val, type))
-        //                    result.Add(item.Name);
-        //                break;
-        //            case "<=":
-        //                if (Validator.IsLessOrEqual(row.Split('^')[colIndex], val, type))
-        //                    result.Add(item.Name);
-        //                break;
-        //            default:
-        //                break;
-        //        }
-        //    }
-
-        //    return result;
-        //}
-
-        //public List<string> GetPrimaryKeys(string dbName, string mongoID)
-        //{
-        //    var collection = _coreDB.GetCollection<BsonDocument>(dbName);
-        //    ObjectId objId = ObjectId.Parse(mongoID);
-        //    var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
-
-        //    var document = collection.Find(filter).FirstOrDefault();
-
-        //    if (document == null)
-        //        throw new DataAccesException("No matching document!");
-
-        //    List<string> pKeys = document.Names.ToList();
-        //    pKeys.Remove("_id");
-
-        //    return pKeys;
         //}
     }
 }

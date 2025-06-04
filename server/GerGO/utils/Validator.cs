@@ -10,6 +10,27 @@
             }
             return val;
         }
+
+        public static bool Match(string type, string val1, string val2, string op)
+        {
+            switch (op)
+            {
+                case "=":
+                case "==":
+                    return IsEqual(val1, val2, type);
+                case ">":
+                    return IsGreater(val1, val2, type);
+                case "<":
+                    return IsLess(val1, val2, type);
+                case ">=":
+                    return IsGreaterOrEqual(val1, val2, type);
+                case "<=":
+                    return IsLessOrEqual(val1, val2, type);
+                default:
+                    return false;
+            }
+        }
+
         public static bool IsEqual(string val1, string val2, string type)
         {
             switch (type)

@@ -70,7 +70,7 @@ namespace GerGO.Functionalities.Data
                 {
                     int batched = 0;
                     List<string> data = [];
-                    while (i < result.Count && batched < 50)
+                    while (i < result.Count && batched < TcpResponder.GetMaxBatchCount())
                     {
                         data.Add(result[i]);
                         batched++;

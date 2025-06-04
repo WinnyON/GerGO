@@ -20,7 +20,7 @@ namespace GerGO.Functionalities.MetaData
                 iFile.Name = arguments[3].ToLower();
                 for (int i = 4; i < arguments.Length; i++)
                 {
-                    iFile.Attributes.Add(arguments[4].ToLower());
+                    iFile.Attributes.Add(arguments[i].ToLower());
                 }
 
                 IResourceManager manager = ResourceManagerFactory.GetInstance();

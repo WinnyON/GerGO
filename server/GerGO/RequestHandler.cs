@@ -77,7 +77,7 @@ namespace GerGO
                 {
                     string request = TcpResponder.ReadValue(stream);
                     
-                    if (string.IsNullOrEmpty(request))
+                    if (string.IsNullOrEmpty(request) || request.StartsWith('0'))
                     {
                         // this is for the client, checks if is still connected to the server
                         return;

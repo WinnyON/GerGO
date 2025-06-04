@@ -144,7 +144,7 @@ namespace GerGO.Manager
                     List<MongoEntity> indexData = GetAllRows(dbName, tableName, attrList).Select(row =>
                     {
                         List<string> values = row.Split('^').ToList();
-                        string fKeyVal = values[-1];
+                        string fKeyVal = values[values.Count - 1];
                         values.RemoveAt(values.Count - 1);
                         string pKey = string.Join('^', values);
                         return new MongoEntity(fKeyVal, pKey);
@@ -756,12 +756,17 @@ namespace GerGO.Manager
             try
             {
                 List<string> rows;
+                IQueryExecuter queryExecuter = QueryExecuterFactory.GetExecuter(_metaDataManager, _storedDataManager);
                 lock (_locks[selectData.DbName])
                 {
-                    IQueryExecuter queryExecuter = QueryExecuterFactory.GetExecuter(_metaDataManager, _storedDataManager);
                     rows = queryExecuter.ExecuteQuery(ref selectData);
                 }
 
+                columnNames = $"{selectData.Columns[0][1]}.{selectData.Columns[0][2]}";
+                for (int i = 1; i < selectData.Columns.Count; i++)
+                {
+                    columnNames = columnNames + $"^{selectData.Columns[i][1]}.{selectData.Columns[i][2]}";
+                }
                 return rows;
             }
             catch (QueryExecuterException ex)
