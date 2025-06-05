@@ -85,7 +85,7 @@ namespace GerGO.DataAcces.StoredData
             }
         }
 
-        public void Delete(string dbName, string tableName, List<string> pKeys)
+        public void Delete<T>(string dbName, string tableName, List<T> pKeys)
         {
             var db = _client.GetDatabase(dbName);
             var collection = db.GetCollection<BsonDocument>(tableName);
@@ -126,12 +126,12 @@ namespace GerGO.DataAcces.StoredData
             return result;
         }
 
-        public void Insert(string dbName, string collectionName, List<MongoEntity> data)
+        public void Insert<T>(string dbName, string collectionName, List<MongoEntity<T>> data)
         {
             var db = _client.GetDatabase(dbName);
             var collection = db.GetCollection<BsonDocument>(collectionName);
 
-            List<BsonDocument> rows = data.Select(x => new BsonDocument { { "_id", x.Key }, { "Value", x.Value } }).ToList();
+            List<BsonDocument> rows = data.Select(x => new BsonDocument { { "_id", BsonValue.Create(x.Key) }, { "Value", x.Value } }).ToList();
 
             try
             {
@@ -159,7 +159,7 @@ namespace GerGO.DataAcces.StoredData
             }
         }
 
-        public bool ExistsKey(string dbName, string collectionName, string key)
+        public bool ExistsKey<T>(string dbName, string collectionName, T key)
         {
             var db = _client.GetDatabase(dbName);
             var collection = db.GetCollection<BsonDocument>(collectionName);
@@ -173,12 +173,12 @@ namespace GerGO.DataAcces.StoredData
             return true;
         }
 
-        public void InsertIndexData(string dbName, string collectionName, List<MongoEntity> data)
+        public void InsertIndexData<T>(string dbName, string collectionName, List<MongoEntity<T>> data)
         {
             var db = _client.GetDatabase(dbName);
             var collection = db.GetCollection<BsonDocument>(collectionName);
 
-            Dictionary<string, string> dict = [];
+            Dictionary<T, string> dict = [];
             data.ForEach(d =>
             {
                 if (dict.ContainsKey(d.Key))
@@ -216,7 +216,7 @@ namespace GerGO.DataAcces.StoredData
                 }
                 else
                 {
-                    docsToInsert.Add(new BsonDocument { { "_id", entity.Key }, { "Value", entity.Value } });
+                    docsToInsert.Add(new BsonDocument { { "_id", BsonValue.Create(entity.Key) }, { "Value", entity.Value } });
                 }
             }
 
@@ -290,14 +290,13 @@ namespace GerGO.DataAcces.StoredData
 
             return result;
         }
-        public List<string> GetKeysWhere(string dbName, string collectionName, string op, string val)
+        public List<string> GetKeysWhere<T>(string dbName, string collectionName, string op, T val)
         {
             var db = _client.GetDatabase(dbName);
             var collection = db.GetCollection<BsonDocument>(collectionName);
 
             FilterDefinition<BsonDocument> filterDef;
 
-            val = Validator.TrimApostrpohes(val);
             switch (op)
             {
                 case "=":
@@ -332,14 +331,13 @@ namespace GerGO.DataAcces.StoredData
         }
 
 
-        public List<string> Get_idWhere(string dbName, string collectionName, string op, string val)
+        public List<string> Get_idWhere<T>(string dbName, string collectionName, string op, T val)
         {
             var db = _client.GetDatabase(dbName);
             var collection = db.GetCollection<BsonDocument>(collectionName);
 
             FilterDefinition<BsonDocument> filterDef;
 
-            val = Validator.TrimApostrpohes(val);
             switch (op)
             {
                 case "=":
@@ -365,7 +363,7 @@ namespace GerGO.DataAcces.StoredData
             var projection = Builders<BsonDocument>.Projection.Include("_id");
             try
             {
-                var result = collection.Find(filterDef).Project(projection).ToList().Select(doc => doc["_id"].AsString).ToList();
+                var result = collection.Find(filterDef).Project(projection).ToList().Select(doc => doc["_id"].ToString()).ToList();
                 return result;
             }
             catch (Exception ex)
@@ -383,7 +381,7 @@ namespace GerGO.DataAcces.StoredData
             
             List<string> result = collection.Find(FilterDefinition<BsonDocument>.Empty).ToList().
                 FindAll(doc => Validator.Match(type, doc["Value"].AsString.Split('^')[colIndex], val, op)).
-                Select(doc => doc["_id"].AsString).ToList();
+                Select(doc => doc["_id"].ToString()).ToList();
 
             return result;
         }

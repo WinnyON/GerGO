@@ -55,7 +55,15 @@ namespace GerGO.Query
                 bool isPkey = table.PrimaryKeys.Any(pk => pk.Name.Equals(whereClause[2]));
                 if (isPkey)
                 {
-                    List<string> resPKeys = _storedDataManager.Get_idWhere(dbName, table.Name, whereClause[3], whereClause[4]);
+                    List<string> resPKeys = [];
+                    if (table.PrimaryKeys.Count == 1 && _metaDataManager.GetColumn(dbName, whereClause[1], whereClause[2]).Type == "int")
+                    {
+                        resPKeys = _storedDataManager.Get_idWhere<int>(dbName, table.Name, whereClause[3], int.Parse(whereClause[4]));
+                    }
+                    else
+                    {
+                        resPKeys = _storedDataManager.Get_idWhere<string>(dbName, table.Name, whereClause[3], whereClause[4]);
+                    }
                     if (pKeys.Count == 0)
                         pKeys = resPKeys;
                     else
@@ -67,7 +75,16 @@ namespace GerGO.Query
                 bool isUniqueKey = table.UniqueKeys.Contains(whereClause[2]);
                 if (isUniqueKey)
                 {
-                    List<string> resPKeys = _storedDataManager.GetKeysWhere(dbName, $"{table.Name}_{whereClause[2]}_uniquekey", whereClause[3], whereClause[4]);
+                    List<string> resPKeys = [];
+                    if (_metaDataManager.GetColumn(dbName, table.Name, whereClause[2]).Type == "int")
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<int>(dbName, $"{table.Name}_{whereClause[2]}_uniquekey", whereClause[3], int.Parse(whereClause[4]));
+                    }
+                    else
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<string>(dbName, $"{table.Name}_{whereClause[2]}_uniquekey", whereClause[3], whereClause[4]);
+                    }
+                    resPKeys = _storedDataManager.GetKeysWhere(dbName, $"{table.Name}_{whereClause[2]}_uniquekey", whereClause[3], whereClause[4]);
                     if (pKeys.Count == 0)
                         pKeys = resPKeys;
                     else
@@ -79,7 +96,15 @@ namespace GerGO.Query
                 IndexFile? iFile = table.IndexFiles.FirstOrDefault(iFile => iFile.Attributes.Contains(whereClause[2]), null);
                 if (iFile != null)
                 {
-                    List<string> resPKeys = _storedDataManager.GetKeysWhere(dbName, $"{table.Name}_{iFile.Name}", whereClause[3], whereClause[4]);
+                    List<string> resPKeys = [];
+                    if (iFile.Attributes.Count == 1 && _metaDataManager.GetColumn(dbName, table.Name, iFile.Attributes[0]).Type == "int")
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<int>(dbName, $"{table.Name}_{iFile.Name}", whereClause[3], int.Parse(whereClause[4]));
+                    }
+                    else
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<string>(dbName, $"{table.Name}_{iFile.Name}", whereClause[3], whereClause[4]);
+                    }
                     if (pKeys.Count == 0)
                         pKeys = resPKeys;
                     else
@@ -90,7 +115,15 @@ namespace GerGO.Query
                 ForeignKey? fKey = table.ForeignKeys.FirstOrDefault(fKey => fKey.AttributeName.Equals(whereClause[2]), null);
                 if (fKey != null)
                 {
-                    List<string> resPKeys = _storedDataManager.GetKeysWhere(dbName, $"{table.Name}_{fKey.Name}", whereClause[3], whereClause[4]);
+                    List<string> resPKeys = [];
+                    if (_metaDataManager.GetColumn(dbName, table.Name, fKey.AttributeName).Type == "int")
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<int>(dbName, $"{table.Name}_{fKey.Name}", whereClause[3], int.Parse(whereClause[4]));
+                    }
+                    else
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<string>(dbName, $"{table.Name}_{fKey.Name}", whereClause[3], whereClause[4]);
+                    }
                     if (pKeys.Count == 0)
                         pKeys = resPKeys;
                     else

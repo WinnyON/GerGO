@@ -4,20 +4,20 @@ namespace GerGO.DataAcces.StoredData
 {
     interface IStoredDataManager
     {
-        public void Insert(string dbName, string collectionName, List<MongoEntity> data);
-        public void Delete(string dbName, string tableName, List<string> pKeys);
+        public void Insert<T>(string dbName, string collectionName, List<MongoEntity<T>> data);
+        public void Delete<T>(string dbName, string tableName, List<T> pKeys);
         public void AddColumn(string dbName, string tableName, string value);
         public void DropDatabase(string dbName);
         public void DropTable(string dbName, string tableName);
         public List<string> GetAllRows(string dbName, string tableName);
-        public void InsertIndexData(string dbName, string collectionName, List<MongoEntity> data);
-        public bool ExistsKey(string dbName, string collectionName, string key);
+        public void InsertIndexData<T>(string dbName, string collectionName, List<MongoEntity<T>> data);
+        public bool ExistsKey<T>(string dbName, string collectionName, T key);
         public void RemoveColumn(string dbName, string tableName, int index);
         public void DeleteIndexData(string dbName, string collectionName, List<string> pKeys);
         public void DeleteUniqueIndexData(string dbName, string collectionName, List<string> pKeys);
         public List<string> GetAllKeys(string dbName, string tableName);
-        public List<string> GetKeysWhere(string dbName, string collectionName, string op, string val);
-        public List<string> Get_idWhere(string dbName, string collectionName, string op, string val);
+        public List<string> GetKeysWhere<T>(string dbName, string collectionName, string op, T val);
+        public List<string> Get_idWhere<T>(string dbName, string collectionName, string op, T val);
         public List<string> GetKeysWhereIter(string dbName, string tableName, int colIndex, string type, string op, string val);
 
 

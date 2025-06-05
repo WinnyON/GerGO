@@ -4,6 +4,9 @@ using GerGO.DataAcces.StoredData;
 using GerGO.Models;
 using GerGO.Query;
 using GerGO.Utils;
+using MongoDB.Driver;
+using System.Linq;
+using System.Xml.Linq;
 
 namespace GerGO.Manager
 {
@@ -141,16 +144,34 @@ namespace GerGO.Manager
                 {
                     var attrList = _metaDataManager.GetPrimaryKeys(dbName, tableName);
                     attrList.Add(foreignKey.AttributeName);
-                    List<MongoEntity> indexData = GetAllRows(dbName, tableName, attrList).Select(row =>
-                    {
-                        List<string> values = row.Split('^').ToList();
-                        string fKeyVal = values[values.Count - 1];
-                        values.RemoveAt(values.Count - 1);
-                        string pKey = string.Join('^', values);
-                        return new MongoEntity(fKeyVal, pKey);
-                    }).ToList();
 
-                    _storedDataManager.InsertIndexData(dbName, $"{tableName}_{foreignKey.Name}", indexData);
+                    if (_metaDataManager.GetColumn(dbName, tableName, foreignKey.AttributeName).Type == "int")
+                    {
+                        List<MongoEntity<int>> indexData = GetAllRows(dbName, tableName, attrList).Select(row =>
+                        {
+                            List<string> values = row.Split('^').ToList();
+                            int fKeyVal = int.Parse(values[values.Count - 1]);
+                            values.RemoveAt(values.Count - 1);
+                            string pKey = string.Join('^', values);
+                            return new MongoEntity<int>(fKeyVal, pKey);
+                        }).ToList();
+
+                        _storedDataManager.InsertIndexData<int>(dbName, $"{tableName}_{foreignKey.Name}", indexData);
+                    }
+                    else
+                    {
+                        List<MongoEntity<string>> indexData = GetAllRows(dbName, tableName, attrList).Select(row =>
+                        {
+                            List<string> values = row.Split('^').ToList();
+                            string fKeyVal = values[values.Count - 1];
+                            values.RemoveAt(values.Count - 1);
+                            string pKey = string.Join('^', values);
+                            return new MongoEntity<string>(fKeyVal, pKey);
+                        }).ToList();
+
+                        _storedDataManager.InsertIndexData<string>(dbName, $"{tableName}_{foreignKey.Name}", indexData);
+                    }
+
                     _metaDataManager.AddForeignKey(dbName, tableName, foreignKey);
                 }
             }
@@ -309,15 +330,30 @@ namespace GerGO.Manager
                     var attrList = _metaDataManager.GetPrimaryKeys(dbName, tableName);
                     attrList.AddRange(iFile.Attributes);
                     int nrPKeys = attrList.Count - iFile.Attributes.Count;
-                    List<MongoEntity> indexData = GetAllRows(dbName, tableName, attrList).Select(row =>
+                    if (iFile.Attributes.Count == 1 && _metaDataManager.GetColumn(dbName, tableName, iFile.Attributes[0]).Type == "int")
                     {
-                        List<string> values = row.Split('^').ToList();
-                        string indVal = string.Join('^', values.Skip(nrPKeys));
-                        string pKey = string.Join('^', values.Take(nrPKeys));
-                        return new MongoEntity(indVal, pKey);
-                    }).ToList();
+                        List<MongoEntity<int>> indexData = GetAllRows(dbName, tableName, attrList).Select(row =>
+                        {
+                            List<string> values = row.Split('^').ToList();
+                            int indVal = int.Parse(values[values.Count - 1]);
+                            string pKey = string.Join('^', values.Take(nrPKeys));
+                            return new MongoEntity<int>(indVal, pKey);
+                        }).ToList();
 
-                    _storedDataManager.InsertIndexData(dbName, $"{tableName}_{iFile.Name}", indexData);
+                        _storedDataManager.InsertIndexData<int>(dbName, $"{tableName}_{iFile.Name}", indexData);
+                    }
+                    else
+                    {
+                        List<MongoEntity<string>> indexData = GetAllRows(dbName, tableName, attrList).Select(row =>
+                        {
+                            List<string> values = row.Split('^').ToList();
+                            string indVal = string.Join('^', values.Skip(nrPKeys));
+                            string pKey = string.Join('^', values.Take(nrPKeys));
+                            return new MongoEntity<string>(indVal, pKey);
+                        }).ToList();
+
+                        _storedDataManager.InsertIndexData<string>(dbName, $"{tableName}_{iFile.Name}", indexData);
+                    }
                 }
             }
             catch (DataAccesException ex)
@@ -556,8 +592,8 @@ namespace GerGO.Manager
             {
                 lock (_locks[dbName])
                 {
-                    List<MongoEntity> insertData = [];
-                    
+                    List<MongoEntity<string>> insertData = [];
+
                     Dictionary<string, List<string>> uKeyVals = new Dictionary<string, List<string>>();
                     foreach (var uKey in table.UniqueKeys)
                     {
@@ -570,9 +606,9 @@ namespace GerGO.Manager
                         fKeyVals.Add(fKey.Name, _storedDataManager.GetAllKeys(dbName, fKey.RefTableName));
                     }
 
-                    Dictionary<string, List<MongoEntity>> uniqueInsertData = [];
-                    Dictionary<string, List<MongoEntity>> indexData = [];
-                    Dictionary<string, List<MongoEntity>> fKeyData = [];
+                    Dictionary<string, List<MongoEntity<string>>> uniqueInsertData = [];
+                    Dictionary<string, List<MongoEntity<string>>> indexData = [];
+                    Dictionary<string, List<MongoEntity<string>>> fKeyData = [];
                     foreach (string row in rows)
                     {
                         try
@@ -602,22 +638,22 @@ namespace GerGO.Manager
                                     throw new DataAccesException("");
                                 string tmp = $"{tableName}_{uKey}_uniquekey";
                                 if (uniqueInsertData.ContainsKey(tmp))
-                                    uniqueInsertData[tmp].Add(new MongoEntity(uniqueVal, pKey));
+                                    uniqueInsertData[tmp].Add(new MongoEntity<string>(uniqueVal, pKey));
                                 else
-                                    uniqueInsertData.Add(tmp, [new MongoEntity(uniqueVal, pKey)]);
+                                    uniqueInsertData.Add(tmp, [new MongoEntity<string>(uniqueVal, pKey)]);
                             }
 
                             foreach (var fk in table.ForeignKeys)
                             {
                                 string fKeyVal = rowSplitted[columnNames.IndexOf(fk.AttributeName)];
                                 if (fKeyData.ContainsKey(fk.Name))
-                                    fKeyData[fk.Name].Add(new MongoEntity(fKeyVal, pKey));
+                                    fKeyData[fk.Name].Add(new MongoEntity<string>(fKeyVal, pKey));
                                 else
-                                    fKeyData.Add(fk.Name, [new MongoEntity(fKeyVal, pKey)]);
+                                    fKeyData.Add(fk.Name, [new MongoEntity<string>(fKeyVal, pKey)]);
                             }
 
                             // inserting data
-                            insertData.Add(new MongoEntity(pKey, value));
+                            insertData.Add(new MongoEntity<string>(pKey, value));
 
                             // inserting to index files
                             foreach (var iFile in table.IndexFiles)
@@ -628,9 +664,9 @@ namespace GerGO.Manager
                                     indexKey = indexKey + "^" + rowSplitted[columnNames.IndexOf(iFile.Attributes[i])];
                                 }
                                 if (indexData.ContainsKey(iFile.Name))
-                                    fKeyData[iFile.Name].Add(new MongoEntity(indexKey, pKey));
+                                    fKeyData[iFile.Name].Add(new MongoEntity<string>(indexKey, pKey));
                                 else
-                                    fKeyData.Add(iFile.Name, [new MongoEntity(indexKey, pKey)]);
+                                    fKeyData.Add(iFile.Name, [new MongoEntity<string>(indexKey, pKey)]);
                             }
 
                             count++;
@@ -656,18 +692,48 @@ namespace GerGO.Manager
                         return 0;
 
                     // batched inserts
-                    _storedDataManager.Insert(dbName, tableName, insertData);
+                    if (table.PrimaryKeys.Count == 1 && _metaDataManager.GetColumn(dbName, tableName, table.PrimaryKeys[0].Name).Type == "int")
+                    {
+                        _storedDataManager.Insert<int>(dbName, tableName, insertData.Select(data => new MongoEntity<int>(int.Parse(data.Key), data.Value)).ToList());
+                    }
+                    else
+                    {
+                        _storedDataManager.Insert(dbName, tableName, insertData);
+                    }
+
                     foreach (var iFileData in indexData)
                     {
-                        _storedDataManager.InsertIndexData(dbName, $"{tableName}_{iFileData.Key}", iFileData.Value);
+                        var iFile = _metaDataManager.GetIndexFile(dbName, tableName, iFileData.Key);
+                        if (iFile.Attributes.Count == 1 && _metaDataManager.GetColumn(dbName, tableName, iFile.Attributes[0]).Type == "int")
+                        {
+                            _storedDataManager.InsertIndexData<int>(dbName, $"{tableName}_{iFileData.Key}", iFileData.Value.Select(val => new MongoEntity<int>(int.Parse(val.Key), val.Value)).ToList());
+                        }
+                        else
+                        {
+                            _storedDataManager.InsertIndexData(dbName, $"{tableName}_{iFileData.Key}", iFileData.Value);
+                        }
                     }
                     foreach (var fKData in fKeyData)
                     {
-                        _storedDataManager.InsertIndexData(dbName, $"{tableName}_{fKData.Key}", fKData.Value);
+                        if (_metaDataManager.GetColumn(dbName, tableName, _metaDataManager.GetForeignKey(dbName, tableName, fKData.Key).AttributeName).Type == "int")
+                        {
+                            _storedDataManager.InsertIndexData<int>(dbName, $"{tableName}_{fKData.Key}", fKData.Value.Select(val => new MongoEntity<int>(int.Parse(val.Key), val.Value)).ToList());
+                        }
+                        else
+                        {
+                            _storedDataManager.InsertIndexData(dbName, $"{tableName}_{fKData.Key}", fKData.Value);
+                        }
                     }
                     foreach (var uniqueData in uniqueInsertData)
                     {
-                        _storedDataManager.Insert(dbName, uniqueData.Key, uniqueData.Value);
+                        if (_metaDataManager.GetColumn(dbName, tableName, uniqueData.Key).Type == "int")
+                        {
+                            _storedDataManager.Insert<int>(dbName, $"{tableName}_{uniqueData.Key}_uniquekey", insertData.Select(data => new MongoEntity<int>(int.Parse(data.Key), data.Value)).ToList());
+                        }
+                        else
+                        {
+                            _storedDataManager.Insert(dbName, $"{tableName}_{uniqueData.Key}_uniquekey", insertData);
+                        }
                     }
                 }
                 return count;

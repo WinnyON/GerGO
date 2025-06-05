@@ -1,85 +1,14 @@
 <?xml version="1.0" encoding="utf-16"?>
 <DataBaseXmlWrapper xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Databases>
-    <DataBase Name="bolt">
-      <Tables>
-        <Table TableName="autok">
-          <ForeignKeys>
-            <ForeignKey Name="fk_autok_markak">
-              <AttributeName>markaid</AttributeName>
-              <RefTableName>markak</RefTableName>
-              <RefAttributeName>markaid</RefAttributeName>
-            </ForeignKey>
-          </ForeignKeys>
-          <IndexFiles />
-          <Structure>
-            <Column FieldName="autoid" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="rendszam" Type="string" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="markaid" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="ar" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-          </Structure>
-          <UniqueKeys>
-            <UniqueKey>rendszam</UniqueKey>
-          </UniqueKeys>
-          <PrimaryKeys>
-            <PKAttribute Name="autoid">
-              <IdentitySeed>1</IdentitySeed>
-              <IdentityStep>1</IdentityStep>
-              <IdentityInnerSeed>24</IdentityInnerSeed>
-            </PKAttribute>
-          </PrimaryKeys>
-        </Table>
-        <Table TableName="markak">
-          <ForeignKeys />
-          <IndexFiles>
-            <Index Name="ind_markanev">
-              <Attributes>
-                <Attribute>markanev</Attribute>
-              </Attributes>
-            </Index>
-          </IndexFiles>
-          <Structure>
-            <Column FieldName="markaid" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="markanev" Type="string" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-          </Structure>
-          <UniqueKeys />
-          <PrimaryKeys>
-            <PKAttribute Name="markaid">
-              <IdentitySeed>1</IdentitySeed>
-              <IdentityStep>1</IdentityStep>
-              <IdentityInnerSeed>10</IdentityInnerSeed>
-            </PKAttribute>
-          </PrimaryKeys>
-        </Table>
-      </Tables>
-    </DataBase>
-    <DataBase Name="soccer">
+    <DataBase Name="foci">
       <Tables>
         <Table TableName="clubs">
           <ForeignKeys />
           <IndexFiles>
-            <Index Name="nev_capacity_index">
+            <Index Name="ind_name">
               <Attributes>
                 <Attribute>clubname</Attribute>
-                <Attribute>capacity</Attribute>
               </Attributes>
             </Index>
           </IndexFiles>
@@ -123,7 +52,7 @@
             </ForeignKey>
           </ForeignKeys>
           <IndexFiles>
-            <Index Name="players_goals_ind">
+            <Index Name="ind_goals">
               <Attributes>
                 <Attribute>goals</Attribute>
               </Attributes>
@@ -169,112 +98,6 @@
               <IdentitySeed>1</IdentitySeed>
               <IdentityStep>1</IdentityStep>
               <IdentityInnerSeed>99001</IdentityInnerSeed>
-            </PKAttribute>
-          </PrimaryKeys>
-        </Table>
-      </Tables>
-    </DataBase>
-    <DataBase Name="abc">
-      <Tables>
-        <Table TableName="abcd">
-          <ForeignKeys />
-          <IndexFiles />
-          <Structure>
-            <Column FieldName="abc" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-          </Structure>
-          <UniqueKeys />
-          <PrimaryKeys>
-            <PKAttribute Name="abc">
-              <IdentitySeed>1</IdentitySeed>
-              <IdentityStep>1</IdentityStep>
-              <IdentityInnerSeed>1</IdentityInnerSeed>
-            </PKAttribute>
-          </PrimaryKeys>
-        </Table>
-      </Tables>
-    </DataBase>
-    <DataBase Name="foci">
-      <Tables>
-        <Table TableName="players">
-          <ForeignKeys />
-          <IndexFiles />
-          <Structure>
-            <Column FieldName="playerid" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="name" Type="string" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="age" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="telnum" Type="string" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="email" Type="string" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="goals" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="assists" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="cid" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-          </Structure>
-          <UniqueKeys />
-          <PrimaryKeys>
-            <PKAttribute Name="playerid">
-              <IdentitySeed>1</IdentitySeed>
-              <IdentityStep>1</IdentityStep>
-              <IdentityInnerSeed>297001</IdentityInnerSeed>
-            </PKAttribute>
-          </PrimaryKeys>
-        </Table>
-        <Table TableName="clubs">
-          <ForeignKeys />
-          <IndexFiles />
-          <Structure>
-            <Column FieldName="clubid" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="clubname" Type="string" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="nickname" Type="string" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="capacity" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-            <Column FieldName="trophies" Type="int" NotNull="false">
-              <DefaultVal />
-              <Check />
-            </Column>
-          </Structure>
-          <UniqueKeys />
-          <PrimaryKeys>
-            <PKAttribute Name="clubid">
-              <IdentitySeed>1</IdentitySeed>
-              <IdentityStep>1</IdentityStep>
-              <IdentityInnerSeed>1001</IdentityInnerSeed>
             </PKAttribute>
           </PrimaryKeys>
         </Table>
