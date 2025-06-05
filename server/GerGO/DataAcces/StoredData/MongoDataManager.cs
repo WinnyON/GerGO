@@ -286,7 +286,7 @@ namespace GerGO.DataAcces.StoredData
             var projection = Builders<BsonDocument>.Projection.Include("_id");
 
             var result = collection.Find(FilterDefinition<BsonDocument>.Empty).Project(projection).ToList()
-                .Select(doc => doc["_id"].AsString).ToList();
+                .Select(doc => doc["_id"].ToString()).ToList();
 
             return result;
         }
@@ -382,6 +382,17 @@ namespace GerGO.DataAcces.StoredData
             List<string> result = collection.Find(FilterDefinition<BsonDocument>.Empty).ToList().
                 FindAll(doc => Validator.Match(type, doc["Value"].AsString.Split('^')[colIndex], val, op)).
                 Select(doc => doc["_id"].ToString()).ToList();
+
+            return result;
+        }
+
+        public List<string> GetRows<T>(string dbName, string tableName, List<T> keys)
+        {
+            var db = _client.GetDatabase(dbName);
+            var collection = db.GetCollection<BsonDocument>(tableName);
+
+            List<string> result = collection.Find(Builders<BsonDocument>.Filter.In("_id", keys)).ToList().
+                Select(doc => $"{doc["_id"].ToString()}^{doc["Value"].ToString()}").ToList();
 
             return result;
         }

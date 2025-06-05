@@ -58,6 +58,12 @@ namespace GerGO.Manager
                 throw new DataResourceException("Not valid column: pk with identity can have no other constraints!");
             }
 
+            if (pKey != null && column.Type != "int" && column.Type != "string")
+            {
+                _logger.Error("Primary key has to be int or string!");
+                throw new DataResourceException("Primary key has to be int or string!");
+            }
+
             if (column.NotNull && column.DefaultVal == string.Empty)
             {
                 _logger.Error("When set NOT NULL, default value is required!");

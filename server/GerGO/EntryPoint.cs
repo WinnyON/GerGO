@@ -6,7 +6,7 @@ namespace GerGO
     {
         public static void Main(string[] args)
         {
-            Server.InitializeServer("172.30.245.46", 12000);
+            Server.InitializeServer("192.168.8.183", 12000);
 
             Server.Start();
             Server.Run();
