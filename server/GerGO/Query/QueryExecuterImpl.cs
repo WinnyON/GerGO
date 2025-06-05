@@ -30,12 +30,16 @@ namespace GerGO.Query
             try
             {
                 List<string> rows;
+
                 Table selectBaseTable = _metaDataManager.GetTable(selectData.DbName, selectData.TableName);
                 List<string[]> whereClauses = selectData.WhereClauses.FindAll(clause => clause[1].Equals(selectData.TableName));
                 rows = Selection(selectData.DbName, selectBaseTable, whereClauses);
 
                 List<string> tablesOrder = [selectData.TableName];
                 selectData.JoinTables.ForEach(jt => tablesOrder.Add(jt[3]));
+                
+                List<int[]> projectionIndexes = [];
+                selectData.Columns.ForEach(colData => projectionIndexes.Add([tablesOrder.IndexOf(colData[1]), _metaDataManager.GetColumnPostions(selectData.DbName, colData[1], [colData[2]])[0]]));
 
                 foreach (var joinClause in selectData.JoinTables)
                 {
@@ -69,13 +73,27 @@ namespace GerGO.Query
                     rows = NestedLoopJoin(selectData.DbName, rows, tablesOrder.IndexOf(joinClause[1]), innerRows, joinClause);
                 }
 
-                return rows;
+                return Projection(projectionIndexes, rows);
             }
             catch (DataAccesException ex)
             {
                 _logger.Error($"Failed to execute query: {ex.Message}");
                 throw new QueryExecuterException($"Failed to execute query: {ex.Message}");
             }
+        }
+
+        List<string> Projection(List<int[]> projIndexes, List<string> rows)
+        {
+            return rows.Select(row =>
+            {
+                string[] data = row.Split('#');
+                string val = data[projIndexes[0][0]].Split('^')[projIndexes[0][1]];
+                for (int i = 1; i < projIndexes.Count; i++)
+                {
+                    val = $"{val}^{data[projIndexes[i][0]].Split('^')[projIndexes[i][1]]}";
+                }
+                return val;
+            }).ToList();
         }
 
         private List<string> NestedLoopJoin(string dbName, List<string> outerRows, int outerIndex, List<string> innerRows, string[] joinClause)
