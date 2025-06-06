@@ -103,5 +103,131 @@
         </Table>
       </Tables>
     </DataBase>
+    <DataBase Name="carrent">
+      <Tables>
+        <Table TableName="dealerships">
+          <ForeignKeys />
+          <IndexFiles />
+          <Structure>
+            <Column FieldName="did" Type="int" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="name" Type="string" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="address" Type="string" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="phone" Type="string" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="isactive" Type="int" NotNull="false">
+              <DefaultVal>0</DefaultVal>
+              <Check />
+            </Column>
+          </Structure>
+          <UniqueKeys />
+          <PrimaryKeys>
+            <PKAttribute Name="did">
+              <IdentitySeed>1</IdentitySeed>
+              <IdentityStep>1</IdentityStep>
+              <IdentityInnerSeed>10000</IdentityInnerSeed>
+            </PKAttribute>
+          </PrimaryKeys>
+        </Table>
+        <Table TableName="renters">
+          <ForeignKeys>
+            <ForeignKey Name="fk_renters_cars">
+              <AttributeName>carid</AttributeName>
+              <RefTableName>cars</RefTableName>
+              <RefAttributeName>carid</RefAttributeName>
+            </ForeignKey>
+          </ForeignKeys>
+          <IndexFiles />
+          <Structure>
+            <Column FieldName="rid" Type="int" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="carid" Type="int" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="name" Type="string" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="email" Type="string" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="rentaldate" Type="date" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="cost" Type="float" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+          </Structure>
+          <UniqueKeys />
+          <PrimaryKeys>
+            <PKAttribute Name="rid">
+              <IdentitySeed>1</IdentitySeed>
+              <IdentityStep>1</IdentityStep>
+              <IdentityInnerSeed>100000</IdentityInnerSeed>
+            </PKAttribute>
+          </PrimaryKeys>
+        </Table>
+        <Table TableName="cars">
+          <ForeignKeys>
+            <ForeignKey Name="fk_cars_dealerships">
+              <AttributeName>did</AttributeName>
+              <RefTableName>dealerships</RefTableName>
+              <RefAttributeName>did</RefAttributeName>
+            </ForeignKey>
+          </ForeignKeys>
+          <IndexFiles />
+          <Structure>
+            <Column FieldName="carid" Type="int" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="did" Type="int" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="make" Type="string" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="model" Type="string" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="dailyrate" Type="float" NotNull="false">
+              <DefaultVal />
+              <Check />
+            </Column>
+            <Column FieldName="isavaible" Type="int" NotNull="false">
+              <DefaultVal>0</DefaultVal>
+              <Check />
+            </Column>
+          </Structure>
+          <UniqueKeys />
+          <PrimaryKeys>
+            <PKAttribute Name="carid">
+              <IdentitySeed>1</IdentitySeed>
+              <IdentityStep>1</IdentityStep>
+              <IdentityInnerSeed>100000</IdentityInnerSeed>
+            </PKAttribute>
+          </PrimaryKeys>
+        </Table>
+      </Tables>
+    </DataBase>
   </Databases>
 </DataBaseXmlWrapper>

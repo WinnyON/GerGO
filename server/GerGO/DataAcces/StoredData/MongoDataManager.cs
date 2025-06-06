@@ -397,41 +397,41 @@ namespace GerGO.DataAcces.StoredData
             return result;
         }
 
-        //public string GetValue(string dbName, string tableName, string key)
-        //{
-        //    var db = _client.GetDatabase(dbName);
-        //    var collection = db.GetCollection<BsonDocument>(tableName);
-        //    ObjectId objId = ObjectId.Parse(key);
-        //    var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
-        //    var document = collection.Find(filter).FirstOrDefault();
+        public List<string> GetRows<T>(string dbName, string tableName, List<T> keys, List<int> colIndexes)
+        {
+            var db = _client.GetDatabase(dbName);
+            var collection = db.GetCollection<BsonDocument>(tableName);
 
-        //    return document[key].AsString;
-        //}
+            List<string> result = collection.Find(Builders<BsonDocument>.Filter.In("_id", keys)).ToList().
+                Select(doc => $"{doc["_id"].ToString()}^{doc["Value"].ToString()}").ToList().
+                Select(row =>
+                {
+                    var data = row.Split('^');
+                    return string.Join('^', colIndexes.Select(ind => data[ind]));
+                }).ToList();
 
-        //public string GetFullRow(string dbName, string mongoID, string key)
-        //{
-        //    var collection = _coreDB.GetCollection<BsonDocument>(dbName);
-        //    ObjectId objId = ObjectId.Parse(mongoID);
-        //    var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+            return result;
+        }
 
-        //    var document = collection.Find(filter).FirstOrDefault();
+        public Dictionary<string, List<string>> GetBuildSide<T>(string dbName, string tableName, List<T> pKeys, int keyIndex, List<int> colIndexes)
+        {
+            var db = _client.GetDatabase(dbName);
+            var collection = db.GetCollection<BsonDocument>(tableName);
 
-        //    return $"{key}^{document[key].AsString}";
-        //}
+            Dictionary<string, List<string>> result = [];
+            collection.Find(Builders<BsonDocument>.Filter.In("_id", pKeys)).ToList().
+                Select(doc => $"{doc["_id"].ToString()}^{doc["Value"].ToString()}").ToList().
+                ForEach(row =>
+                {
+                    string[] data = row.Split('^');
+                    string key = data[keyIndex];
+                    if (!result.ContainsKey(key))
+                        result[key] = [];
 
-        //public List<string> GetValues(string dbName, string mongoID, List<string> keys)
-        //{
-        //    var collection = _coreDB.GetCollection<BsonDocument>(dbName);
-        //    ObjectId objId = ObjectId.Parse(mongoID);
-        //    var filter = Builders<BsonDocument>.Filter.Eq("_id", objId);
+                    result[key].Add(string.Join('^', colIndexes.Select(ind => data[ind])));
+                });
 
-        //    var document = collection.Find(filter).FirstOrDefault();
-
-        //    List<string> res = [];
-
-        //    keys.ForEach(key => res.Add($"{key}^{document[key].AsString}"));
-
-        //    return res;
-        //}
+            return result;
+        }
     }
 }
