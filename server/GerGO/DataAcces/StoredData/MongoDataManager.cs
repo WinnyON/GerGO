@@ -239,45 +239,37 @@ namespace GerGO.DataAcces.StoredData
             var db = _client.GetDatabase(dbName);
             var collection = db.GetCollection<BsonDocument>(collectionName);
 
-            var filterDocs = Builders<BsonDocument>.Filter.Empty;
             var documents = collection.Find(FilterDefinition<BsonDocument>.Empty).ToList();
             foreach (var key in pKeys)
             {
                 var updates = new List<WriteModel<BsonDocument>>();
-                List<string> keysToDelete = [];
                 foreach (var doc in documents)
                 {
-                    List<string> vals = doc["Value"].AsString.Split('#').ToList();
+                    List<string> vals = doc["Value"].ToString().Split('#').ToList();
                     if (vals.Contains(key))
                     {
-                        if (vals.Count == 1)
-                        {
-                            keysToDelete.Add(doc["_id"].AsString);
-                            continue;
-                        }
-
                         vals.Remove(key);
 
-                        var filter = Builders<BsonDocument>.Filter.Eq("_id", doc["_id"].AsString);
+                        var filter = Builders<BsonDocument>.Filter.Eq("_id", doc["_id"]);
                         var update = Builders<BsonDocument>.Update.Set("Value", string.Join('#', vals));
 
                         updates.Add(new UpdateOneModel<BsonDocument>(filter, update));
                     }
                 }
+
                 try
                 {
                     if (updates.Count > 0)
                         collection.BulkWrite(updates);
-                    if (keysToDelete.Count == 0)
-                    {
-                        var filter = Builders<BsonDocument>.Filter.In("_id", keysToDelete);
-                        var result = collection.DeleteMany(filter);
-                    }
+                    
                 } catch (Exception)
                 {
                     throw new DataAccesException("Failed to delete index data!");
                 }
             }
+
+            var filterEmpty = Builders<BsonDocument>.Filter.Eq("Value", string.Empty);
+            collection.DeleteMany(filterEmpty);
         }
         public List<string> GetAllKeys(string dbName, string tableName)
         {

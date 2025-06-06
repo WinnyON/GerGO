@@ -784,7 +784,17 @@ namespace GerGO.Manager
                 if (pKeysToDelete.Count == 0)
                     return 0;
 
-                _storedDataManager.Delete(dbName, tableName, pKeysToDelete);
+                if (table.PrimaryKeys.Count == 1 && _metaDataManager.GetColumn(dbName, tableName, table.PrimaryKeys[0].Name).Type == "int")
+                {
+                    _storedDataManager.Delete<int>(dbName, tableName, pKeysToDelete.Select(key => int.Parse(key)).ToList());
+
+                }
+                else
+                {
+                    _storedDataManager.Delete<string>(dbName, tableName, pKeysToDelete);
+                }
+
+
                 foreach (var iFile in table.IndexFiles)
                 {
                     _storedDataManager.DeleteIndexData(dbName, $"{tableName}_{iFile.Name}", pKeysToDelete);
