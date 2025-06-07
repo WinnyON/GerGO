@@ -40,7 +40,7 @@ namespace GerGO.Functionalities.MetaData
                 if (!arguments[8].Equals("--") && pKey != null)
                 {
                     pKey.IdentitySeed = int.Parse(arguments[8]);
-                    pKey.IdentityInnerSeed = pKey.IdentitySeed;
+                    pKey.IdentityInnerSeed = 0;
                 }
                 if (!arguments[9].Equals("--") && pKey != null)
                     pKey.IdentityStep = int.Parse(arguments[9]);

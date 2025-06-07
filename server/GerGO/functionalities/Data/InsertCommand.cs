@@ -9,6 +9,7 @@ namespace GerGO.Functionalities.Data
     class InsertCommand : ICommand
     {
         private readonly ILogger _logger = LoggerFactory.GetLogger();
+        private readonly int _insertDataBatchSize = 1000;
         public void Execute(NetworkStream stream, string[] arguments)
         {
             IResourceManager resourceManager = ResourceManagerFactory.GetInstance();
@@ -35,19 +36,23 @@ namespace GerGO.Functionalities.Data
             TcpResponder.SendMessage(stream, "OK");
 
             int count = 0;
-            List<string> rows;
+            List<string> rows = [];
             try
             {
                 do
                 {
-                    rows = TcpResponder.ReadValueBatched(stream);
+                    rows.AddRange(TcpResponder.ReadValueBatched(stream));
 
                     if (rows.Count == 1 && rows[0].Equals("0"))
                         break; 
                     
-                    count += resourceManager.Insert(dbName, tableName, columnNames, rows);
-                    TcpResponder.SendMessage(stream, "OK");
+                    if (rows.Count >= _insertDataBatchSize)
+                    {
+                        count += resourceManager.Insert(dbName, tableName, columnNames, rows);
+                        rows.Clear();
+                    }
 
+                    TcpResponder.SendMessage(stream, "OK");
                 } while (!(rows.Count == 1 && rows[0].Equals("0")));
 
                 TcpResponder.SendMessage(stream, $"{count}");

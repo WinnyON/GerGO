@@ -10,7 +10,9 @@
         public List<string[]> GroupByClauses { get; set; }
         public List<string[]> HavingClauses { get; set; }
         public List<string[]> OrderByCluases { get; set; }
-
+        public List<string[]> AggFunctions { get; set; }
+        public bool Distinct { get; set; }
+        public int Limit { get; set; }
         public SelectData()
         {
             DbName = string.Empty;
@@ -21,6 +23,9 @@
             GroupByClauses = [];
             HavingClauses = [];
             OrderByCluases = [];
+            AggFunctions = [];
+            Distinct = false;
+            Limit = -1;
         }
     }
 }

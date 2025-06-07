@@ -44,7 +44,7 @@ namespace GerGO.Functionalities.Data
                 {
                     int batched = 0;
                     List<string> data = [];
-                    while (i < rows.Count && batched < 50)
+                    while (i < rows.Count && batched < TcpResponder.GetMaxBatchCount())
                     {
                         data.Add(rows[i]);
                         batched++;

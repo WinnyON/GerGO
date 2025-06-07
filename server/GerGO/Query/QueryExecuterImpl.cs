@@ -4,6 +4,7 @@ using GerGO.DataAcces.StoredData;
 using GerGO.Manager;
 using GerGO.Models;
 using GerGO.Utils;
+using System.Runtime.ConstrainedExecution;
 
 namespace GerGO.Query
 {
@@ -20,212 +21,571 @@ namespace GerGO.Query
 
         public List<string> ExecuteQuery(ref SelectData selData)
         {
-            return null;
+            SelectData selectData = selData;
+            if (!IsValidSelectData(ref selectData))
+            {
+                _logger.Error("Not valid select data!");
+                throw new DataResourceException("Not valid select data!");
+            }
+
+            try
+            {
+                List<string> tablesOrder = [selectData.TableName];
+                selectData.JoinTables.ForEach(jt => tablesOrder.Add(jt[3]));
+
+                Dictionary<string, List<string>> columnsPerTable = [];
+                columnsPerTable.Add(selectData.TableName, []);
+                for (int i = 0; i < selectData.JoinTables.Count; i++) columnsPerTable.Add(selectData.JoinTables[i][3], []);
+                selectData.Columns.ForEach(colData =>
+                {
+                    columnsPerTable[colData[1]].Add(colData[2]);
+                    
+                });
+                selectData.JoinTables.ForEach(joinData =>
+                {
+                    if (!columnsPerTable[joinData[1]].Contains(joinData[2]))
+                        columnsPerTable[joinData[1]].Add(joinData[2]);
+
+                    if (!columnsPerTable[joinData[3]].Contains(joinData[4]))
+                        columnsPerTable[joinData[3]].Add(joinData[4]);
+                });
+
+                // column indexes per table for projection
+                List<int[]> projectionIndexes = [];
+                selectData.Columns.ForEach(colData =>
+                {
+                    projectionIndexes.Add([tablesOrder.IndexOf(colData[1]), columnsPerTable[colData[1]].IndexOf(colData[2])]);
+                });
+
+
+                Table selectBaseTable = _metaDataManager.GetTable(selectData.DbName, selectData.TableName);
+                List<int> colIndexesBaseTable = _metaDataManager.GetColumnPostions(selectData.DbName, selectBaseTable.Name, columnsPerTable[selectBaseTable.Name]);
+                List<string> rows;
+                List<string[]> whereClauses = selectData.WhereClauses.FindAll(clause => clause[1].Equals(selectData.TableName));
+                rows = Selection(selectData.DbName, selectBaseTable, whereClauses, colIndexesBaseTable);
+
+                foreach (var joinClause in selectData.JoinTables)
+                {
+                    Table innerTable = _metaDataManager.GetTable(selectData.DbName, joinClause[3]);
+                    whereClauses = selectData.WhereClauses.FindAll(clause => clause[1].Equals(joinClause[3]));
+                    List<int> colIndexesJoinTable = _metaDataManager.GetColumnPostions(selectData.DbName, joinClause[3],
+                        selectData.Columns.FindAll(col => col[1].Equals(joinClause[3])).Select(col => col[2]).ToList());
+
+                    bool isUnique = innerTable.UniqueKeys.Contains(joinClause[4]);
+                    if (isUnique)
+                    {
+                        rows = IndexedNestedLoopJoin(selectData.DbName, rows, tablesOrder.IndexOf(joinClause[1]), 
+                            columnsPerTable[joinClause[1]].IndexOf(joinClause[2]), joinClause[3], joinClause[4], whereClauses, colIndexesJoinTable);
+                        continue;
+                    }
+
+                    ForeignKey? fKey = innerTable.ForeignKeys.FirstOrDefault(fk => fk.AttributeName.Equals(joinClause[4]), null);
+                    if (fKey != null)
+                    {
+                        rows = IndexedNestedLoopJoin(selectData.DbName, rows, tablesOrder.IndexOf(joinClause[1]),
+                            columnsPerTable[joinClause[1]].IndexOf(joinClause[2]), joinClause[3], fKey, whereClauses, colIndexesJoinTable);
+                        continue;
+                    }
+
+                    IndexFile? iFile = innerTable.IndexFiles.FirstOrDefault(iFile => iFile.Attributes.Count == 1 && iFile.Attributes[0].Equals(joinClause[4]), null);
+                    if (iFile != null)
+                    {
+                        rows = IndexedNestedLoopJoin(selectData.DbName, rows, tablesOrder.IndexOf(joinClause[1]),
+                            columnsPerTable[joinClause[1]].IndexOf(joinClause[2]), joinClause[3], iFile, whereClauses, colIndexesJoinTable);
+                        continue;
+                    }
+
+                    rows = ClassicHashJoin(selectData.DbName, rows, tablesOrder.IndexOf(joinClause[1]), columnsPerTable[joinClause[1]].IndexOf(joinClause[2]),
+                        innerTable, _metaDataManager.GetColumnPostions(selectData.DbName, joinClause[3], [joinClause[4]])[0], whereClauses, 
+                        _metaDataManager.GetColumnPostions(selectData.DbName, innerTable.Name, columnsPerTable[innerTable.Name]));
+                }
+
+                // group by
+                if (selectData.GroupByClauses.Count > 0)
+                {
+                    int tableInd = tablesOrder.IndexOf(selectData.GroupByClauses[0][1]);
+                    int colInd = columnsPerTable[selectData.GroupByClauses[0][1]].IndexOf(selectData.GroupByClauses[0][2]);
+                    string type = _metaDataManager.GetColumn(selectData.DbName, selectData.GroupByClauses[0][1], selectData.GroupByClauses[0][2]).Type;
+                    rows.Sort(new RowComparerAsc(type, tableInd, colInd, tableInd, colInd));
+
+                }
+
+                
+                // projection
+                List<string> finalRows = Projection(projectionIndexes, rows);
+
+                // distinct
+                if (selectData.Distinct)
+                    finalRows = finalRows.Distinct().ToList();
+
+                // order by
+                if (selectData.OrderByCluases.Count > 0)
+                {
+                    int tableInd = tablesOrder.IndexOf(selectData.OrderByCluases[0][1]);
+                    int colInd = columnsPerTable[selectData.OrderByCluases[0][1]].IndexOf(selectData.OrderByCluases[0][2]);
+                    string type = _metaDataManager.GetColumn(selectData.DbName, selectData.OrderByCluases[0][1], selectData.OrderByCluases[0][2]).Type;
+                    if (selectData.OrderByCluases[0][3] == "ASC")
+                        rows.Sort(new RowComparerAsc(type, tableInd, colInd, tableInd, colInd));
+                    else
+                        rows.Sort(new RowComparerDesc(type, tableInd, colInd, tableInd, colInd));
+                }
+
+                // limit
+                if (selectData.Limit == -1)
+                    return finalRows;
+                else
+                    return finalRows.Take(selectData.Limit).ToList();
+            }
+            catch (DataAccesException ex)
+            {
+                _logger.Error($"Failed to execute query: {ex.Message}");
+                throw new QueryExecuterException($"Failed to execute query: {ex.Message}");
+            }
         }
-        //public List<string> ExecuteQuery(ref SelectData selData)
-        //{
-        //    SelectData selectData = selData;
-        //    if (!IsValidSelectData(ref selectData))
-        //    {
-        //        _logger.Error("Not valid select data!");
-        //        throw new DataResourceException("Not valid select data!");
-        //    }
 
-        //    try
-        //    {
-        //        // execute where caluses only on base table
-        //        List<string[]> whereClauses = selectData.WhereClauses.FindAll(clause => clause[1].Equals(selectData.TableName));
-        //        Table selectBaseTable = _metaDataManager.GetTable(selectData.DbName, selectData.TableName);
-        //        List<string> pKeys = Selection(selectData.DbName, selectBaseTable, whereClauses);
-        //        JoinProvider.Initialize(selectData.DbName, _storedDataManager, _metaDataManager);
-
-        //        List<string> tableOrder = new string[selectData.JoinTables.Count + 1].ToList();
-        //        tableOrder[0] = selectData.TableName;
-
-        //        // join tables
-        //        int ind = 1;
-        //        foreach (var joinClause in selectData.JoinTables)
-        //        {
-        //            Table baseTable = _metaDataManager.GetTable(selectData.DbName, joinClause[1]);
-
-        //            Table joinTable = _metaDataManager.GetTable(selectData.DbName, joinClause[3]);
-        //            string outerMongoID = string.Empty;
-        //            string innerColName = string.Empty;
-        //            string innerMongoID = string.Empty;
-        //            int pos = -1;
-
-        //            // the inner table is the newly joind table
-        //            UniqueKey? uKey = joinTable.UniqueKeys.FirstOrDefault(uKey => uKey.Column.Equals(joinClause[4]), null);
-        //            ForeignKey? fKey = joinTable.ForeignKeys.FirstOrDefault(fKey => fKey.AttributeName.Equals(joinClause[4]), null);
-        //            IndexFile? iFile = joinTable.IndexFiles.FirstOrDefault(iFile => iFile.Attributes.Contains(joinClause[4]), null);
-        //            if (uKey != null)
-        //            {
-        //                outerMongoID = baseTable.MongoID;
-        //                innerMongoID = uKey.MongoID;
-        //                innerColName = $"{selectData.DbName}_{joinTable.Name}_uniquekeys";
-        //                pos = _metaDataManager.GetColumnPostions(selectData.DbName, baseTable.Name, [joinClause[2]])[0];
-        //            }
-        //            else if (fKey != null)
-        //            {
-        //                outerMongoID = baseTable.MongoID;
-        //                innerMongoID = fKey.MongoID;
-        //                innerColName = $"{selectData.DbName}_{joinTable.Name}_foreignkeys";
-        //                pos = _metaDataManager.GetColumnPostions(selectData.DbName, baseTable.Name, [joinClause[2]])[0];
-        //            }
-        //            else if (iFile != null)
-        //            {
-        //                outerMongoID = baseTable.MongoID;
-        //                innerMongoID = iFile.MongoID;
-        //                innerColName = $"{selectData.DbName}_{joinTable.Name}_indexfiles";
-        //                pos = _metaDataManager.GetColumnPostions(selectData.DbName, baseTable.Name, [joinClause[2]])[0];
-        //            }
-
-        //            if (pos != -1)
-        //            {
-        //                tableOrder[ind] = joinTable.Name;
-        //                List<string> pKeysOuter = pKeys.Select(pKey => pKey.Split('#')[tableOrder.IndexOf(baseTable.Name)]).ToList();
-        //                pKeys = JoinProvider.IndexedNestedLoopJoin(pKeysOuter, tableOrder.IndexOf(baseTable.Name), outerMongoID, innerColName, innerMongoID, pos);
-        //                continue;
-        //            }
-
-        //            // the inner table is the base table
-        //            whereClauses = selectData.WhereClauses.FindAll(clause => clause[1].Equals(selectData.TableName));
-        //            List<string> pKeysJoinTable = Selection(selectData.DbName, joinTable, whereClauses);
-
-        //            uKey = baseTable.UniqueKeys.FirstOrDefault(uKey => uKey.Column.Equals(joinClause[2]), null);
-        //            fKey = baseTable.ForeignKeys.FirstOrDefault(fKey => fKey.AttributeName.Equals(joinClause[2]), null);
-        //            iFile = baseTable.IndexFiles.FirstOrDefault(iFile => iFile.Attributes.Contains(joinClause[2]), null);
-        //            if (uKey != null)
-        //            {
-        //                outerMongoID = joinTable.MongoID;
-        //                innerMongoID = uKey.MongoID;
-        //                innerColName = $"{selectData.DbName}_{baseTable.Name}_uniquekeys";
-        //                pos = _metaDataManager.GetColumnPostions(selectData.DbName, joinTable.Name, [joinClause[2]])[0];
-        //            }
-        //            else if (fKey != null)
-        //            {
-        //                outerMongoID = joinTable.MongoID;
-        //                innerMongoID = fKey.MongoID;
-        //                innerColName = $"{selectData.DbName}_{baseTable.Name}_foreignkeys";
-        //                pos = _metaDataManager.GetColumnPostions(selectData.DbName, joinTable.Name, [joinClause[2]])[0];
-        //            }
-        //            else if (iFile != null)
-        //            {
-        //                outerMongoID = joinTable.MongoID;
-        //                innerMongoID = iFile.MongoID;
-        //                innerColName = $"{selectData.DbName}_{baseTable.Name}_indexfiles";
-        //                pos = _metaDataManager.GetColumnPostions(selectData.DbName, joinTable.Name, [joinClause[2]])[0];
-        //            }
-
-        //            if (pos != -1)
-        //            {
-        //                int indTmp = tableOrder.IndexOf(baseTable.Name);
-        //                tableOrder[ind] = baseTable.Name;
-        //                tableOrder[indTmp] = joinTable.Name;
-        //                pKeys = JoinProvider.IndexedNestedLoopJoin(pKeysJoinTable, 0, outerMongoID, innerColName, innerMongoID, pos);
-        //                continue;
-        //            }
-
-        //            int pos1 = _metaDataManager.GetColumnPostions(selectData.DbName, baseTable.Name, [joinClause[2]])[0];
-        //            int pos2 = _metaDataManager.GetColumnPostions(selectData.DbName, joinTable.Name, [joinClause[4]])[0];
-        //            pKeys = JoinProvider.NestedLoopJoin(baseTable.MongoID, pKeys, tableOrder.IndexOf(baseTable.Name), joinTable.MongoID, pKeysJoinTable, pos1, pos2);
-        //            tableOrder[ind] = joinTable.Name;
-        //        }
-
-        //        List<string> resultSet = [];
-
-        //        // projection
-        //        List<string> tables = selectData.Columns.Select(col => col[1]).ToList();
-        //        List<string> tableMongoIds = selectData.Columns.Select(col => _metaDataManager.GetTableMongoId(selectData.DbName, col[1])).ToList();
-        //        List<int> indeces = selectData.Columns.Select(col => _metaDataManager.GetColumnPostions(selectData.DbName, col[1], [col[2]])[0]).ToList();
-        //        foreach (var joinedKey in pKeys)
-        //        {
-        //            List<string> keys = joinedKey.Split('#').ToList();
-        //            string resRow = _storedDataManager.GetFullRow(selectData.DbName, tableMongoIds[0], keys[tableOrder.IndexOf(tables[0])]).Split('^')[indeces[0]];
-        //            for (int i = 1; i < tables.Count; i++)
-        //            {
-        //                resRow = $"{resRow}^{_storedDataManager.GetFullRow(selectData.DbName, tableMongoIds[i], keys[tableOrder.IndexOf(tables[i])]).Split('^')[indeces[i]]}";
-        //            }
-        //            resultSet.Add(resRow);
-        //        }
-
-
-        //        return resultSet;
-        //    }
-        //    catch (DataAccesException ex)
-        //    {
-        //        _logger.Error($"Failed to execute query: {ex.Message}");
-        //        throw new QueryExecuterException($"Failed to execute query: {ex.Message}");
-        //    }
-        //}
-
-
-
-        private List<string> Selection(string dbName, Table table, List<string[]> whereClauses)
+        List<string> Projection(List<int[]> projIndexes, List<string> rows)
         {
-            return null;
+            return rows.Select(row =>
+            {
+                string[] data = row.Split('#');
+                return string.Join('^', projIndexes.Select(pi => data[pi[0]].Split('^')[pi[1]]));
+            }).ToList();
         }
-        //private List<string> Selection(string dbName, Table table, List<string[]> whereClauses)
-        //{
-        //    if (whereClauses == null || whereClauses.Count == 0)
-        //        return _storedDataManager.GetPrimaryKeys(dbName, table.MongoID);
 
-        //    List<string> pKeys = [];
-        //    List<string[]> clausesToCheck = [];
-        //    foreach (var whereClause in whereClauses)
-        //    {
-        //        UniqueKey? uKey = table.UniqueKeys.FirstOrDefault(uKey => uKey.Column.Equals(whereClause[2]), null);
-        //        if (uKey != null)
-        //        {
-        //            List<string> resPKeys = _storedDataManager.GetPrimaryKeysWhere($"{dbName}_{table.Name}_uniquekeys", uKey.MongoID, 0,
-        //            _metaDataManager.GetColumn(dbName, table.Name, whereClause[2]).Type, whereClause[3], whereClause[4]);
-        //            if (pKeys.Count == 0)
-        //                pKeys = resPKeys;
-        //            else
-        //                pKeys = pKeys.Intersect(resPKeys).ToList();
+        private List<string> ClassicHashJoin(string dbName, List<string> outerRows, int indexOutTable, int indexOutAttr, Table innerTable, int indexInAttr, List<string[]> whereCaluses, List<int> colIndexes)
+        {
+            List<string> resultSet = [];
 
-        //            continue;
-        //        }
+            var pKeys = SelectionPKeys(dbName, innerTable, whereCaluses, []);
+            Dictionary<string, List<string>> hashTable;
+            if (innerTable.PrimaryKeys.Count == 1 && _metaDataManager.GetColumn(dbName, innerTable.Name, innerTable.PrimaryKeys[0].Name).Type == "int")
+            {
+                hashTable = _storedDataManager.GetBuildSide<int>(dbName, innerTable.Name, pKeys.Select(key => int.Parse(key)).ToList(),
+                    indexInAttr, colIndexes);
+            }
+            else
+            {
+                hashTable = _storedDataManager.GetBuildSide<string>(dbName, innerTable.Name, pKeys,
+                    indexInAttr, colIndexes);
+            }
 
-        //        IndexFile? iFile = table.IndexFiles.FirstOrDefault(iFile => iFile.Attributes.Contains(whereClause[2]), null);
-        //        if (iFile != null)
-        //        {
-        //            List<string> resPKeys = _storedDataManager.GetPrimaryKeysWhere($"{dbName}_{table.Name}_indexfiles", iFile.MongoID, iFile.Attributes.IndexOf(whereClause[2]),
-        //            _metaDataManager.GetColumn(dbName, table.Name, whereClause[2]).Type, whereClause[3], whereClause[4]);
-        //            if (pKeys.Count == 0)
-        //                pKeys = resPKeys;
-        //            else
-        //                pKeys = pKeys.Intersect(resPKeys).ToList();
-        //            continue;
-        //        }
+            outerRows.ForEach(row =>
+            {
+                string val = row.Split('#')[indexOutTable].Split('^')[indexOutAttr];
+                hashTable[val].ForEach(iRow =>
+                {
+                    resultSet.Add($"{row}#{iRow}");
+                });
+            });
 
-        //        ForeignKey? fKey = table.ForeignKeys.FirstOrDefault(fKey => fKey.AttributeName.Equals(whereClause[2]), null);
-        //        if (fKey != null)
-        //        {
-        //            List<string> resPKeys = _storedDataManager.GetPrimaryKeysWhere($"{dbName}_{table.Name}_foreignkeys", fKey.MongoID, 0,
-        //            _metaDataManager.GetColumn(dbName, table.Name, whereClause[2]).Type, whereClause[3], whereClause[4]);
-        //            if (pKeys.Count == 0)
-        //                pKeys = resPKeys;
-        //            else
-        //                pKeys = pKeys.Intersect(resPKeys).ToList();
-        //            continue;
-        //        }
+            return resultSet;
+        }
 
-        //        clausesToCheck.Add(whereClause);
-        //    }
+        private List<string> NestedLoopJoin(string dbName, List<string> outerRows, int outerIndex, List<string> innerRows, string[] joinClause)
+        {
+            List<string> rows = [];
 
-        //    foreach (var clause in clausesToCheck)
-        //    {
-        //        List<string> resPKeys = _storedDataManager.GetPrimaryKeysWhereAllRow(dbName, table.MongoID, _metaDataManager.GetColumnPostions(dbName, table.Name, [clause[2]])[0],
-        //            _metaDataManager.GetColumn(dbName, table.Name, clause[2]).Type, clause[3], clause[4]);
-        //        if (pKeys.Count == 0)
-        //            pKeys = resPKeys;
-        //        else
-        //            pKeys = pKeys.Intersect(resPKeys).ToList();
-        //    }
+            outerRows.ForEach(oRow =>
+            {
+                string oVal = oRow.Split('#')[outerIndex].Split('^')[_metaDataManager.GetColumnPostions(dbName, joinClause[1], [joinClause[2]])[0]];
+                innerRows.ForEach(iRow =>
+                {
+                    string iVal = iRow.Split('^')[_metaDataManager.GetColumnPostions(dbName, joinClause[3], [joinClause[4]])[0]];
+                    if (oVal.Equals(iVal))
+                    {
+                        rows.Add($"{oRow}#{iRow}");
+                    }
+                });
+            });
 
-        //    return pKeys;
-        //}
+            return rows;
+        }
+
+        private List<string> IndexedNestedLoopJoin(string dbName, List<string> outerRows, int outerIndex, int index, string innerTableName, ForeignKey fKey, 
+            List<string[]> innerTableWheres, List<int> colIndexes)
+        {
+            List<string> resultSet = [];
+            Table innerTable = _metaDataManager.GetTable(dbName, innerTableName);
+            if (_metaDataManager.GetColumn(dbName, innerTableName, fKey.AttributeName).Type == "int")
+            {
+                outerRows.ForEach(row =>
+                {
+                    int fKeyVal = int.Parse(row.Split('#')[outerIndex].Split('^')[index]);
+                    List<string> innerPKeys = _storedDataManager.GetKeysWhere<int>(dbName, $"{innerTableName}_{fKey.Name}", "=", fKeyVal);
+                    innerPKeys = SelectionPKeys(dbName, innerTable, innerTableWheres, innerPKeys);
+
+                    List<string> innerRows;
+                    if (innerTable.PrimaryKeys.Count == 1 &&
+                    _metaDataManager.GetColumn(dbName, innerTableName, innerTable.PrimaryKeys[0].Name).Type == "int")
+                    {
+                        innerRows = _storedDataManager.GetRows<int>(dbName, innerTableName, innerPKeys.Select(k => int.Parse(k)).ToList(), colIndexes);
+                    }
+                    else
+                    {
+                        innerRows = _storedDataManager.GetRows<string>(dbName, innerTableName, innerPKeys, colIndexes);
+                    }
+
+                    innerRows.ForEach(iRow => resultSet.Add($"{row}#{iRow}"));
+                });
+            }
+            else
+            {
+                outerRows.ForEach(row =>
+                {
+                    string fKeyVal = row.Split('#')[outerIndex].Split('^')[index];
+                    List<string> innerPKeys = _storedDataManager.GetKeysWhere<string>(dbName, $"{innerTableName}_{fKey.Name}", "=", fKeyVal);
+                    innerPKeys = SelectionPKeys(dbName, innerTable, innerTableWheres, innerPKeys);
+
+                    List<string> innerRows;
+                    if (innerTable.PrimaryKeys.Count == 1 &&
+                    _metaDataManager.GetColumn(dbName, innerTableName, innerTable.PrimaryKeys[0].Name).Type == "int")
+                    {
+                        innerRows = _storedDataManager.GetRows<int>(dbName, innerTableName, innerPKeys.Select(k => int.Parse(k)).ToList());
+                    }
+                    else
+                    {
+                        innerRows = _storedDataManager.GetRows<string>(dbName, innerTableName, innerPKeys);
+                    }
+
+                    innerRows.ForEach(iRow => resultSet.Add($"{row}#{iRow}"));
+                });
+            }
+
+            return resultSet;
+        }
+
+        private List<string> IndexedNestedLoopJoin(string dbName, List<string> outerRows, int outerIndex, int index, string innerTableName,
+            string uKey, List<string[]> innerTableWheres, List<int> colIndexes)
+        {
+            List<string> resultSet = [];
+            Table innerTable = _metaDataManager.GetTable(dbName, innerTableName);
+            if (_metaDataManager.GetColumn(dbName, innerTableName, uKey).Type == "int")
+            {
+                outerRows.ForEach(row =>
+                {
+                    int uKeyVal = int.Parse(row.Split('#')[outerIndex].Split('^')[index]);
+                    string innerPKey = _storedDataManager.GetKeysWhere<int>(dbName, $"{innerTableName}_{uKey}_uniquekey", "=", uKeyVal)[0];
+                    var res = SelectionPKeys(dbName, innerTable, innerTableWheres, [innerPKey]);
+
+                    if (res.Count == 0)
+                        return;
+                    innerPKey = res[0];
+
+                    string innerRow;
+                    if (innerTable.PrimaryKeys.Count == 1 &&
+                    _metaDataManager.GetColumn(dbName, innerTableName, innerTable.PrimaryKeys[0].Name).Type == "int")
+                    {
+                        innerRow = _storedDataManager.GetRows<int>(dbName, innerTableName, [int.Parse(innerPKey)])[0];
+                    }
+                    else
+                    {
+                        innerRow = _storedDataManager.GetRows<string>(dbName, innerTableName, [innerPKey])[0];
+                    }
+                    
+                    resultSet.Add($"{row}#{innerRow}");
+                });
+            }
+            else
+            {
+                outerRows.ForEach(row =>
+                {
+                    string uKeyVal = row.Split('#')[outerIndex].Split('^')[index];
+                    string innerPKey = _storedDataManager.GetKeysWhere<string>(dbName, $"{innerTableName}_{uKey}_uniquekey", "=", uKeyVal)[0];
+                    var res = SelectionPKeys(dbName, innerTable, innerTableWheres, [innerPKey]);
+
+                    if (res.Count == 0)
+                        return;
+                    innerPKey = res[0];
+
+                    string innerRow;
+                    if (innerTable.PrimaryKeys.Count == 1 &&
+                    _metaDataManager.GetColumn(dbName, innerTableName, innerTable.PrimaryKeys[0].Name).Type == "int")
+                    {
+                        innerRow = _storedDataManager.GetRows<int>(dbName, innerTableName, [int.Parse(innerPKey)], colIndexes)[0];
+                    }
+                    else
+                    {
+                        innerRow = _storedDataManager.GetRows<string>(dbName, innerTableName, [innerPKey], colIndexes)[0];
+                    }
+
+                    resultSet.Add($"{row}#{innerRow}");
+                });
+            }
+
+            return resultSet;
+        }
+        private List<string> IndexedNestedLoopJoin(string dbName, List<string> outerRows, int outerIndex, int index, string innerTableName,
+            IndexFile iFile, List<string[]> innerTableWheres, List<int> colIndexes)
+        {
+            List<string> resultSet = [];
+            Table innerTable = _metaDataManager.GetTable(dbName, innerTableName);
+            if (_metaDataManager.GetColumn(dbName, innerTableName, iFile.Attributes[0]).Type == "int")
+            {
+                outerRows.ForEach(row =>
+                {
+                    int indexVal = int.Parse(row.Split('#')[outerIndex].Split('^')[index]);
+                    List<string> innerPKeys = _storedDataManager.GetKeysWhere<int>(dbName, $"{innerTableName}_{iFile.Name}", "=", indexVal);
+                    innerPKeys = SelectionPKeys(dbName, innerTable, innerTableWheres, innerPKeys);
+
+                    List<string> innerRows;
+                    if (innerTable.PrimaryKeys.Count == 1 &&
+                    _metaDataManager.GetColumn(dbName, innerTableName, innerTable.PrimaryKeys[0].Name).Type == "int")
+                    {
+                        innerRows = _storedDataManager.GetRows<int>(dbName, innerTableName, innerPKeys.Select(k => int.Parse(k)).ToList());
+                    }
+                    else
+                    {
+                        innerRows = _storedDataManager.GetRows<string>(dbName, innerTableName, innerPKeys);
+                    }
+
+                    innerRows.ForEach(iRow => resultSet.Add($"{row}#{iRow}"));
+                });
+            }
+            else
+            {
+                outerRows.ForEach(row =>
+                {
+                    string indexVal = row.Split('#')[outerIndex].Split('^')[index];
+                    List<string> innerPKeys = _storedDataManager.GetKeysWhere<string>(dbName, $"{innerTableName}_{iFile.Name}", "=", indexVal);
+                    innerPKeys = SelectionPKeys(dbName, innerTable, innerTableWheres, innerPKeys);
+
+                    List<string> innerRows;
+                    if (innerTable.PrimaryKeys.Count == 1 &&
+                    _metaDataManager.GetColumn(dbName, innerTableName, innerTable.PrimaryKeys[0].Name).Type == "int")
+                    {
+                        innerRows = _storedDataManager.GetRows<int>(dbName, innerTableName, innerPKeys.Select(k => int.Parse(k)).ToList());
+                    }
+                    else
+                    {
+                        innerRows = _storedDataManager.GetRows<string>(dbName, innerTableName, innerPKeys);
+                    }
+
+                    innerRows.ForEach(iRow => resultSet.Add($"{row}#{iRow}"));
+                });
+            }
+
+            return resultSet;
+        }
+
+        private List<string> SelectionPKeys(string dbName, Table table, List<string[]> whereClauses, List<string> pKeys)
+        {
+            if (whereClauses == null || whereClauses.Count == 0)
+            {
+                if (pKeys.Count != 0)
+                    return pKeys;
+                return _storedDataManager.GetAllKeys(dbName, table.Name);
+            }
+
+            List<string[]> clausesToCheck = [];
+            foreach (var whereClause in whereClauses)
+            {
+                bool isPkey = table.PrimaryKeys.Any(pk => pk.Name.Equals(whereClause[2]));
+                if (isPkey)
+                {
+                    List<string> resPKeys = [];
+                    if (table.PrimaryKeys.Count == 1 && _metaDataManager.GetColumn(dbName, whereClause[1], whereClause[2]).Type == "int")
+                    {
+                        resPKeys = _storedDataManager.Get_idWhere<int>(dbName, table.Name, whereClause[3], int.Parse(whereClause[4]));
+                    }
+                    else
+                    {
+                        resPKeys = _storedDataManager.Get_idWhere<string>(dbName, table.Name, whereClause[3], whereClause[4]);
+                    }
+
+                    if (pKeys.Count != 0)
+                        pKeys = pKeys.Intersect(resPKeys).ToList();
+                    else
+                        pKeys = resPKeys;
+
+                    continue;
+                }
+
+                bool isUniqueKey = table.UniqueKeys.Contains(whereClause[2]);
+                if (isUniqueKey)
+                {
+                    List<string> resPKeys = [];
+                    if (_metaDataManager.GetColumn(dbName, table.Name, whereClause[2]).Type == "int")
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<int>(dbName, $"{table.Name}_{whereClause[2]}_uniquekey", whereClause[3], int.Parse(whereClause[4]));
+                    }
+                    else
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<string>(dbName, $"{table.Name}_{whereClause[2]}_uniquekey", whereClause[3], whereClause[4]);
+                    }
+                    if (pKeys.Count != 0)
+                        pKeys = pKeys.Intersect(resPKeys).ToList();
+                    else
+                        pKeys = resPKeys;
+
+                    continue;
+                }
+
+                IndexFile? iFile = table.IndexFiles.FirstOrDefault(iFile => iFile.Attributes.Contains(whereClause[2]), null);
+                if (iFile != null)
+                {
+                    List<string> resPKeys = [];
+                    if (iFile.Attributes.Count == 1 && _metaDataManager.GetColumn(dbName, table.Name, iFile.Attributes[0]).Type == "int")
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<int>(dbName, $"{table.Name}_{iFile.Name}", whereClause[3], int.Parse(whereClause[4]));
+                    }
+                    else
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<string>(dbName, $"{table.Name}_{iFile.Name}", whereClause[3], whereClause[4]);
+                    }
+                    if (pKeys.Count != 0)
+                        pKeys = pKeys.Intersect(resPKeys).ToList();
+                    else
+                        pKeys = resPKeys;
+
+                    continue;
+                }
+
+                ForeignKey? fKey = table.ForeignKeys.FirstOrDefault(fKey => fKey.AttributeName.Equals(whereClause[2]), null);
+                if (fKey != null)
+                {
+                    List<string> resPKeys = [];
+                    if (_metaDataManager.GetColumn(dbName, table.Name, fKey.AttributeName).Type == "int")
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<int>(dbName, $"{table.Name}_{fKey.Name}", whereClause[3], int.Parse(whereClause[4]));
+                    }
+                    else
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<string>(dbName, $"{table.Name}_{fKey.Name}", whereClause[3], whereClause[4]);
+                    }
+                    if (pKeys.Count != 0)
+                        pKeys = pKeys.Intersect(resPKeys).ToList();
+                    else
+                        pKeys = resPKeys;
+
+                    continue;
+                }
+
+                clausesToCheck.Add(whereClause);
+            }
+
+            foreach (var clause in clausesToCheck)
+            {
+                int index = _metaDataManager.GetColumnPostions(dbName, clause[1], [clause[2]])[0] - table.PrimaryKeys.Count;
+                Column col = _metaDataManager.GetColumn(dbName, table.Name, clause[2]);
+                List<string> resPKeys = _storedDataManager.GetKeysWhereIter(dbName, table.Name, index, col.Type, clause[3], clause[4]);
+                if (pKeys.Count != 0)
+                    pKeys = pKeys.Intersect(resPKeys).ToList();
+                else
+                    pKeys = resPKeys;
+            }
+            return pKeys;
+        }
+
+        private List<string> Selection(string dbName, Table table, List<string[]> whereClauses, List<int> colIndexes)
+        {
+            List<string> pKeys = [];
+            if (whereClauses == null || whereClauses.Count == 0)
+                pKeys = _storedDataManager.GetAllKeys(dbName, table.Name);
+
+            List<string[]> clausesToCheck = [];
+            foreach (var whereClause in whereClauses)
+            {
+                bool isPkey = table.PrimaryKeys.Any(pk => pk.Name.Equals(whereClause[2]));
+                if (isPkey)
+                {
+                    List<string> resPKeys = [];
+                    if (table.PrimaryKeys.Count == 1 && _metaDataManager.GetColumn(dbName, whereClause[1], whereClause[2]).Type == "int")
+                    {
+                        resPKeys = _storedDataManager.Get_idWhere<int>(dbName, table.Name, whereClause[3], int.Parse(whereClause[4]));
+                    }
+                    else
+                    {
+                        resPKeys = _storedDataManager.Get_idWhere<string>(dbName, table.Name, whereClause[3], whereClause[4]);
+                    }
+                    if (pKeys.Count == 0)
+                        pKeys = resPKeys;
+                    else
+                        pKeys = pKeys.Intersect(resPKeys).ToList();
+
+                    continue;
+                }
+
+                bool isUniqueKey = table.UniqueKeys.Contains(whereClause[2]);
+                if (isUniqueKey)
+                {
+                    List<string> resPKeys = [];
+                    if (_metaDataManager.GetColumn(dbName, table.Name, whereClause[2]).Type == "int")
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<int>(dbName, $"{table.Name}_{whereClause[2]}_uniquekey", whereClause[3], int.Parse(whereClause[4]));
+                    }
+                    else
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<string>(dbName, $"{table.Name}_{whereClause[2]}_uniquekey", whereClause[3], whereClause[4]);
+                    }
+                    resPKeys = _storedDataManager.GetKeysWhere(dbName, $"{table.Name}_{whereClause[2]}_uniquekey", whereClause[3], whereClause[4]);
+                    if (pKeys.Count == 0)
+                        pKeys = resPKeys;
+                    else
+                        pKeys = pKeys.Intersect(resPKeys).ToList();
+
+                    continue;
+                }
+
+                IndexFile? iFile = table.IndexFiles.FirstOrDefault(iFile => iFile.Attributes.Contains(whereClause[2]), null);
+                if (iFile != null)
+                {
+                    List<string> resPKeys = [];
+                    if (iFile.Attributes.Count == 1 && _metaDataManager.GetColumn(dbName, table.Name, iFile.Attributes[0]).Type == "int")
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<int>(dbName, $"{table.Name}_{iFile.Name}", whereClause[3], int.Parse(whereClause[4]));
+                    }
+                    else
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<string>(dbName, $"{table.Name}_{iFile.Name}", whereClause[3], whereClause[4]);
+                    }
+                    if (pKeys.Count == 0)
+                        pKeys = resPKeys;
+                    else
+                        pKeys = pKeys.Intersect(resPKeys).ToList();
+                    continue;
+                }
+
+                ForeignKey? fKey = table.ForeignKeys.FirstOrDefault(fKey => fKey.AttributeName.Equals(whereClause[2]), null);
+                if (fKey != null)
+                {
+                    List<string> resPKeys = [];
+                    if (_metaDataManager.GetColumn(dbName, table.Name, fKey.AttributeName).Type == "int")
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<int>(dbName, $"{table.Name}_{fKey.Name}", whereClause[3], int.Parse(whereClause[4]));
+                    }
+                    else
+                    {
+                        resPKeys = _storedDataManager.GetKeysWhere<string>(dbName, $"{table.Name}_{fKey.Name}", whereClause[3], whereClause[4]);
+                    }
+                    if (pKeys.Count == 0)
+                        pKeys = resPKeys;
+                    else
+                        pKeys = pKeys.Intersect(resPKeys).ToList();
+                    continue;
+                }
+
+                clausesToCheck.Add(whereClause);
+            }
+
+            foreach (var clause in clausesToCheck)
+            {
+                int index = _metaDataManager.GetColumnPostions(dbName, clause[1], [clause[2]])[0] - table.PrimaryKeys.Count;
+                Column col = _metaDataManager.GetColumn(dbName, table.Name, clause[2]);
+                List<string> resPKeys = _storedDataManager.GetKeysWhereIter(dbName, table.Name, index, col.Type, clause[3], clause[4]);
+                if (pKeys.Count == 0)
+                    pKeys = resPKeys;
+                else
+                    pKeys = pKeys.Intersect(resPKeys).ToList();
+            }
+
+
+            if (table.PrimaryKeys.Count == 1 && _metaDataManager.GetColumn(dbName, table.Name, table.PrimaryKeys[0].Name).Type == "int")
+            {
+                return _storedDataManager.GetRows<int>(dbName, table.Name, pKeys.Select(pk => int.Parse(pk)).ToList(), colIndexes);
+            }
+
+            return _storedDataManager.GetRows<string>(dbName, table.Name, pKeys, colIndexes);
+        }
 
         private bool IsValidSelectData(ref SelectData selectData)
         {
@@ -243,10 +603,10 @@ namespace GerGO.Query
 
                 foreach (var joinTable in selectData.JoinTables)
                 {
-                    columns = _metaDataManager.GetColumns(selectData.DbName, joinTable[1]).ToList();
+                    columns = _metaDataManager.GetColumns(selectData.DbName, joinTable[3]).ToList();
                     foreach (var col in columns)
                     {
-                        selectData.Columns.Add(["25", joinTable[1], joinTable[2]]);
+                        selectData.Columns.Add(["25", joinTable[3], col]);
                     }
                 }
             }
@@ -302,7 +662,7 @@ namespace GerGO.Query
 
             foreach (var orderBy in selectData.OrderByCluases)
             {
-                if (orderBy.Length != 3)
+                if (orderBy.Length != 4)
                     return false;
                 if (!_metaDataManager.ExistsTable(selectData.DbName, orderBy[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, orderBy[1], orderBy[2]))
                     return false;

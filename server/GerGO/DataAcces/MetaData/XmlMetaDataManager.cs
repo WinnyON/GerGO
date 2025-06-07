@@ -379,17 +379,7 @@ namespace GerGO.DataAcces.MetaData
                 _dataBases.First(db => db.Name.Equals(dbName)).Tables.First(t => t.Name.Equals(table.Name)).PrimaryKeys[0].IdentityInnerSeed +=
                     table.PrimaryKeys[0].IdentityStep;
 
-                try
-                {
-                    _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
-
-                    return table.PrimaryKeys[0].IdentityInnerSeed.ToString();
-                }
-                catch (FileHandlerException ex)
-                {
-                    _logger.Error($"Failed to write db data: {ex.Message}");
-                    throw new DataAccesException("Failed to update inner seed for identity!");
-                }
+                return table.PrimaryKeys[0].IdentityInnerSeed.ToString();
             }
 
             string key = columnNames[columnNames.IndexOf(table.PrimaryKeys[0].Name)];
@@ -398,6 +388,20 @@ namespace GerGO.DataAcces.MetaData
                 key = key + "^" + columnNames[columnNames.IndexOf(table.PrimaryKeys[i].Name)];
             }
             return key;
+        }
+
+        public void WriteData()
+        {
+            try
+            {
+                _fileHandler.WriteDataBaseData(_dbDataSourceFile, _dataBases);
+
+            }
+            catch (FileHandlerException ex)
+            {
+                _logger.Error($"Failed to write db data: {ex.Message}");
+                throw new DataAccesException("Failed to update inner seed for identity!");
+            }
         }
 
         public string GetValuePart(Table table, string row, List<string> columnNames)

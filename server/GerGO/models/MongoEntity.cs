@@ -1,17 +1,17 @@
 ﻿namespace GerGO.Models
 {
-    public class MongoEntity
+    public class MongoEntity<T>
     {
-        public string Key { get; set; }
+        public T Key { get; set; }
         public string Value { get; set; }
 
         public MongoEntity()
         {
-            Key = string.Empty;
+            Key = default;
             Value = string.Empty;
         }
 
-        public MongoEntity(string key, string value)
+        public MongoEntity(T key, string value)
         {
             Key = key;
             Value = value;

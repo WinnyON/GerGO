@@ -30,5 +30,6 @@ namespace GerGO.Manager
 
         public List<string> Select(SelectData selectData, ref string columnNames);
         public int DeleteWhere(string dbName, string tableName, List<string[]> wheres);
+        public int Update(string dbName, string tableName, List<string[]> wheres, string colName, string newVal);
     }
 }

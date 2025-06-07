@@ -44,5 +44,6 @@ namespace GerGO.DataAcces.MetaData
         public string GetPrimaryKey(string dbName, Table table, string row, List<string> columnNames);
         public string GetValuePart(Table table, string row, List<string> columnNames);
         public List<string> GetReferingForeignKeys(string dbName, string tableName);
+        public void WriteData();
     }
 }

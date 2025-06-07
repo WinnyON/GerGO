@@ -7,8 +7,13 @@ namespace GerGO.Communication
     class TcpResponder : ICommunicator
     {
         private static readonly ILogger _logger = LoggerFactory.GetLogger();
-        private static readonly int _maxSize = 50;
+        private static readonly int _maxSize = 100;
+        private static readonly int _maxBufferSize = 60000;
 
+        public static int GetMaxBatchCount()
+        {
+            return _maxSize;
+        }
         public static string ReadValue(NetworkStream stream)
         {
             byte[] buffer = new byte[1024];
@@ -80,7 +85,7 @@ namespace GerGO.Communication
                 throw new CommunicationException($"Batched message can't be larger than {_maxSize} messages!");
             }
 
-            messages[0] = $"1#{messages[0]}";
+            messages[0] = $"2#{messages[0]}";
             byte[] buffer = Encoding.UTF8.GetBytes(string.Join('#', messages));
             try
             {
@@ -94,7 +99,7 @@ namespace GerGO.Communication
         }
         public static List<string> ReadValueBatched(NetworkStream stream)
         {
-            byte[] buffer = new byte[10000];
+            byte[] buffer = new byte[_maxBufferSize];
             try
             {
                 stream.Read(buffer, 0, buffer.Length);

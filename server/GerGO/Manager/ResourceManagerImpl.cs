@@ -4,6 +4,9 @@ using GerGO.DataAcces.StoredData;
 using GerGO.Models;
 using GerGO.Query;
 using GerGO.Utils;
+using MongoDB.Driver;
+using System.Linq;
+using System.Xml.Linq;
 
 namespace GerGO.Manager
 {
@@ -53,6 +56,12 @@ namespace GerGO.Manager
             {
                 _logger.Error("Not valid column: pk with identity can have no other constraints!");
                 throw new DataResourceException("Not valid column: pk with identity can have no other constraints!");
+            }
+
+            if (pKey != null && column.Type != "int" && column.Type != "string")
+            {
+                _logger.Error("Primary key has to be int or string!");
+                throw new DataResourceException("Primary key has to be int or string!");
             }
 
             if (column.NotNull && column.DefaultVal == string.Empty)
@@ -141,16 +150,34 @@ namespace GerGO.Manager
                 {
                     var attrList = _metaDataManager.GetPrimaryKeys(dbName, tableName);
                     attrList.Add(foreignKey.AttributeName);
-                    List<MongoEntity> indexData = GetAllRows(dbName, tableName, attrList).Select(row =>
-                    {
-                        List<string> values = row.Split('^').ToList();
-                        string fKeyVal = values[-1];
-                        values.RemoveAt(values.Count - 1);
-                        string pKey = string.Join('^', values);
-                        return new MongoEntity(fKeyVal, pKey);
-                    }).ToList();
 
-                    _storedDataManager.InsertIndexData(dbName, $"{tableName}_{foreignKey.Name}", indexData);
+                    if (_metaDataManager.GetColumn(dbName, tableName, foreignKey.AttributeName).Type == "int")
+                    {
+                        List<MongoEntity<int>> indexData = GetAllRows(dbName, tableName, attrList).Select(row =>
+                        {
+                            List<string> values = row.Split('^').ToList();
+                            int fKeyVal = int.Parse(values[values.Count - 1]);
+                            values.RemoveAt(values.Count - 1);
+                            string pKey = string.Join('^', values);
+                            return new MongoEntity<int>(fKeyVal, pKey);
+                        }).ToList();
+
+                        _storedDataManager.InsertIndexData<int>(dbName, $"{tableName}_{foreignKey.Name}", indexData);
+                    }
+                    else
+                    {
+                        List<MongoEntity<string>> indexData = GetAllRows(dbName, tableName, attrList).Select(row =>
+                        {
+                            List<string> values = row.Split('^').ToList();
+                            string fKeyVal = values[values.Count - 1];
+                            values.RemoveAt(values.Count - 1);
+                            string pKey = string.Join('^', values);
+                            return new MongoEntity<string>(fKeyVal, pKey);
+                        }).ToList();
+
+                        _storedDataManager.InsertIndexData<string>(dbName, $"{tableName}_{foreignKey.Name}", indexData);
+                    }
+
                     _metaDataManager.AddForeignKey(dbName, tableName, foreignKey);
                 }
             }
@@ -309,15 +336,30 @@ namespace GerGO.Manager
                     var attrList = _metaDataManager.GetPrimaryKeys(dbName, tableName);
                     attrList.AddRange(iFile.Attributes);
                     int nrPKeys = attrList.Count - iFile.Attributes.Count;
-                    List<MongoEntity> indexData = GetAllRows(dbName, tableName, attrList).Select(row =>
+                    if (iFile.Attributes.Count == 1 && _metaDataManager.GetColumn(dbName, tableName, iFile.Attributes[0]).Type == "int")
                     {
-                        List<string> values = row.Split('^').ToList();
-                        string indVal = string.Join('^', values.Skip(nrPKeys));
-                        string pKey = string.Join('^', values.Take(nrPKeys));
-                        return new MongoEntity(indVal, pKey);
-                    }).ToList();
+                        List<MongoEntity<int>> indexData = GetAllRows(dbName, tableName, attrList).Select(row =>
+                        {
+                            List<string> values = row.Split('^').ToList();
+                            int indVal = int.Parse(values[values.Count - 1]);
+                            string pKey = string.Join('^', values.Take(nrPKeys));
+                            return new MongoEntity<int>(indVal, pKey);
+                        }).ToList();
 
-                    _storedDataManager.InsertIndexData(dbName, $"{tableName}_{iFile.Name}", indexData);
+                        _storedDataManager.InsertIndexData<int>(dbName, $"{tableName}_{iFile.Name}", indexData);
+                    }
+                    else
+                    {
+                        List<MongoEntity<string>> indexData = GetAllRows(dbName, tableName, attrList).Select(row =>
+                        {
+                            List<string> values = row.Split('^').ToList();
+                            string indVal = string.Join('^', values.Skip(nrPKeys));
+                            string pKey = string.Join('^', values.Take(nrPKeys));
+                            return new MongoEntity<string>(indVal, pKey);
+                        }).ToList();
+
+                        _storedDataManager.InsertIndexData<string>(dbName, $"{tableName}_{iFile.Name}", indexData);
+                    }
                 }
             }
             catch (DataAccesException ex)
@@ -556,10 +598,23 @@ namespace GerGO.Manager
             {
                 lock (_locks[dbName])
                 {
-                    List<MongoEntity> insertData = [];
-                    Dictionary<string, List<MongoEntity>> uniqueInsertData = [];
-                    Dictionary<string, List<MongoEntity>> indexData = [];
-                    Dictionary<string, List<MongoEntity>> fKeyData = [];
+                    List<MongoEntity<string>> insertData = [];
+
+                    Dictionary<string, List<string>> uKeyVals = new Dictionary<string, List<string>>();
+                    foreach (var uKey in table.UniqueKeys)
+                    {
+                        uKeyVals.Add(uKey, _storedDataManager.GetAllKeys(dbName, $"{tableName}_{uKey}_uniquekey"));
+                    }
+
+                    Dictionary<string, List<string>> fKeyVals = new Dictionary<string, List<string>>();
+                    foreach (var fKey in table.ForeignKeys)
+                    {
+                        fKeyVals.Add(fKey.Name, _storedDataManager.GetAllKeys(dbName, fKey.RefTableName));
+                    }
+
+                    Dictionary<string, List<MongoEntity<string>>> uniqueInsertData = [];
+                    Dictionary<string, List<MongoEntity<string>>> indexData = [];
+                    Dictionary<string, List<MongoEntity<string>>> fKeyData = [];
                     foreach (string row in rows)
                     {
                         try
@@ -573,7 +628,7 @@ namespace GerGO.Manager
                             foreach (var fk in table.ForeignKeys)
                             {
                                 string fKeyVal = rowSplitted[columnNames.IndexOf(fk.AttributeName)];
-                                if (!_storedDataManager.ExistsKey(dbName, fk.RefTableName, fKeyVal))
+                                if (!fKeyVals[fk.Name].Contains(fKeyVal))
                                     throw new DataAccesException("");
 
                                 bool isUnique = _metaDataManager.GetTable(dbName, fk.RefTableName).UniqueKeys.Contains(fk.RefAttributeName);
@@ -585,26 +640,26 @@ namespace GerGO.Manager
                             foreach (var uKey in table.UniqueKeys)
                             {
                                 string uniqueVal = rowSplitted[columnNames.IndexOf(uKey)];
-                                if (_storedDataManager.ExistsKey(dbName, $"{tableName}_{uKey}_uniquekey", uniqueVal))
+                                if (uKeyVals[uKey].Contains(uniqueVal))
                                     throw new DataAccesException("");
                                 string tmp = $"{tableName}_{uKey}_uniquekey";
                                 if (uniqueInsertData.ContainsKey(tmp))
-                                    uniqueInsertData[tmp].Add(new MongoEntity(uniqueVal, pKey));
+                                    uniqueInsertData[tmp].Add(new MongoEntity<string>(uniqueVal, pKey));
                                 else
-                                    uniqueInsertData.Add(tmp, [new MongoEntity(uniqueVal, pKey)]);
+                                    uniqueInsertData.Add(tmp, [new MongoEntity<string>(uniqueVal, pKey)]);
                             }
 
                             foreach (var fk in table.ForeignKeys)
                             {
                                 string fKeyVal = rowSplitted[columnNames.IndexOf(fk.AttributeName)];
                                 if (fKeyData.ContainsKey(fk.Name))
-                                    fKeyData[fk.Name].Add(new MongoEntity(fKeyVal, pKey));
+                                    fKeyData[fk.Name].Add(new MongoEntity<string>(fKeyVal, pKey));
                                 else
-                                    fKeyData.Add(fk.Name, [new MongoEntity(fKeyVal, pKey)]);
+                                    fKeyData.Add(fk.Name, [new MongoEntity<string>(fKeyVal, pKey)]);
                             }
 
                             // inserting data
-                            insertData.Add(new MongoEntity(pKey, value));
+                            insertData.Add(new MongoEntity<string>(pKey, value));
 
                             // inserting to index files
                             foreach (var iFile in table.IndexFiles)
@@ -615,9 +670,9 @@ namespace GerGO.Manager
                                     indexKey = indexKey + "^" + rowSplitted[columnNames.IndexOf(iFile.Attributes[i])];
                                 }
                                 if (indexData.ContainsKey(iFile.Name))
-                                    fKeyData[iFile.Name].Add(new MongoEntity(indexKey, pKey));
+                                    fKeyData[iFile.Name].Add(new MongoEntity<string>(indexKey, pKey));
                                 else
-                                    fKeyData.Add(iFile.Name, [new MongoEntity(indexKey, pKey)]);
+                                    fKeyData.Add(iFile.Name, [new MongoEntity<string>(indexKey, pKey)]);
                             }
 
                             count++;
@@ -628,22 +683,63 @@ namespace GerGO.Manager
                         }
 
                     }
+
+                    try
+                    {
+                        _metaDataManager.WriteData();
+                    }
+                    catch (DataAccesException)
+                    {
+                        _logger.Error("Failed to write meta data to file!");
+                        throw new DataResourceException("Failed to write meta data!");
+                    }
+
                     if (insertData.Count == 0)
                         return 0;
 
                     // batched inserts
-                    _storedDataManager.Insert(dbName, tableName, insertData);
+                    if (table.PrimaryKeys.Count == 1 && _metaDataManager.GetColumn(dbName, tableName, table.PrimaryKeys[0].Name).Type == "int")
+                    {
+                        _storedDataManager.Insert<int>(dbName, tableName, insertData.Select(data => new MongoEntity<int>(int.Parse(data.Key), data.Value)).ToList());
+                    }
+                    else
+                    {
+                        _storedDataManager.Insert(dbName, tableName, insertData);
+                    }
+
                     foreach (var iFileData in indexData)
                     {
-                        _storedDataManager.InsertIndexData(dbName, $"{tableName}_{iFileData.Key}", iFileData.Value);
+                        var iFile = _metaDataManager.GetIndexFile(dbName, tableName, iFileData.Key);
+                        if (iFile.Attributes.Count == 1 && _metaDataManager.GetColumn(dbName, tableName, iFile.Attributes[0]).Type == "int")
+                        {
+                            _storedDataManager.InsertIndexData<int>(dbName, $"{tableName}_{iFileData.Key}", iFileData.Value.Select(val => new MongoEntity<int>(int.Parse(val.Key), val.Value)).ToList());
+                        }
+                        else
+                        {
+                            _storedDataManager.InsertIndexData(dbName, $"{tableName}_{iFileData.Key}", iFileData.Value);
+                        }
                     }
                     foreach (var fKData in fKeyData)
                     {
-                        _storedDataManager.InsertIndexData(dbName, $"{tableName}_{fKData.Key}", fKData.Value);
+                        if (_metaDataManager.GetColumn(dbName, tableName, _metaDataManager.GetForeignKey(dbName, tableName, fKData.Key).AttributeName).Type == "int")
+                        {
+                            _storedDataManager.InsertIndexData<int>(dbName, $"{tableName}_{fKData.Key}", fKData.Value.Select(val => new MongoEntity<int>(int.Parse(val.Key), val.Value)).ToList());
+                        }
+                        else
+                        {
+                            _storedDataManager.InsertIndexData(dbName, $"{tableName}_{fKData.Key}", fKData.Value);
+                        }
                     }
                     foreach (var uniqueData in uniqueInsertData)
                     {
-                        _storedDataManager.Insert(dbName, uniqueData.Key, uniqueData.Value);
+                        if (_metaDataManager.GetColumn(dbName, tableName, uniqueData.Key).Type == "int")
+                        {
+                            _storedDataManager.Insert<int>(dbName, $"{tableName}_{uniqueData.Key}_uniquekey", insertData.Select(data => new MongoEntity<int>(int.Parse(data.Key), data.Value)).ToList());
+                        }
+                        else
+                        {
+                            _storedDataManager.Insert(dbName, $"{tableName}_{uniqueData.Key}_uniquekey", insertData);
+                        }
                     }
                 }
                 return count;
@@ -688,7 +784,17 @@ namespace GerGO.Manager
                 if (pKeysToDelete.Count == 0)
                     return 0;
 
-                _storedDataManager.Delete(dbName, tableName, pKeysToDelete);
+                if (table.PrimaryKeys.Count == 1 && _metaDataManager.GetColumn(dbName, tableName, table.PrimaryKeys[0].Name).Type == "int")
+                {
+                    _storedDataManager.Delete<int>(dbName, tableName, pKeysToDelete.Select(key => int.Parse(key)).ToList());
+
+                }
+                else
+                {
+                    _storedDataManager.Delete<string>(dbName, tableName, pKeysToDelete);
+                }
+
+
                 foreach (var iFile in table.IndexFiles)
                 {
                     _storedDataManager.DeleteIndexData(dbName, $"{tableName}_{iFile.Name}", pKeysToDelete);
@@ -704,6 +810,58 @@ namespace GerGO.Manager
 
                 return count;
             }
+        }
+
+        public int Update(string dbName, string tableName, List<string[]> wheres, string colName, string newVal)
+        {
+            if (!_metaDataManager.ExistsDb(dbName) || !_metaDataManager.ExistsTable(dbName, tableName) || !_metaDataManager.ExistsColumn(dbName, tableName, colName))
+            {
+                throw new DataResourceException("Table doesn't exist");
+            }
+
+            Table table = _metaDataManager.GetTable(dbName, tableName);
+            int count = 0;
+            lock (_locks[dbName])
+            {
+                SelectData selectData = new SelectData();
+                selectData.DbName = dbName;
+                selectData.TableName = tableName;
+                selectData.WhereClauses = wheres.Select(where =>
+                {
+                    var tmp = where.ToList();
+                    tmp.Insert(0, tableName);
+                    tmp.Insert(0, "21");
+                    return tmp.ToArray();
+                }).ToList();
+                _metaDataManager.GetTable(dbName, tableName).PrimaryKeys.ForEach(fk => selectData.Columns.Add(["25", tableName, fk.Name]));
+
+                List<string> keys;
+                try
+                {
+                    IQueryExecuter queryExecuter = QueryExecuterFactory.GetExecuter(_metaDataManager, _storedDataManager);
+                    keys = queryExecuter.ExecuteQuery(ref selectData);
+                    int indCol = _metaDataManager.GetColumnPostions(dbName, tableName, [colName])[0] - table.PrimaryKeys.Count;
+                    count = 0;
+
+                    if (table.PrimaryKeys.Count == 1 && _metaDataManager.GetColumn(dbName, tableName, table.PrimaryKeys[0].Name).Type == "int")
+                    {
+                        count = _storedDataManager.UpdateColumn<int>(dbName, tableName, indCol, newVal, keys.Select(key => int.Parse(key)).ToList());
+                    }
+                    else
+                    {
+                        count = _storedDataManager.UpdateColumn<string>(dbName, tableName, indCol, newVal, keys);
+                    }
+
+                    return count;
+                }
+                catch (QueryExecuterException ex)
+                {
+                    _logger.Error($"Failed to execute delete where query: {ex.Message}");
+                    throw new DataResourceException($"Failed to execute delete where query: {ex.Message}");
+                }
+            }
+
+            return count;
         }
 
         // DATA QUERY
@@ -756,12 +914,17 @@ namespace GerGO.Manager
             try
             {
                 List<string> rows;
+                IQueryExecuter queryExecuter = QueryExecuterFactory.GetExecuter(_metaDataManager, _storedDataManager);
                 lock (_locks[selectData.DbName])
                 {
-                    IQueryExecuter queryExecuter = QueryExecuterFactory.GetExecuter(_metaDataManager, _storedDataManager);
                     rows = queryExecuter.ExecuteQuery(ref selectData);
                 }
 
+                columnNames = $"{selectData.Columns[0][1]}.{selectData.Columns[0][2]}";
+                for (int i = 1; i < selectData.Columns.Count; i++)
+                {
+                    columnNames = columnNames + $"^{selectData.Columns[i][1]}.{selectData.Columns[i][2]}";
+                }
                 return rows;
             }
             catch (QueryExecuterException ex)
@@ -773,31 +936,39 @@ namespace GerGO.Manager
 
         public int DeleteWhere(string dbName, string tableName, List<string[]> wheres)
         {
-            SelectData selectData = new SelectData();
-            selectData.DbName = dbName;
-            selectData.TableName = tableName;
-            selectData.WhereClauses = wheres.Select(where =>
+            if (!_metaDataManager.ExistsDb(dbName) || !_metaDataManager.ExistsTable(dbName, tableName))
             {
-                var tmp = where.ToList();
-                tmp.Insert(0, tableName);
-                tmp.Insert(0, "21");
-                return tmp.ToArray();
-            }).ToList();
-            _metaDataManager.GetTable(dbName, tableName).PrimaryKeys.ForEach(fk => selectData.Columns.Add(["25", tableName, fk.Name]));
-
-            List<string> keys;
-            try
-            {
-                IQueryExecuter queryExecuter = QueryExecuterFactory.GetExecuter(_metaDataManager, _storedDataManager);
-                keys = queryExecuter.ExecuteQuery(ref selectData);
-                int count = Delete(dbName, tableName, keys);
-
-                return count;
+                throw new DataResourceException("Table doesn't exist");
             }
-            catch (QueryExecuterException ex)
+
+            lock (_locks[dbName])
             {
-                _logger.Error($"Failed to execute delete where query: {ex.Message}");
-                throw new DataResourceException($"Failed to execute delete where query: {ex.Message}");
+                SelectData selectData = new SelectData();
+                selectData.DbName = dbName;
+                selectData.TableName = tableName;
+                selectData.WhereClauses = wheres.Select(where =>
+                {
+                    var tmp = where.ToList();
+                    tmp.Insert(0, tableName);
+                    tmp.Insert(0, "21");
+                    return tmp.ToArray();
+                }).ToList();
+                _metaDataManager.GetTable(dbName, tableName).PrimaryKeys.ForEach(fk => selectData.Columns.Add(["25", tableName, fk.Name]));
+
+                List<string> keys;
+                try
+                {
+                    IQueryExecuter queryExecuter = QueryExecuterFactory.GetExecuter(_metaDataManager, _storedDataManager);
+                    keys = queryExecuter.ExecuteQuery(ref selectData);
+                    int count = Delete(dbName, tableName, keys);
+
+                    return count;
+                }
+                catch (QueryExecuterException ex)
+                {
+                    _logger.Error($"Failed to execute delete where query: {ex.Message}");
+                    throw new DataResourceException($"Failed to execute delete where query: {ex.Message}");
+                }
             }
         }
     }

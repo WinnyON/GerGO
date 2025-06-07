@@ -46,6 +46,17 @@ namespace GerGO.Functionalities.Data
                         case 25:
                             selectData.Columns.Add(data);
                             break;
+                        case 26:
+                            if (data[1].Equals("1"))
+                                selectData.Distinct = true;
+                            break;
+                        case 27:
+                            if (!data[1].Equals("--"))
+                                selectData.Limit = int.Parse(data[1]);
+                            break;
+                        case 28:
+                            selectData.AggFunctions.Add(data);
+                            break;
                         default:
                             throw new CommandException("Invalid arguments in select!");
                     }
@@ -70,7 +81,7 @@ namespace GerGO.Functionalities.Data
                 {
                     int batched = 0;
                     List<string> data = [];
-                    while (i < result.Count && batched < 50)
+                    while (i < result.Count && batched < TcpResponder.GetMaxBatchCount())
                     {
                         data.Add(result[i]);
                         batched++;
