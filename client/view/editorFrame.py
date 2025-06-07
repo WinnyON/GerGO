@@ -199,16 +199,21 @@ class EditorFrame(QWidget):
 				column_names = map(lambda x: x["Name"], inserted_data)
 				code, msg = self.repository.delete_columns(self.selected_db, self.selected_table, column_names)
 				if code == 1:
+					self.edit_columns_widget.modified_rows = inserted_data
+					self.edit_columns_widget.deleted_rows = deleted_data
 					self.show_message("ERROR", "There was an error when deleting the columns!\n" + msg)
 					return
 				code, msg = self.repository.add_columns(self.selected_db, self.selected_table, inserted_data)
 				if code == 1:
+					self.edit_columns_widget.modified_rows = inserted_data
+					self.edit_columns_widget.deleted_rows = deleted_data
 					self.show_message("ERROR", "There was an error when inserting the columns!\n" + msg)
 					return
 
 			if deleted_data:
 				code, msg = self.repository.delete_columns(self.selected_db, self.selected_table, deleted_data)
 				if code == 1:
+					self.edit_columns_widget.deleted_rows = deleted_data
 					self.show_message("ERROR", "There was an error when deleting the columns!\n" + msg)
 					return
 
@@ -261,8 +266,16 @@ class EditorFrame(QWidget):
 					return
 				self.show_message("SUCCESS", "Rows deleted successfully!")
 				return
+			if code == 3:
+				print(data)
+				code, data = self.repository.update_rows(self.selected_db, data[0], data[1], data[2])
+				if code == 1:
+					self.show_message("ERROR", "Error updating rows: " + data)
+					return
+				self.show_message("SUCCESS", "Rows updated successfully!")
+				return
 			print(data)
-			code, data = self.repository.select_rows(self.selected_db, data[0], data[1], data[2], data[3], data[4])
+			code, data = self.repository.select_rows(self.selected_db, data[0], data[1], data[2], data[3], data[4], data[5])
 			if code == 1:
 				self.show_message("ERROR", "Error while selecting rows!\n" + data)
 				return

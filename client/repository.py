@@ -434,7 +434,7 @@ class Repository():
 			return 1, ce.get_text()
 
 
-	def select_rows(self, db_name, table_name, columns, join_tables, conditions, aliases):
+	def select_rows(self, db_name, table_name, columns, join_tables, conditions, aliases, aggregates):
 		select_all = False
 		try:
 			command = "19^" + db_name + "^" + table_name
@@ -516,6 +516,20 @@ class Repository():
 				if code[0] == '1':
 					self.client.set_timeout()
 					return 1, code.split('^')[1]
+
+			for aggr, col in aggregates:
+				if '.' not in col:
+					command = "28^" + table_name + "^" + col + "^" + aggr
+				else:
+					table1, col1 = col.split('.')
+					table_name1 = table1
+					if table1 in aliases.keys():
+						table_name1 = aliases[table1]
+					command = "28^" + table_name1 + "^" + col1 + "^" + aggr
+				code = self.client.send_message(command)
+				if code[0] == '1':
+					self.client.set_timeout()
+					return 1, code.split('^')[1]
 			command = "0^OK"
 			code = self.client.send_message(command)
 			if code[0] == '1':
@@ -530,11 +544,24 @@ class Repository():
 				# column_names = [table_name + "." + column for column in columns]
 				column_names = []
 				for column in columns:
-					table1, col1 = column.split('.')
-					table_name1 = table1
-					if table1 in aliases.keys():
-						table_name1 = aliases[table1]
-					column_names.append(table_name1 + "." + col1)
+					if '.' in column:
+						table1, col1 = column.split('.')
+						table_name1 = table1
+						if table1 in aliases.keys():
+							table_name1 = aliases[table1]
+						column_names.append(table_name1 + "." + col1)
+					else:
+						column_names.append(table_name + "." + column)
+				for aggr, col in aggregates:
+					if '.' in col:
+						table1, col1 = col.split('.')
+						table_name1 = table1
+						if table1 in aliases.keys():
+							table_name1 = aliases[table1]
+						column_names.append(table_name1 + "." + col1 + "." + aggr)
+					else:
+						column_names.append(table_name + "." + col + "." + aggr)
+
 			rows = []
 			code = self.client.send_message("0")
 			# while code[0] != '0':
@@ -558,6 +585,26 @@ class Repository():
 	def delete_where_rows(self, db_name, table_name, conditions):
 		try:
 			command = "20^" + db_name + "^" + table_name
+			self.client.connect()
+			code = self.client.send_message(command)
+			if code[0] == '1':
+				return 1, code.split('^')[1]
+			for table in conditions:
+				command = table["col1"] + "^" + table["op"] + "^" + table["col2"]
+				code = self.client.send_message(command)
+				if code[0] == '1':
+					return 1, code.split('^')[1]
+			command = "0^OK"
+			code = self.client.send_message(command)
+			if code[0] == '1':
+				return 1, code.split('^')[1]
+			return 0, "OK"
+		except ConnectionError as ce:
+			return 1, ce.get_text()
+
+	def update_rows(self, db_name, table_name, conditions, set_details):
+		try:
+			command = "21^" + db_name + "^" + table_name + "^" + set_details[0] + "^" + set_details[1]
 			self.client.connect()
 			code = self.client.send_message(command)
 			if code[0] == '1':

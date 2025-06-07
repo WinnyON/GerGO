@@ -207,6 +207,43 @@ class QueryEditor(QLineEdit):
         except IndexError:
             return -1, "Incorrect Syntax Error"
 
+    def get_update_data(self, command):
+        main_table = ""
+        conditions = []
+        set_details = []
+        parts = command.split()
+        if not self.check_signs(parts):
+            return -1, "Incorrect Syntax Error"
+        try:
+            if parts[0] == 'UPDATE':
+                i = 1
+                main_table = parts[i].strip()
+                i += 1
+                if parts[i] != 'SET':
+                    return -1, "Incorrect Syntax Error"
+                i += 1
+                col = parts[i].strip()
+                val = parts[i + 2].strip()
+                set_details = [col, val]
+                i += 3
+                if i < len(parts) and parts[i] == 'WHERE':
+                    i += 1
+                    while i < len(parts):
+                        if parts[i] == 'AND':
+                            i += 1
+                        elif conditions:
+                            return -1, "Incorrect Syntax Error"
+                        col1 = parts[i].strip()
+                        op = parts[i + 1].strip()
+                        col2 = parts[i + 2].strip()
+                        conditions.append({"col1": col1, "col2": col2, "op": op})
+                        i += 3
+                return 3, (main_table, conditions, set_details)
+            else:
+                return -1, "Incorrect Syntax Error"
+        except IndexError:
+            return -1, "Incorrect Syntax Error"
+
     def parse_command(self):
         command = self.text()
         if command.split()[0] == "INSERT":
@@ -218,9 +255,12 @@ class QueryEditor(QLineEdit):
         command = self.add_whitespaces(command)
         if command.split()[0] == "DELETE":
             return self.get_delete_data(command)
+        elif command.split()[0] == "UPDATE":
+            return self.get_update_data(command)
 
         aliases = {}
         columns = []
+        aggregates = []
         join_tables = []
         conditions = []
         parts = command.split()
@@ -234,9 +274,21 @@ class QueryEditor(QLineEdit):
                         parts2 = parts[i].split(',')
                         for part in parts2:
                             if part.strip():
-                                columns.append(part.strip())
+                                if '(' in part:
+                                    par_split = part.strip().split('(')
+                                    aggr = par_split[0]
+                                    col = par_split[1][:-1]
+                                    aggregates.append([aggr, col])
+                                else:
+                                    columns.append(part.strip())
                     elif parts[i].strip():
-                        columns.append(parts[i].strip())
+                        if '(' in parts[i]:
+                            par_split = parts[i].strip().split('(')
+                            aggr = par_split[0]
+                            col = par_split[1][:-1]
+                            aggregates.append([aggr, col])
+                        else:
+                            columns.append(parts[i].strip())
                     i += 1
                 i += 1
                 main_table = parts[i].strip()
@@ -275,7 +327,7 @@ class QueryEditor(QLineEdit):
                         col2 = parts[i+2].strip()
                         conditions.append({"col1": col1, "col2": col2, "op": op})
                         i += 3
-                return 0, (main_table, columns, join_tables, conditions, aliases)
+                return 0, (main_table, columns, join_tables, conditions, aliases, aggregates)
             else:
                 return -1, "Incorrect Syntax Error"
         except IndexError:
