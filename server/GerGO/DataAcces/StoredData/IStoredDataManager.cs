@@ -22,7 +22,7 @@ namespace GerGO.DataAcces.StoredData
         public List<string> GetRows<T>(string dbName, string tableName, List<T> keys);
         public List<string> GetRows<T>(string dbName, string tableName, List<T> keys, List<int> colIndexes);
         public Dictionary<string, List<string>> GetBuildSide<T>(string dbName, string tableName, List<T> pKeys, int KeyIndex, List<int> colIndexes);
-
+        public int UpdateColumn<T>(string dbName, string tableName, int index, string newVal, List<T> pKeys);
 
         //public string GetValue(string dbName, string tableName, string key);
         //public string GetFullRow(string dbName, string mongoID, string key);

@@ -102,6 +102,17 @@ namespace GerGO.Query
                     //rows = NestedLoopJoin(selectData.DbName, rows, tablesOrder.IndexOf(joinClause[1]), innerRows, joinClause);
                 }
 
+                //if (selectData.OrderByCluases.Count > 0)
+                //{
+                //    int tableInd = tablesOrder.IndexOf(selectData.OrderByCluases[0][1]);
+                //    int colInd = columnsPerTable[selectData.OrderByCluases[0][1]].IndexOf(selectData.OrderByCluases[0][2]);
+                //    string type = _metaDataManager.GetColumn(selectData.DbName, selectData.OrderByCluases[0][1], selectData.OrderByCluases[0][2]).Type;
+                //    if (selectData.OrderByCluases[0][3] == "ASC")
+                //        rows.Sort(new RowComparerAsc(type, tableInd, colInd, tableInd, colInd));
+                //    else
+                //        rows.Sort(new RowComparerDesc(type, tableInd, colInd, tableInd, colInd));
+                //}
+
                 return Projection(projectionIndexes, rows);
             }
             catch (DataAccesException ex)
@@ -630,7 +641,7 @@ namespace GerGO.Query
 
             foreach (var orderBy in selectData.OrderByCluases)
             {
-                if (orderBy.Length != 3)
+                if (orderBy.Length != 4)
                     return false;
                 if (!_metaDataManager.ExistsTable(selectData.DbName, orderBy[1]) || !_metaDataManager.ExistsColumn(selectData.DbName, orderBy[1], orderBy[2]))
                     return false;

@@ -425,5 +425,43 @@ namespace GerGO.DataAcces.StoredData
 
             return result;
         }
+        public int UpdateColumn<T>(string dbName, string tableName, int index, string newVal, List<T> pKeys)
+        {
+            var db = _client.GetDatabase(dbName);
+            var collection = db.GetCollection<BsonDocument>(tableName);
+
+            var documents = collection.Find(Builders<BsonDocument>.Filter.In("_id", pKeys)).ToList();
+            if (documents.Count == 0)
+                return 0;
+
+            var updates = new List<WriteModel<BsonDocument>>();
+
+            foreach (var document in documents)
+            {
+                var id = document["_id"];
+                List<string> currentVal = document["Value"].AsString.Split('^').ToList();
+
+                currentVal[index] = newVal;
+                string updatedVal = string.Join('^', currentVal);
+                var filter = Builders<BsonDocument>.Filter.Eq("_id", id);
+                var update = Builders<BsonDocument>.Update.Set("Value", updatedVal);
+
+                updates.Add(new UpdateOneModel<BsonDocument>(filter, update));
+            }
+
+            if (updates.Count > 0)
+            {
+                try
+                {
+                    var result = collection.BulkWrite(updates);
+                    return (int)result.ModifiedCount;
+                }
+                catch (Exception ex)
+                {
+                    throw new DataAccesException($"Failed bulk write at add column: {ex.Message}");
+                }
+            }
+            return 0;
+        }
     }
 }

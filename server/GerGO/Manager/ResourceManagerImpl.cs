@@ -812,6 +812,58 @@ namespace GerGO.Manager
             }
         }
 
+        public int Update(string dbName, string tableName, List<string[]> wheres, string colName, string newVal)
+        {
+            if (!_metaDataManager.ExistsDb(dbName) || !_metaDataManager.ExistsTable(dbName, tableName) || !_metaDataManager.ExistsColumn(dbName, tableName, colName))
+            {
+                throw new DataResourceException("Table doesn't exist");
+            }
+
+            Table table = _metaDataManager.GetTable(dbName, tableName);
+            int count = 0;
+            lock (_locks[dbName])
+            {
+                SelectData selectData = new SelectData();
+                selectData.DbName = dbName;
+                selectData.TableName = tableName;
+                selectData.WhereClauses = wheres.Select(where =>
+                {
+                    var tmp = where.ToList();
+                    tmp.Insert(0, tableName);
+                    tmp.Insert(0, "21");
+                    return tmp.ToArray();
+                }).ToList();
+                _metaDataManager.GetTable(dbName, tableName).PrimaryKeys.ForEach(fk => selectData.Columns.Add(["25", tableName, fk.Name]));
+
+                List<string> keys;
+                try
+                {
+                    IQueryExecuter queryExecuter = QueryExecuterFactory.GetExecuter(_metaDataManager, _storedDataManager);
+                    keys = queryExecuter.ExecuteQuery(ref selectData);
+                    int indCol = _metaDataManager.GetColumnPostions(dbName, tableName, [colName])[0] - table.PrimaryKeys.Count;
+                    count = 0;
+
+                    if (table.PrimaryKeys.Count == 1 && _metaDataManager.GetColumn(dbName, tableName, table.PrimaryKeys[0].Name).Type == "int")
+                    {
+                        count = _storedDataManager.UpdateColumn<int>(dbName, tableName, indCol, newVal, keys.Select(key => int.Parse(key)).ToList());
+                    }
+                    else
+                    {
+                        count = _storedDataManager.UpdateColumn<string>(dbName, tableName, indCol, newVal, keys);
+                    }
+
+                    return count;
+                }
+                catch (QueryExecuterException ex)
+                {
+                    _logger.Error($"Failed to execute delete where query: {ex.Message}");
+                    throw new DataResourceException($"Failed to execute delete where query: {ex.Message}");
+                }
+            }
+
+            return count;
+        }
+
         // DATA QUERY
 
         public List<string> GetAllRows(string dbName, string tableName, List<string> columnNames)
@@ -884,31 +936,39 @@ namespace GerGO.Manager
 
         public int DeleteWhere(string dbName, string tableName, List<string[]> wheres)
         {
-            SelectData selectData = new SelectData();
-            selectData.DbName = dbName;
-            selectData.TableName = tableName;
-            selectData.WhereClauses = wheres.Select(where =>
+            if (!_metaDataManager.ExistsDb(dbName) || !_metaDataManager.ExistsTable(dbName, tableName))
             {
-                var tmp = where.ToList();
-                tmp.Insert(0, tableName);
-                tmp.Insert(0, "21");
-                return tmp.ToArray();
-            }).ToList();
-            _metaDataManager.GetTable(dbName, tableName).PrimaryKeys.ForEach(fk => selectData.Columns.Add(["25", tableName, fk.Name]));
-
-            List<string> keys;
-            try
-            {
-                IQueryExecuter queryExecuter = QueryExecuterFactory.GetExecuter(_metaDataManager, _storedDataManager);
-                keys = queryExecuter.ExecuteQuery(ref selectData);
-                int count = Delete(dbName, tableName, keys);
-
-                return count;
+                throw new DataResourceException("Table doesn't exist");
             }
-            catch (QueryExecuterException ex)
+
+            lock (_locks[dbName])
             {
-                _logger.Error($"Failed to execute delete where query: {ex.Message}");
-                throw new DataResourceException($"Failed to execute delete where query: {ex.Message}");
+                SelectData selectData = new SelectData();
+                selectData.DbName = dbName;
+                selectData.TableName = tableName;
+                selectData.WhereClauses = wheres.Select(where =>
+                {
+                    var tmp = where.ToList();
+                    tmp.Insert(0, tableName);
+                    tmp.Insert(0, "21");
+                    return tmp.ToArray();
+                }).ToList();
+                _metaDataManager.GetTable(dbName, tableName).PrimaryKeys.ForEach(fk => selectData.Columns.Add(["25", tableName, fk.Name]));
+
+                List<string> keys;
+                try
+                {
+                    IQueryExecuter queryExecuter = QueryExecuterFactory.GetExecuter(_metaDataManager, _storedDataManager);
+                    keys = queryExecuter.ExecuteQuery(ref selectData);
+                    int count = Delete(dbName, tableName, keys);
+
+                    return count;
+                }
+                catch (QueryExecuterException ex)
+                {
+                    _logger.Error($"Failed to execute delete where query: {ex.Message}");
+                    throw new DataResourceException($"Failed to execute delete where query: {ex.Message}");
+                }
             }
         }
     }
