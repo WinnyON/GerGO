@@ -275,7 +275,7 @@ class EditorFrame(QWidget):
 				self.show_message("SUCCESS", "Rows updated successfully!")
 				return
 			print(data)
-			code, data = self.repository.select_rows(self.selected_db, data[0], data[1], data[2], data[3], data[4], data[5])
+			code, data = self.repository.select_rows(self.selected_db, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9])
 			if code == 1:
 				self.show_message("ERROR", "Error while selecting rows!\n" + data)
 				return

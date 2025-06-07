@@ -263,12 +263,19 @@ class QueryEditor(QLineEdit):
         aggregates = []
         join_tables = []
         conditions = []
+        group_by = []
+        order_by = []
+        distinct_columns = False
+        limit_count = ''
         parts = command.split()
         if not self.check_signs(parts):
             return -1, "Incorrect Syntax Error"
         try:
             if parts[0] == 'SELECT':
                 i = 1
+                if parts[i] == 'DISTINCT':
+                    distinct_columns = True
+                    i += 1
                 while parts[i] != 'FROM':
                     if ',' in parts[i]:
                         parts2 = parts[i].split(',')
@@ -317,7 +324,7 @@ class QueryEditor(QLineEdit):
                         i += 6
                 if i < len(parts) and parts[i] == 'WHERE':
                     i += 1
-                    while i < len(parts):
+                    while i < len(parts) and parts[i] != 'GROUP' and parts[i] != 'LIMIT' and parts[i] != 'ORDER':
                         if parts[i] == 'AND':
                             i += 1
                         elif conditions:
@@ -327,7 +334,43 @@ class QueryEditor(QLineEdit):
                         col2 = parts[i+2].strip()
                         conditions.append({"col1": col1, "col2": col2, "op": op})
                         i += 3
-                return 0, (main_table, columns, join_tables, conditions, aliases, aggregates)
+
+                if i < len(parts) and parts[i] == 'GROUP' and parts[i+1] == 'BY':
+                    i += 2
+                    while i < len(parts) and parts[i] != 'HAVING' and parts[i] != 'LIMIT' and parts[i] != 'ORDER':
+                        if ',' in parts[i]:
+                            parts2 = parts[i].split(',')
+                            for part in parts2:
+                                if part.strip():
+                                    group_by.append(part.strip())
+                        elif parts[i].strip():
+                            group_by.append(parts[i].strip())
+                        i += 1
+
+                if i < len(parts) and parts[i] == 'ORDER' and parts[i+1] == 'BY':
+                    i += 2
+                    while i < len(parts) and parts[i] != 'LIMIT':
+                        if ',' in parts[i]:
+                            parts2 = parts[i].split(',')
+                            for part in parts2:
+                                if part.strip() and i+1 < len(parts) and (parts[i+1].strip() == "ASC" or parts[i+1].strip() == "DESC"):
+                                    order_by.append([part.strip(), parts[i+1].strip()])
+                                    i += 1
+                                elif part.strip():
+                                    order_by.append([part.strip(), "ASC"])
+                        elif parts[i].strip():
+                            if i + 1 < len(parts) and (parts[i + 1].strip() == "ASC" or parts[i + 1].strip() == "DESC"):
+                                order_by.append([parts[i].strip(), parts[i+1].strip()])
+                                i += 1
+                            else:
+                                order_by.append([parts[i].strip(), "ASC"])
+                        i += 1
+
+                if i < len(parts) and parts[i] == 'LIMIT':
+                    i += 1
+                    limit_count = parts[i].strip()
+
+                return 0, (main_table, columns, join_tables, conditions, aliases, aggregates, distinct_columns, group_by, limit_count, order_by)
             else:
                 return -1, "Incorrect Syntax Error"
         except IndexError:

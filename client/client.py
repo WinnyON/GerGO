@@ -6,7 +6,7 @@ class Client():
     def __init__(self, server_ip="localhost", server_port=5555):
         self.server_ip = server_ip
         self.server_port = int(server_port)
-        self.max_bytes = 50000 # 2048
+        self.max_bytes = 64000 # 2048
 
     def setDestination(self, server_ip, server_port):
         self.server_ip = server_ip
