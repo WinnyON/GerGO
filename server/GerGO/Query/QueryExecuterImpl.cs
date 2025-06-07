@@ -4,6 +4,7 @@ using GerGO.DataAcces.StoredData;
 using GerGO.Manager;
 using GerGO.Models;
 using GerGO.Utils;
+using System.Runtime.ConstrainedExecution;
 
 namespace GerGO.Query
 {
@@ -97,23 +98,43 @@ namespace GerGO.Query
                     rows = ClassicHashJoin(selectData.DbName, rows, tablesOrder.IndexOf(joinClause[1]), columnsPerTable[joinClause[1]].IndexOf(joinClause[2]),
                         innerTable, _metaDataManager.GetColumnPostions(selectData.DbName, joinClause[3], [joinClause[4]])[0], whereClauses, 
                         _metaDataManager.GetColumnPostions(selectData.DbName, innerTable.Name, columnsPerTable[innerTable.Name]));
-                    
-                    //var innerRows = Selection(selectData.DbName, innerTable, whereClauses, colIndexesJoinTable);
-                    //rows = NestedLoopJoin(selectData.DbName, rows, tablesOrder.IndexOf(joinClause[1]), innerRows, joinClause);
                 }
 
-                //if (selectData.OrderByCluases.Count > 0)
-                //{
-                //    int tableInd = tablesOrder.IndexOf(selectData.OrderByCluases[0][1]);
-                //    int colInd = columnsPerTable[selectData.OrderByCluases[0][1]].IndexOf(selectData.OrderByCluases[0][2]);
-                //    string type = _metaDataManager.GetColumn(selectData.DbName, selectData.OrderByCluases[0][1], selectData.OrderByCluases[0][2]).Type;
-                //    if (selectData.OrderByCluases[0][3] == "ASC")
-                //        rows.Sort(new RowComparerAsc(type, tableInd, colInd, tableInd, colInd));
-                //    else
-                //        rows.Sort(new RowComparerDesc(type, tableInd, colInd, tableInd, colInd));
-                //}
+                // group by
+                if (selectData.GroupByClauses.Count > 0)
+                {
+                    int tableInd = tablesOrder.IndexOf(selectData.GroupByClauses[0][1]);
+                    int colInd = columnsPerTable[selectData.GroupByClauses[0][1]].IndexOf(selectData.GroupByClauses[0][2]);
+                    string type = _metaDataManager.GetColumn(selectData.DbName, selectData.GroupByClauses[0][1], selectData.GroupByClauses[0][2]).Type;
+                    rows.Sort(new RowComparerAsc(type, tableInd, colInd, tableInd, colInd));
 
-                return Projection(projectionIndexes, rows);
+                }
+
+                
+                // projection
+                List<string> finalRows = Projection(projectionIndexes, rows);
+
+                // distinct
+                if (selectData.Distinct)
+                    finalRows = finalRows.Distinct().ToList();
+
+                // order by
+                if (selectData.OrderByCluases.Count > 0)
+                {
+                    int tableInd = tablesOrder.IndexOf(selectData.OrderByCluases[0][1]);
+                    int colInd = columnsPerTable[selectData.OrderByCluases[0][1]].IndexOf(selectData.OrderByCluases[0][2]);
+                    string type = _metaDataManager.GetColumn(selectData.DbName, selectData.OrderByCluases[0][1], selectData.OrderByCluases[0][2]).Type;
+                    if (selectData.OrderByCluases[0][3] == "ASC")
+                        rows.Sort(new RowComparerAsc(type, tableInd, colInd, tableInd, colInd));
+                    else
+                        rows.Sort(new RowComparerDesc(type, tableInd, colInd, tableInd, colInd));
+                }
+
+                // limit
+                if (selectData.Limit == -1)
+                    return finalRows;
+                else
+                    return finalRows.Take(selectData.Limit).ToList();
             }
             catch (DataAccesException ex)
             {
